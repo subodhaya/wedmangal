@@ -1,0 +1,685 @@
+/* General Styling for Header, Carousel, and Page index.css */
+/* Header Styling */
+header {
+  background-color: #f9e79f; /* Updated to the custom color */
+  color: #ffffff;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem; /* Padding for the header */
+}
+.install-app-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+/* Navbar styling */
+.btn-tertiary {
+  background-color: #f8f9fa; /* Light gray background */
+  border: 1px solid #ced4da; /* Light border */
+  color: #495057; /* Dark gray text */
+}
+
+/* Navbar Styling */
+.navbar {
+  --bs-navbar-padding-x: 0;
+  --bs-navbar-padding-y: 0.5rem; /* Adjusted for consistent spacing */
+  --bs-navbar-color: #5e143f; /* Main navbar color */
+  --bs-navbar-hover-color: #0056b3;
+  --bs-navbar-active-color: #0056b3;
+  --bs-navbar-brand-color: #f9e79f;
+  --bs-navbar-brand-hover-color: #f9e79f;
+  --bs-navbar-nav-link-padding-x: 0.5rem;
+  --bs-navbar-toggler-padding-y: 0.25rem;
+  --bs-navbar-toggler-padding-x: 0.75rem;
+  --bs-navbar-toggler-font-size: 1.25rem;
+  --bs-navbar-toggler-icon-bg: url(data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 30 30%27%3e%3cpath stroke=%27rgba(85, 89, 92, 0.75)%27 stroke-linecap=%27round%27 stroke-miterlimit=%2710%27 stroke-width=%272%27 d=%27M4 7h22M4 15h22M4 23h22%27/%3e%3c/svg%3e);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--bs-navbar-padding-y) var(--bs-navbar-padding-x);
+}
+.notification-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center; /* Align with other icons */
+  font-size: 1.25rem; /* Match icon size */
+  margin-left: 1rem; /* Add spacing between elements */
+  color: #f9e79f; /* Same as other icons */
+  cursor: pointer; /* Add interactivity */
+}
+
+.notification-container:hover {
+  color: #ffcc80; /* Optional: Hover effect */
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -10px; /* Position relative to the bell icon */
+  background: #f9e79f; /* Match brand color */
+  color: #5e143f; /* Ensure contrast */
+  border-radius: 50%;
+  padding: 0.25rem 0.4rem; /* Adjust size for a compact badge */
+  font-size: 0.75rem; /* Small, readable font */
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+}
+
+
+.header-navbar .container {
+ 
+  /* Stack items vertically if needed */
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap; /* Prevent wrapping */
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #f9e79f; /* Brand logo color */
+  text-transform: uppercase; /* Adjust font size */
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  white-space: nowrap; /* Prevent text from breaking into 2 lines */
+  gap: 8px;
+}
+
+
+.brand-logo:hover {
+  color: #5e143f; /* Maintain brand color on hover */
+  text-decoration: none;
+}
+
+/* Nav Links Styling */
+.navbar-nav .nav-link {
+  font-size: 1rem;
+  color: #5e143f !important; /* Change to #5e143f */
+  padding: 0.5rem 1rem;
+  transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #f9e79f; /* Hover color */
+  text-decoration: none;
+}
+
+
+/* Dropdown Styling */
+/* Change the color when the Navbar Toggle Button is active */
+.navbar-toggler:focus, .navbar-toggler:active {
+  outline: none; /* Remove default outline */
+  background-color: #5e143f; /* Avoid white background */
+  box-shadow: none; /* Remove shadow on focus/active */
+}
+
+.navbar-toggler {
+  background-color: transparent !important; /* Remove background */
+  border: none !important;  /* Remove border */
+  padding: 0;  /* Remove extra padding */
+  margin-left: auto !important;
+}
+
+.navbar-toggler:hover {
+  background-color: #f7f093 !important; /* Change color on hover */
+  border-color: white !important;
+}
+
+.navbar-toggler-icon:hover {
+  background-color: white !important; /* Change icon color on hover */
+}
+
+/* Ensure all three lines of the toggler are the same color */
+.navbar-toggler-icon,
+.navbar-toggler-icon::before,
+.navbar-toggler-icon::after {
+  background-color: #f7f093 !important; /* Force all lines to be black */
+}
+
+
+/* Add custom lines for the toggler icon */
+
+
+.navbar-toggler-icon::before {
+  top: -8px;
+}
+
+.navbar-toggler-icon::after {
+  top: 8px;
+}
+
+
+/* Custom styling for the dropdown toggle in the Navbar */
+.nav-dropdown .dropdown-toggle::after {
+  color: #5e143f; /* Change arrow color */
+}
+
+/* Custom styling for dropdown items */
+.nav-dropdown .dropdown-item {
+  color: #5e143f; /* Change dropdown item color */
+}
+
+/* Dropdown item hover styling */
+.nav-dropdown .dropdown-item:hover {
+  color: #5e143f;
+  background-color: #f9e79f; /* Background on hover */
+}
+
+/* Navbar link hover color */
+.navbar-nav .nav-link:hover {
+  color: #f9e79f; /* Change hover color */
+  text-decoration: none;
+}
+
+/* Cart and Nav Icons */
+.cart-link i,
+.nav-link i {
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+  color: #5e143f; /* Change icon color */
+  transition: color 0.3s;
+}
+
+.cart-link:hover i,
+.nav-link:hover i {
+  color: #f9e79f; /* Hover color for icons */
+}
+
+/* Responsive Header Styles */
+@media (max-width: 576px) {
+  .brand-logo .logo {
+    width: 40px !important;
+    height: 40px !important;
+  }
+}
+
+@media (max-width: 68px) {
+  .navbar-nav {
+      text-align: center;
+  }
+
+  .search-box {
+    margin: 0; /* Remove margin on smaller screens */
+    margin-top: 0.5rem; /* Add top margin for search box */
+  }
+
+  /* Style for the search icon button */
+  .btn-icon {
+    font-size: 1rem; /* Size of the icon */
+    padding: 0.25rem; /* Reduced padding to fit the icon size */
+    height: auto; /* Adjust height based on content */
+    line-height: 1; /* Adjust line height for proper alignment */
+    border-radius: 0.2rem; /* Slightly rounded corners */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Ensure the button has a proper width for better appearance */
+  .btn-icon .fas.fa-search {
+    width: 1rem; /* Width of the icon */
+    height: 1rem; /* Height of the icon */
+  }
+}
+
+
+
+/*...............................................................................................................*/
+
+/* Additional styles to enhance overall look */
+.main {
+  min-height: 80vh;
+}
+
+/* Remove margin on body and set full-width layout */
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Ensure the container covers the full page width */
+.container-fluid {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+/* Center content and remove internal padding */
+ .col-xs-12 {
+  padding: 0;
+  text-align: center;
+}
+
+
+
+.bg-custom {
+  background: linear-gradient(to bottom, #f9e79f, #ffffff) !important; /* Gradient background */
+}
+
+
+/* Specific styling for booked-date class */
+
+.booked-date {
+  background-color: #ffcccb; /* Light red for booked dates */
+  color: white;
+  border-radius: 50%;
+}
+
+.available-date {
+  background-color: skyblue; /* Light green for available dates */
+  color: black;
+  border-radius: 50%;
+}
+
+.search-box input {
+  width: 100%;
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+/* Styling for product images */
+.product-image {
+  width: 100%;
+  height: 200px; /* Adjust as needed */
+  object-fit: cover; /* This will ensure the image covers the entire area without distortion */
+}
+
+/* iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii */
+/* Highlight section styling */
+.highlight-section {
+  overflow: hidden;
+  margin-bottom: 25px;
+  border: 10px solid rgba(255, 255, 255, 0.25);
+  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.25);
+  box-sizing: border-box;
+  box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.25);
+  padding: 20px;
+}
+
+/* Form styling */
+.form-group {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.form-label {
+  width: 130px;
+  color: #5e143f;
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+.form-group .form-control {
+  border-radius: 0.25rem;
+  flex: 1;
+}
+
+
+
+
+/* Button styling */
+.btn-outline-warning {
+  border: 1px solid #f9e79f;
+  color: #5e143f;
+  background-color: transparent;
+  border-radius: 0.25rem;
+}
+
+.btn-outline-warning:hover {
+  background-color: #f9e79f;
+  color: #fff;
+}
+
+/* Navbar Toggle */
+
+
+.custom-toggler .navbar-toggler-icon {
+  color: #5e143f;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='white' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+.custom-toggler {
+  border-color: #f9e79f; /* Remove default border color */
+}
+
+/* Invitation styling */
+#invitation {
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+#invitation img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* General button styling */
+button {
+  margin: 5px;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #f0f0f0;
+}
+/* iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+
+/* Highlight search styling */
+.highlight-search {
+  margin-top: 50px;
+  margin-bottom: 50px;
+  border: 1px solid #e0d7d7;
+  padding: 5px;
+  overflow: hidden;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+.carousel-image-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 180px; /* Maximum width to match the ideal size */
+  height: 220px; /* Fixed height for consistency */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+}
+
+.carousel-image-wrapper img {
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain; /* Ensures images fit without zooming or cropping */
+  border-radius: 8px;
+  transition: transform 0.1s ease;
+}
+
+.carousel-image-wrapper:hover img {
+  transform: scale(1.05);
+}
+
+@media (min-width: 768px) {
+  .carousel-slide {
+    display: flex;
+  }
+  .carousel-item {
+    width: calc(100% / 3); /* Display 3 images side-by-side */
+  }
+}
+
+@media (max-width: 767px) {
+  .carousel-slide {
+    display: block;
+  }
+  .carousel-item {
+    width: 100%; /* Display 1 image at a time on mobile */
+  }
+}
+.bg-custom {
+  background-color: #f9e79f; /* Change this to your desired color */
+}
+.carousel-caption {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: #f9e79f;
+  color: #ffffff;
+  padding: 0.5rem;
+  text-align: center;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+.carousel-custom {
+  background-color: #ffffff; /* Change this color to your desired background color */
+  padding: 0px; /* Add some padding if needed */
+}
+.carousel-caption h4 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #f9e79f;
+}
+
+.carousel-caption {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: #f9e79f;
+  color: #ffffff;
+  padding: 0.5rem;
+  text-align: center;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.carousel-caption h4 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #f9e79f;
+}
+ .container-fluid {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+
+/* Background Section */
+.background-section {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 0;
+  margin: 0;
+  max-width: 100% !important;
+  width: 100% !important;
+  
+  color: #0e0d0d;
+  
+}
+
+/* Title Bar */
+.title-bar {
+  background-color: rgba(219, 42, 116, 0.137);
+  padding: 20px;
+  border-radius: 8px;
+}
+
+/* Home Screen Title */
+.home-screen-title {
+  font-size: 2.5rem;
+  color: #343a40;
+  font-family: 'Georgia', serif;
+}
+
+/* Welcome Message */
+.welcome-message {
+  font-size: 1.2rem;
+  color: #6c757d;
+  font-family: 'Roboto', sans-serif;
+  text-align: center;
+}
+
+/* Brand Name */
+.brand-name {
+  font-weight: bold;
+  color: #628dbb;
+}
+
+/* Explore Button */
+.explore-button {
+  background-color: #628dbb;
+  border: none;
+  transition: background-color 0.3s;
+}
+
+.explore-button:hover {
+  background-color: #8eadce;
+}
+
+/* Product Grid */
+.product-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+/* Product Card */
+.product-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.3s ease-in-out;
+}
+
+
+
+
+.product-card:hover {
+  transform: scale(1.05);
+  min-height: 400px;
+}
+
+.product-card img {
+  object-position: top;
+  border-radius: 8px;
+  max-height: 200px;
+  object-fit: contain; 
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+/* Pagination */
+.paginate-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+
+/* search button design */
+.d-flex.align-items-center {
+  display: flex;
+  align-items: center;
+  gap: 05px; /* Space between input and button */
+}
+
+.form-control {
+  flex: 1;
+}
+
+/* Container for the input and button */
+.position-relative.custom-input-group {
+  position: relative;
+  width: 100%;
+}
+
+.custom-search-input {
+  width: 99%;
+  padding: 10px 50px 10px 15px; /* space on right for button */
+  border: 1px solid #5a123c;
+  border-radius: 0px;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.custom-search-button {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 80%;
+  padding: 0 10px;
+  border: none;
+  background-color: #7e275a;
+  color: white;
+  font-weight: bold;
+  font-size: 1.25rem;
+  border-radius: 0px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-button:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+ 
+
+
+/* Hide up and down arrows in number input */
+.custom-input::-webkit-outer-spin-button,
+.custom-input::-webkit-inner-spin-button {
+-webkit-appearance: none;
+margin: 0;
+}
+
+input[type="number"] {
+  appearance: textfield;
+}
+/* Target Cashfree modal */
+#cashfree-popup {
+  font-family: Arial, sans-serif !important;
+  background-color: #fff !important;
+  border-radius: 10px !important;
+}
+/* Improve button styles */
+#cashfree-popup button {
+  background-color: #007bff !important;
+  color: black !important;  /* Change text color to black */
+  border-radius: 5px !important;
+  padding: 10px 15px !important;
+  font-weight: bold !important;
+}
+
+/* Adjust input fields */
+#cashfree-popup input {
+  border: 1px solid #ccc !important;
+  padding: 8px !important;
+  border-radius: 5px !important;
+  color: black !important; /* Ensure input text is black */
+}
+
+/* Ensure all text inside Cashfree popup is black */
+#cashfree-popup {
+  color: black !important;
+}
+
+/* Hide unwanted elements */
+#cashfree-popup .cf-footer {
+  display: none !important;
+}
+/* Remove global styles when Cashfree popup is open */
+body.cashfree-active * {
+  all: unset !important;  /* Reset styles for Cashfree */
+  color: #000000 !important;  /* Ensure text remains black */
+}
+
+/* Restore button styles for usability */
+body.cashfree-active button {
+  all: unset !important;
+  background-color: #f0f0f0 !important;
+  color: #000000 !important;
+  border-radius: 6px !important;
+}

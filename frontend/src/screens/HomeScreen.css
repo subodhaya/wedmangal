@@ -1,0 +1,568 @@
+/* General Styling for Header, Carousel, and Page */
+
+/* Header Styling */
+header {
+  background-color: #5e143fec; /* Updated to the custom color */
+  color: #ffffff;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+   /* Padding for the header */
+}
+
+
+/* Navbar styling */
+.btn-tertiary {
+  background-color: #5e143fec; /* Light gray background */
+  border: 1px solid #f9e79f; /* Light border */
+  color: #f9e79f; /* Dark gray text */
+}
+
+/* Navbar Styling */
+.navbar {
+  --bs-navbar-padding-x: 0;
+  --bs-navbar-padding-y: 0.5rem; /* Adjusted for consistent spacing */
+  --bs-navbar-color: #f9e79f; /* Main navbar color */
+ 
+  --bs-navbar-toggler-icon-bg: url(data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 30 30%27%3e%3cpath stroke=%27rgba(85, 89, 92, 0.75)%27 stroke-linecap=%27round%27 stroke-miterlimit=%2710%27 stroke-width=%272%27 d=%27M4 7h22M4 15h22M4 23h22%27/%3e%3c/svg%3e);
+  position: relative;
+  display: flex;
+  
+  justify-content: space-between;
+  padding: var(--bs-navbar-padding-y) var(--bs-navbar-padding-x);
+}
+
+
+
+.brand-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #f9e79f; /* Brand logo color */
+  text-transform: uppercase;
+}
+
+.brand-logo:hover {
+  color: #f9e79f; /* Maintain brand color on hover */
+  text-decoration: none;
+}
+
+/* Nav Links Styling */
+.navbar-nav .nav-link {
+  font-size: 1rem;
+  color: #f9e79f !important; /* Change to #5e143f */
+  
+  transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #f9e79f; /* Hover color */
+  text-decoration: none;
+}
+
+/* Dropdown Styling */
+.nav-dropdown .dropdown-toggle::after {
+  color: #f9e79f; /* Change arrow color */
+}
+
+.nav-dropdown .dropdown-item {
+  color: #f9e79f; /* Change dropdown item color */
+}
+
+.nav-dropdown .dropdown-item:hover {
+  color: #be0505;
+  background-color: #f9e79f; /* Background on hover */
+}
+
+/* Cart and Nav Icons */
+.cart-link i,
+.nav-link i {
+  font-size: 1.2rem;
+  margin-right: 0rem;
+  color: #f9e79f; /* Change icon color */
+  transition: color 0.3s;
+}
+
+.cart-link:hover i,
+.nav-link:hover i {
+  color: #f9e79f; /* Hover color for icons */
+}
+header .navbar .container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: nowrap !important;
+}
+
+.brand-logo {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+}
+
+.navbar-toggler {
+  margin-left: auto !important;
+  flex-shrink: 0 !important;
+}
+
+/* Responsive Header Styles */
+@media (max-width: 768px) {
+  .navbar-nav {
+      text-align: auto;
+  }
+
+  .search-box {
+    margin: 0; /* Remove margin on smaller screens */
+    margin-top: 0.5rem; /* Add top margin for search box */
+  }
+
+  /* Style for the search icon button */
+  .btn-icon {
+    font-size: 1rem; /* Size of the icon */
+    padding: 0.25rem; /* Reduced padding to fit the icon size */
+    height: auto; /* Adjust height based on content */
+    line-height: 1; /* Adjust line height for proper alignment */
+    border-radius: 0.2rem; /* Slightly rounded corners */
+    display: flex;
+    
+    justify-content: right;
+  }
+
+  /* Ensure the button has a proper width for better appearance */
+  .btn-icon .fas.fa-search {
+    width: 1rem; /* Width of the icon */
+    height: 1rem; /* Height of the icon */
+  }
+}
+
+
+
+/* Search Box */
+.search-box {
+  width: 100%;
+  max-width: 300px;
+ 
+}
+
+.search-box input {
+  width: 100%;
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
+/* Navbar Toggle */
+.navbar-toggler {
+  border: none;
+}
+
+.navbar-toggler-icon {
+  color: #ffffff;
+}
+
+/* Carousel Styling */
+.carousel {
+  max-width: 100%;
+  margin: auto;
+  background-color: #343a40;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-image-wrapper {
+  position: relative;
+  padding-top: 5px;
+  height: 300px;
+}
+
+.carousel-image-wrapper img {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  transition: transform 0.4s ease;
+}
+
+.carousel-image-wrapper:hover img {
+  transform: scale(1.05);
+}
+
+.carousel-caption {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  padding: 0.5rem;
+  text-align: center;
+  transition: background 0.3s ease;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.carousel-caption h4 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin: 0;
+  text-transform: uppercase;
+  color: #f5a623;
+}
+
+.carousel-caption h4:hover {
+  color: #ffb347;
+}
+
+.carousel-item:hover .carousel-caption {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+@media (max-width: 768px) {
+  .carousel-image-wrapper {
+    height: 200px;
+  }
+
+  .carousel-caption h4 {
+    font-size: 1rem;
+  }
+}
+
+/* Background Section */
+.background-section {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 0;
+  margin: 0;
+  max-width: 100% !important;
+  width: 100% !important;
+  color: #0e0d0d;
+}
+
+/* Title Bar */
+.title-bar {
+  background-image: linear-gradient(to bottom, #ffffff, #ffffff);
+  text-align: center;
+  opacity: 0.9;
+}
+
+/* Home Screen Title */
+.home-screen-title {
+  font-size: 2.5rem;
+  color: #343a40;
+  font-family: 'Georgia', serif;
+}
+
+/* Welcome Message */
+.welcome-message {
+  font-size: 1.2rem;
+  color: #6c757d;
+  margin-bottom: 20px;
+  font-family: 'Roboto', sans-serif;
+  text-align: center;
+}
+
+.front-page-container {
+  background-color: #f8f9fa;
+  margin-top: 0; /* Remove top margin */
+  padding-top: 0; /* Ensure no padding at the top */
+}
+
+.plain1-card {
+  background:              linear-gradient(315deg, white 15%, white 15%) 0 0;
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  margin-top: 0; /* Remove top margin if any */
+}
+
+  
+
+
+.welcome-card {
+  background-color: #ffffff;
+  border: none;
+  color: #333;
+}
+
+.welcome-card .card-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #007bff; /* Primary blue color */
+}
+
+.welcome-card h4 {
+  font-size: 1.25rem;
+  color: #6c757d; /* Muted text color */
+}
+
+.welcome-card p {
+  font-size: 1rem;
+  color: #495057;
+  margin-bottom: 1.5rem;
+}
+
+.welcome-card .btn-primary {
+  font-size: 1rem;
+  padding: 10px 20px;
+  border-radius: 5px;
+}
+
+.makeup-artist-image {
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Brand Name */
+.brand-name {
+  font-weight: bold;
+  color: #5e143f;
+}
+
+/* Explore Button */
+.explore-button {
+  background-color: #5e143f;
+  border: none;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+
+.explore-button:hover {
+  background-color: #5e143f;
+}
+
+/* Product Grid */
+.product-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+/* Product Card */
+.product-card {
+  width: 310px; /* Set a fixed width */
+  background: #f9e79f52;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.product-card:hover {
+  transform: scale(1.05);
+  min-height: 400px;
+}
+
+.product-card img {
+  object-position: top;
+  border-radius: 8px;
+  max-height: 200px;
+  object-fit: contain; 
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.product-card .product-details {
+  flex-grow: 1; /* Allow details to take up remaining space */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+
+
+.welcome-message {
+  font-family: 'Roboto', sans-serif;
+  color: #333;
+  text-align: center;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.paginate-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+/* Additional styles to enhance overall look */
+.main {
+  min-height: 80vh;
+}
+
+/* Remove margin on body and set full-width layout */
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Ensure the container covers the full page width */
+.container-fluid {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+/* Center content and remove internal padding */
+.col-xs-12 {
+  padding: 0;
+  text-align: center;
+}
+
+.bg-custom {
+  background: linear-gradient(to bottom, #f9e79f, #ffffff) !important; /* Gradient background */
+}
+
+/* Specific styling for booked-date class */
+.booked-date {
+  background-color: #ffcccb; /* Light red for booked dates */
+  color: white;
+  border-radius: 50%;
+}
+
+.available-date {
+  background-color: #d4edda; /* Light green for available dates */
+  color: black;
+  border-radius: 50%;
+}
+
+/* Specific styling for productscreen grow and move motion */
+
+
+@keyframes slideIn {
+  from {
+      transform: translateX(-10px);
+      opacity: 0.8;
+  }
+  to {
+      transform: translateX(0);
+      opacity: 1;
+  }
+}
+
+.slide-title {
+  animation: slideIn 0.5s ease-in-out;
+}
+@keyframes growShrink {
+  0% { transform: scale(0.95); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.grow-title {
+  animation: growShrink 0.5s ease-in-out;
+}
+/* Target Cashfree modal */
+#cashfree-popup {
+  font-family: Arial, sans-serif !important;
+  background-color: #fff !important;
+  border-radius: 10px !important;
+}
+/* Improve button styles */
+#cashfree-popup button {
+  background-color: #007bff !important;
+  color: black !important;  /* Change text color to black */
+  border-radius: 5px !important;
+  padding: 10px 15px !important;
+  font-weight: bold !important;
+}
+
+/* Adjust input fields */
+#cashfree-popup input {
+  border: 1px solid #ccc !important;
+  padding: 8px !important;
+  border-radius: 5px !important;
+  color: black !important; /* Ensure input text is black */
+}
+
+/* Ensure all text inside Cashfree popup is black */
+#cashfree-popup {
+  color: black !important;
+}
+
+/* Hide unwanted elements */
+#cashfree-popup .cf-footer {
+  display: none !important;
+}
+/* Remove global styles when Cashfree popup is open */
+body.cashfree-active * {
+  all: unset !important;  /* Reset styles for Cashfree */
+  color: #000000 !important;  /* Ensure text remains black */
+}
+
+/* Restore button styles for usability */
+body.cashfree-active button {
+  all: unset !important;
+  background-color: #f0f0f0 !important;
+  color: #000000 !important;
+  border-radius: 6px !important;
+}
+
+.category-section {
+  text-align: center;
+  margin: 40px 0;
+}
+
+.category-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  justify-content: center;
+}
+
+.category-card {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.3s ease-in-out;
+}
+
+.category-card:hover {
+  transform: translateY(-5px);
+}
+
+.category-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.category-name {
+  font-size: 18px;
+  font-weight: 600;
+  padding: 10px 0;
+}
+/* install-ui / a2hs styles (paste into HomeScreen.css) */
+.install-banner {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.98);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  padding: 8px 12px;
+  border-radius: 10px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  z-index:99999;
+  width: calc(100% - 40px);
+  max-width: 880px;
+}
+.install-text { font-weight:600; }
+.install-btn { background:#d63384; color:white; border: none; padding:8px 12px; border-radius:8px; }
+.install-dismiss { background:transparent; border: 1px solid rgba(0,0,0,0.08); padding:6px 10px; border-radius:8px; }

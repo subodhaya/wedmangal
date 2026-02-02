@@ -1,0 +1,160 @@
+/* ------------------ VARIABLES ------------------ */
+:root {
+  --wedding-pink: #5e143f;
+  --wedding-yellow: #f9e79f;
+  --brand-white: #ffffff;
+  --shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+/* ------------------ HEADER WRAPPER ------------------ */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1050;
+  background: var(--wedding-pink);
+  color: var(--wedding-yellow);
+  box-shadow: var(--shadow);
+}
+
+/* REMOVE ALL BOOTSTRAP PADDING BY DEFAULT */
+.header-navbar .container {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* ------------------ BRAND (LOGO + NAME) ------------------ */
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--wedding-yellow) !important;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+
+  /* let it shrink so toggler is never cut */
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.brand-logo .logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+/* brand text only – fully responsive */
+.brand-text {
+  font-size: 1.4rem;           /* desktop */
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+/* Tablet / mid screens */
+@media (max-width: 992px) {
+  .brand-text {
+    font-size: 1.2rem;
+  }
+}
+
+/* Phones (360–480px) */
+@media (max-width: 480px) {
+  .brand-text {
+    font-size: 1.05rem;
+  }
+}
+
+/* Very small phones (iPhone 6 / SE, ~320–360px) */
+@media (max-width: 360px) {
+  .brand-text {
+    font-size: 0.9rem;
+  }
+
+  .brand-logo .logo {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* ------------------ NAV LINKS ------------------ */
+.navbar-nav .nav-link {
+  color: var(--wedding-yellow) !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+}
+
+/* ------------------ MOBILE LAYOUT (≤ 992px) ------------------ */
+@media (max-width: 992px) {
+
+  /* brand & hamburger in one row */
+  .header-navbar .container {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 0 8px !important;
+  }
+
+  .brand-logo {
+    margin-left: 0 !important;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .custom-toggler {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+    position: static !important;
+    z-index: 5000;
+  }
+
+  /* dropdown below header row */
+  #basic-navbar-nav {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(90deg, #5e143f, #7a1c54);
+    padding: 1rem 1.3rem;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.18);
+    z-index: 3000;
+  }
+
+  #basic-navbar-nav .nav-link,
+  #basic-navbar-nav .dropdown-item {
+    text-align: left !important;
+    width: 100%;
+  }
+
+  .search-box {
+    width: 100%;
+    margin: 10px 0;
+  }
+}
+
+/* extra squeeze only for the tiniest phones */
+@media (max-width: 360px) {
+  .header-navbar .container {
+    padding: 0 4px !important;
+  }
+}
+
+/* ------------------ DROPDOWNS ------------------ */
+#username .dropdown-toggle {
+  color: var(--wedding-yellow) !important;
+}
+
+/* DESKTOP: remove left/right gap & keep full width */
+@media (min-width: 992px) {
+  header .container,
+  .header-navbar .container {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+    max-width: 100% !important;
+  }
+}

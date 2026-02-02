@@ -1,0 +1,9 @@
+backend/backend/settings.py
+backend/settings.py
+
+backend/venv/
+frontend/node_modules/
+__pycache__/
+*.pyc
+.env
+

@@ -1,0 +1,222 @@
+products = [
+    {
+        '_id': '1',
+        'name': 'Viji Knr (Bronzer Makeover)',
+        'image': '/images/1.jpg',
+        'loc': 'Chennai',
+        'rating': 3.5,
+        'numReviews': 3,
+        'price': 30000,
+        'description': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '2',
+        'name': 'Beautybeginsbyleimi',
+        'image': '/images/2.jpg',
+        'loc': 'Chennai',
+        'rating': 5.0,
+        'numReviews': 12,
+        'price': 35000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '3',
+        'name': 'Bride Over',
+        'image': '/images/3.jpg',
+        'loc': 'Chennai',
+        'rating': 5.0,
+        'numReviews': 10,
+        'price': 40000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '4',
+        'name': 'Almighty Makeup Studio',
+        'image': '/images/4.jpg',
+        'loc': 'Hyderabad (also serves in Chennai)',
+        'rating': 4.9,
+        'numReviews': 7,
+        'price': 35000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '5',
+        'name': 'Makeover Ravi',
+        'image': '/images/5.jpg',
+        'loc': 'Chennai',
+        'rating': 4.3,
+        'numReviews': 1,
+        'price': 30000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '6',
+        'name': 'Be A Great Bride',
+        'image': '/images/6.jpg',
+        'loc': 'Chennai',
+        'rating': 4.4,
+        'numReviews': None,
+        'price': 35000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '7',
+        'name': 'Thoorigai Bridal Makeup Studio',
+        'image': '/images/7.jpg',
+        'loc': 'Chennai',
+        'rating': 5.0,
+        'numReviews': 3,
+        'price': 30000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '8',
+        'name': 'Makeup By Ibrahim',
+        'image': '/images/8.jpg',
+        'loc': 'Chennai',
+        'rating': 4.4,
+        'numReviews': None,
+        'price': 40000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '9',
+        'name': 'Wink Salon',
+        'image': '/images/9.jpg',
+        'loc': 'Chennai',
+        'rating': 4.4,
+        'numReviews': None,
+        'price': 40000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '10',
+        'name': 'Glamup With Anjana',
+        'image': '/images/10.jpg',
+        'loc': 'Chennai',
+        'rating': 4.4,
+        'numReviews': 1,
+        'price': 30000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '11',
+        'name': 'Pinky Blush Beauty & Spa',
+        'image': '/images/11.jpg',
+        'loc': 'Chennai',
+        'rating': 4.4,
+        'numReviews': 1,
+        'price': 32000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '12',
+        'name': 'Raj Bridal Makeup',
+        'image': '/images/12.jpg',
+        'loc': 'Chennai',
+        'rating': 4.4,
+        'numReviews': None,
+        'price': 30000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '13',
+        'name': 'Kohila Meena Makeover',
+        'image': '/images/13.jpg',
+        'loc': 'Chennai',
+        'rating': 4.4,
+        'numReviews': None,
+        'price': 30000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '14',
+        'name': 'Makeup Artistry By Kavitha Sekar',
+        'image': '/images/14.jpg',
+        'loc': 'Chennai',
+        'rating': 4.4,
+        'numReviews': None,
+        'price': 40000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '15',
+        'name': 'Sharmila Makeup Artistry',
+        'image': '/images/15.jpg',
+        'loc': 'Chennai',
+        'rating': 4.4,
+        'numReviews': None,
+        'price': 45000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '16',
+        'name': 'Kavi Suresh Makeover',
+        'image': '/images/16.jpg',
+        'loc': 'Chennai',
+        'rating': 4.4,
+        'numReviews': None,
+        'price': 30000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '17',
+        'name': 'Chithu Makeover',
+        'image': '/images/17.jpg',
+        'loc': 'Chennai',
+        'rating': 4.4,
+        'numReviews': None,
+        'price': 30000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '18',
+        'name': 'Meenamakeup & Hairstylist',
+        'image': '/images/18.jpg',
+        'loc': 'Chennai',
+        'rating': 4.4,
+        'numReviews': None,
+        'price': 30000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '19',
+        'name': 'Sansha Group',
+        'image': '/images/19.jpg',
+        'loc': 'Chennai',
+        'rating': 4.3,
+        'numReviews': None,
+        'price': 40000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    },
+    {
+        '_id': '20',
+        'name': 'Beautician Makeupartists',
+        'image': '/images/20.jpg',
+        'loc': 'Chennai',
+        'rating': 4.4,
+        'numReviews': None,
+        'price': 50000,
+        'task': 'For Bridal Makeup',
+        'category': 'makeup'
+    }
+]

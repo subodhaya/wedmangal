@@ -1,0 +1,170 @@
+/* Apply the background styling */
+body {
+   
+    background-color: white;
+}
+
+/* Card styling for the registration form */
+.login-card, .register-card {
+    background: linear-gradient(225deg, #f9e79f 25%, transparent 25%),
+                linear-gradient(135deg, #f9e79f 25%, transparent 25%) 0 0,
+                linear-gradient(225deg, #f9e79f 25%, transparent 25%) 0 0,
+                linear-gradient(90deg, white 20%, #f9e79fd0 50%),
+                linear-gradient(315deg, white 15%, white 15%) 0 0;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 700px;
+
+    margin: auto;
+    margin-top: 1.5rem;
+}
+.plain-card {
+    background: linear-gradient(225deg, #f9e79f 25%, transparent 25%),
+                linear-gradient(135deg, #f9e79f 25%, transparent 25%) 0 0,
+                linear-gradient(225deg, #f9e79f 25%, transparent 25%) 0 0,
+                linear-gradient(90deg, white 20%, #f9e79fd0 50%),
+                linear-gradient(315deg, white 15%, white 15%) 0 0;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    
+
+    margin: auto;
+    margin-top: 1.5rem;
+}
+.bold-black-text {
+    font-weight: bold; /* Make text bold */
+    color: black; /* Set text color to black */
+}
+.chart-container {
+    width: 300px; /* Set the width for the pie chart container */
+    height: 300px; /* Set a fixed height for the pie chart */
+    margin-left: 20px; /* Add some spacing between form and chart */
+}
+/* Header styling */
+.login-header, .register-header {
+    color: #5e143f; /* Dark purple text */
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+    font-weight: bold;
+
+}
+
+/* Input styling */
+.login-input, .register-input, .form-control {
+    display: flex;
+    color: black;
+    border: 1px solid #5e143f;
+    padding: 0.8rem;
+    border-radius: 5px;
+    transition: box-shadow 0.3s ease;
+}
+
+.login-input:focus, .register-input:focus, .form-control:focus {
+    flex: 1;
+    box-shadow: 0 0 5px rgba(94, 20, 63, 0.5);
+    border-color: #5e143f;
+}
+
+/* Button styling */
+.login-button, .register-button, .btn-primary {
+    background-color: #5e143f;
+    color: #f9e79f;
+    border: none;
+    border-radius: 5px;
+    padding: 0.8rem;
+    width: 100%;
+    margin-top: 1rem;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.login-button:hover, .register-button:hover, .btn-primary:hover {
+    background-color: #4a1032;
+    color: #f9e79f;
+}
+
+/* Link styling */
+a {
+    color: #5e143f;
+}
+
+a:hover {
+    color: #4a1032;
+}
+
+/* budget            */
+.d-flex.align-items-center {
+    display: flex;
+    align-items: center;
+    gap: 05px; /* Space between input and button */
+  }
+  
+  .form-control {
+    flex: 1;
+  }
+  
+/* Container for the input and button */
+.position-relative.custom-input-group {
+    position: relative;
+    width: 100%;
+  }
+  
+  .custom-input {
+    width: 100%;
+    padding: 10px 50px 10px 15px; /* space on right for button */
+    border: 1px solid #5a123c;
+    border-radius: 0px;
+    box-sizing: border-box;
+    outline: none;
+  }
+  
+  .custom-button {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 80%;
+    padding: 0 10px;
+    border: none;
+    background-color: #7e275a;
+    color: white;
+    font-weight: bold;
+    font-size: 1.25rem;
+    border-radius: 0px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .custom-button:active {
+    transform: translateY(-50%) scale(0.95);
+  }
+  
+  /* Hide up and down arrows in number input */
+.custom-input::-webkit-outer-spin-button,
+.custom-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+    appearance: textfield;
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  color: #6c757d; /* Optional: Customize icon color */
+}

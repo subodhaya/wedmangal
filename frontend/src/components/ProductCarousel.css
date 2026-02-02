@@ -1,0 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600&family=Roboto:wght@300;400;500;900&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Open Sans", sans-serif;
+}
+
+.title-bar {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.title-bar h1 {
+  text-transform: capitalize;
+  letter-spacing: 0.8px;
+  font-family: "Roboto", sans-serif;
+  font-weight: 900;
+  font-size: clamp(2rem, 3.25rem + 0.75vw, 4rem);
+  color: #005baa;
+}
+
+.title-bar p {
+  line-height: 1.6;
+}
+
+.explore-button {
+  margin-top: 1rem;
+}
+.product-carousel-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* Align items at the start */
+  margin: 20px; /* Add some margin for spacing */
+}
+
+.text-section {
+  flex: 1; /* Take up space proportionally */
+  padding-right: 20px; /* Space between text and carousel */
+}
+
+.carousel-section {
+  flex: 2; /* Carousel takes more space */
+}
+
+/* Optional: Adjust Swiper styles */
+.carousel-slide {
+  display: flex;
+  justify-content: center; /* Center images */
+}
+
+.carousel-image-wrapper {
+  display: block; /* Ensure images are block elements */
+  text-align: center; /* Center caption text */
+}
+
+.carousel-caption {
+  margin-top: 10px; /* Space above caption */
+}
+
+
+
+
+
+.carousel-image-wrapper img {
+  border-radius: 1rem;
+}

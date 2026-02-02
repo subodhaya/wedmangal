@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Allow: /
+
+Sitemap: https://www.bookyourcelebration.com/sitemap.xml
+
