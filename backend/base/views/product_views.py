@@ -122,107 +122,7 @@ def getRoutes(request):
 
 
 
-@api_view(['GET'])
-def getProducts1(request):
-    # Retrieve keyword from query parameters
-    query = request.query_params.get('keyword', '')
-    
-    # Filter products based on keyword and approval status
-    products = Product.objects.filter(name__icontains=query, is_approved=True).order_by('-createdAt')
 
-    # Pagination setup
-    page = request.query_params.get('page', 1)  # Default to page 1 if not provided
-    paginator = Paginator(products, 8)  # Show 8 products per page
-
-    try:
-        products_page = paginator.page(page)
-    except PageNotAnInteger:
-        products_page = paginator.page(1)  # If page is not an integer, deliver first page
-    except EmptyPage:
-        products_page = paginator.page(paginator.num_pages)  # If page is out of range, deliver last page of results
-
-    # Serialize the page of products
-    serializer = ProductSerializer(products_page, many=True)
-    #print(serializer.data)
-    
-    return Response({
-        'products': serializer.data,
-        'page': int(page),
-        'pages': paginator.num_pages
-    })
-
-
-
-
-
-@api_view(['GET'])
-def getProducts(request):
-    # Get the keyword, category, and page number from the request
-    keyword = request.query_params.get('keyword', '')
-    category = request.query_params.get('category', '') 
-    print("keyword:",keyword)
-    print(category)
-     # Get category filter
-    page = request.query_params.get('page', 1)
-
-    # Filter products based on keyword and category, only fetching approved products
-    products_page = Product.objects.filter(is_approved=True)
-    #print(products_page)
-    
-    if keyword:
-        products_page=Product.objects.filter(category__icontains=keyword,is_approved=True)
-        print(products_page)
-        #products_page = products_page.filter(name__icontains=keyword)
-       
-    
-    if category:
-        
-
-        products_page = Product.objects.filter(category__iexact=category,is_approved=True)
-        #print(products_page)  # Case-insensitive match for category
-
-    products_page = products_page.order_by('-createdAt')  # Order by newest
-
-    # Pagination
-    paginator = Paginator(products_page, 10)  # 10 products per page
-    products_page = paginator.get_page(page)
-
-    response_data = []
-
-    for product in products_page:
-        # Calculate total number of reviews and average rating from related services
-        services = product.services.all()
-        total_num_reviews = services.aggregate(total_reviews=Sum('numReviews'))['total_reviews'] or 0
-        average_rating = services.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 1.0  # Default rating is 1.0
-
-        # Create a dictionary for the product with the additional fields
-        product_data = {
-            '_id': product._id,
-            'name': product.name,
-            'image': str(product.image),  # Convert ImageFieldFile to string path
-            'brand': product.brand,
-            'category': product.category,
-            'description': product.description,
-            'createdAt': product.createdAt,
-            'city': product.city,
-            'area_name': product.area_name, 
-            'address': product.address,
-            'business_phone': product.business_phone,
-            'personal_phone': product.personal_phone,
-            'opening_time': product.opening_time, 
-            'closing_time': product.closing_time, 
-            'is_approved': product.is_approved,
-            'total_num_reviews': total_num_reviews,
-            'average_rating': float(average_rating),  # Convert Decimal to float
-        }
-        
-        response_data.append(product_data)
-
-    return Response({
-        'products': response_data,
-        'page': int(page),
-        'pages': paginator.num_pages
-    })
 
 
 class ProductDetailView(generics.RetrieveAPIView):
@@ -683,36 +583,33 @@ def approveProduct(request, pk):
         return Response({'detail': 'Product approved successfully'})
     except Product.DoesNotExist:
         return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
-
 from datetime import timedelta
+
 @api_view(['GET'])
 def get_booked_dates(request, service_id):
     try:
         print("Fetching booked dates for service ID:", service_id)
 
-        # Fetch all CartItems related to the given service ID
-        overlapping_bookings = CartItem.objects.filter(service_id=service_id)
+        # ✅ FIX: Query OrderItem, not CartItem
+        # CartItem is temporary — cleared after booking confirmed
+        # OrderItem is the actual confirmed booking
+        # adjust import path if needed
 
-        print("Overlapping bookings found:", overlapping_bookings)
+        order_items = OrderItem.objects.filter(service_id=service_id)
+        print("Order items found:", order_items)
 
-        # Collect all booked dates (range between bookingDate and bookingDate + duration)
-        booked_dates = set()  # Use a set to avoid duplicates
-        for cart_item in overlapping_bookings:
-            booking_date = cart_item.bookingDate
+        booked_dates = set()
 
-            # Assuming the duration is 1 day for each booking; adjust if needed
-            end_date = booking_date + timedelta(days=1)  # Change duration as per your requirement
-
-            print(f"Processing cart item: {cart_item}, Booking date: {booking_date}, End date: {end_date}")
-
-            # Add the booking date to the set
-            current_date = booking_date
-            while current_date < end_date:
-                booked_dates.add(current_date.strftime('%Y-%m-%d'))  # Store dates as strings
-                current_date += timedelta(days=1)  # Increment date by one day
+        for item in order_items:
+            booking_date = item.start_date  # or bookingDate — check your OrderItem model field name
+            if not booking_date:
+                continue
+            # Block just the booked date (1 day)
+            booked_dates.add(booking_date.strftime('%Y-%m-%d'))
 
         print("Booked dates:", booked_dates)
-        return JsonResponse({'booked_dates': list(booked_dates)})  # Return a list of dates
+        return JsonResponse({'booked_dates': list(booked_dates)})
+
     except Exception as e:
         print("Error:", e)
         return JsonResponse({'error': str(e)}, status=500)
@@ -721,7 +618,7 @@ def get_booked_dates(request, service_id):
 @api_view(['GET'])
 def getTopProducts(request):
     # Step 1: Get the top services with a rating of 2 or greater, along with their related product details
-    top_services = Service.objects.filter(rating__gte=2).order_by('-rating')[:5].select_related('product')
+    top_services = Service.objects.filter(rating__gte=2).order_by('-rating')[:12].select_related('product')
     
     top_product_ids = [service.product._id for service in top_services]
     print(top_product_ids)
@@ -1183,3 +1080,210 @@ def mark_order_as_done(request, pk):
     print("🔧 Marked updated")
     serializer = OrderSerializer(order, many=False)
     return Response(serializer.data)
+
+
+@api_view(['GET'])
+def getProducts(request):
+    from django.db.models import Avg, Min, Q
+
+    keyword      = request.query_params.get('keyword', '')
+    category     = request.query_params.get('category', '')
+    city         = request.query_params.get('city', '')
+    min_price    = request.query_params.get('min_price', '')
+    max_price    = request.query_params.get('max_price', '')
+    min_rating   = request.query_params.get('min_rating', '')
+    sort         = request.query_params.get('sort', 'newest')
+    available    = request.query_params.get('available', '')
+    page         = request.query_params.get('page', 1)
+
+    food_type    = request.query_params.get('food_type', '')
+    shoot_type   = request.query_params.get('shoot_type', '')
+    makeup_type  = request.query_params.get('makeup_type', '')
+    trial        = request.query_params.get('trial', '')
+    hall_ac      = request.query_params.get('hall_ac', '')
+    hall_parking = request.query_params.get('hall_parking', '')
+    hall_capacity= request.query_params.get('hall_capacity', '')
+    dj_venue     = request.query_params.get('dj_venue', '')
+    dj_equipment = request.query_params.get('dj_equipment', '')
+    mehandi_type = request.query_params.get('mehandi_type', '')
+    home_visit   = request.query_params.get('home_visit', '')
+
+    qs = Product.objects.filter(is_approved=True)
+
+    # ── Keyword — searches name, category, description, city ──
+    if keyword:
+        qs = qs.filter(
+            Q(name__icontains=keyword) |
+            Q(category__icontains=keyword) |
+            Q(description__icontains=keyword) |
+            Q(city__icontains=keyword)
+        )
+
+    if category:
+        qs = qs.filter(category__iexact=category)
+
+    if city:
+        qs = qs.filter(city__icontains=city)
+
+    if available == 'true':
+        qs = qs.filter(is_available_today=True)
+
+    if food_type:
+        qs = qs.filter(attributes__food_type=food_type)
+    if shoot_type:
+        qs = qs.filter(attributes__shoot_type=shoot_type)
+    if makeup_type:
+        qs = qs.filter(attributes__type=makeup_type)
+    if trial == 'true':
+        qs = qs.filter(attributes__trial_available=True)
+    if hall_ac == 'true':
+        qs = qs.filter(attributes__ac=True)
+    if hall_parking == 'true':
+        qs = qs.filter(attributes__parking=True)
+    if hall_capacity:
+        qs = qs.filter(attributes__capacity__gte=int(hall_capacity))
+    if dj_venue:
+        qs = qs.filter(attributes__venue_type=dj_venue)
+    if dj_equipment == 'true':
+        qs = qs.filter(attributes__equipment_included=True)
+    if mehandi_type:
+        qs = qs.filter(attributes__type=mehandi_type)
+    if home_visit == 'true':
+        qs = qs.filter(attributes__home_visit=True)
+
+    qs = qs.annotate(
+        avg_rating=Avg('services__rating'),
+        min_price_val=Min('services__price'),
+    )
+
+    if min_price:
+        qs = qs.filter(min_price_val__gte=float(min_price))
+    if max_price:
+        qs = qs.filter(min_price_val__lte=float(max_price))
+    if min_rating:
+        qs = qs.filter(avg_rating__gte=float(min_rating))
+
+    if sort == 'price_asc':
+        qs = qs.order_by('min_price_val')
+    elif sort == 'price_desc':
+        qs = qs.order_by('-min_price_val')
+    elif sort == 'rating':
+        qs = qs.order_by('-avg_rating')
+    else:
+        qs = qs.order_by('-createdAt')
+
+    paginator = Paginator(qs, 10)
+    products_page = paginator.get_page(page)
+
+    response_data = []
+    for product in products_page:
+        services = product.services.all()
+        total_num_reviews = services.aggregate(total=Sum('numReviews'))['total'] or 0
+        average_rating    = services.aggregate(avg=Avg('rating'))['avg'] or 1.0
+
+        response_data.append({
+            '_id':              product._id,
+            'name':             product.name,
+            'image':            str(product.image),
+            'brand':            product.brand,
+            'category':         product.category,
+            'description':      product.description,
+            'createdAt':        product.createdAt,
+            'city':             product.city,
+            'area_name':        product.area_name,
+            'address':          product.address,
+            'business_phone':   product.business_phone,
+            'personal_phone':   product.personal_phone,
+            'opening_time':     product.opening_time,
+            'closing_time':     product.closing_time,
+            'is_approved':      product.is_approved,
+            'is_available_today': product.is_available_today,
+            'available_since':  product.available_since,
+            'is_claimed':       product.is_claimed,
+            'claimed_by_id':    product.claimed_by_id,
+            'attributes':       product.attributes or {},
+            'total_num_reviews': total_num_reviews,
+            'average_rating':   float(average_rating),
+        })
+
+    return Response({
+        'products': response_data,
+        'page': int(page),
+        'pages': paginator.num_pages,
+    })
+
+# ── Toggle availability (vendor ON/OFF) ───────────────────────────────────────
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_availability(request):
+    """
+    POST /api/products/toggle-availability/
+    Vendor toggles their "available today" status ON or OFF.
+    """
+    try:
+        product = Product.objects.get(user=request.user)
+    except Product.DoesNotExist:
+        return Response({'detail': 'No business found for this account.'}, status=404)
+
+    product.is_available_today = not product.is_available_today
+    product.available_since    = timezone.now() if product.is_available_today else None
+    product.save()
+
+    return Response({
+        'is_available_today': product.is_available_today,
+        'available_since':    product.available_since,
+        'detail': 'You are now marked as Available Today! Customers can see you.' if product.is_available_today
+                  else 'You are no longer marked as available today.',
+    })
+
+
+# ── Emergency vendors list (customers) ────────────────────────────────────────
+@api_view(['GET'])
+def get_available_today(request):
+    """
+    GET /api/products/available-today/
+    Returns all vendors currently marked as available today.
+    Supports: category, city, sort filters.
+    """
+    from django.db.models import Avg, Sum
+    category = request.query_params.get('category', '')
+    city     = request.query_params.get('city', '')
+    sort     = request.query_params.get('sort', 'newest')
+
+    qs = Product.objects.filter(is_approved=True, is_available_today=True)
+
+    if category:
+        qs = qs.filter(category__iexact=category)
+    if city:
+        qs = qs.filter(city__icontains=city)
+
+    qs = qs.annotate(avg_rating=Avg('services__rating'))
+
+    if sort == 'rating':
+        qs = qs.order_by('-avg_rating')
+    elif sort == 'newest':
+        qs = qs.order_by('-available_since')
+
+    data = []
+    for p in qs:
+        services = p.services.all()
+        avg = services.aggregate(avg=Avg('rating'))['avg'] or 1.0
+        min_price = services.order_by('price').values_list('price', flat=True).first()
+        data.append({
+            '_id':              p._id,
+            'name':             p.name,
+            'image':            str(p.image),
+            'category':         p.category,
+            'city':             p.city,
+            'area_name':        p.area_name,
+            'business_phone':   p.business_phone,
+            'opening_time':     p.opening_time,
+            'closing_time':     p.closing_time,
+            'is_available_today': True,
+            'available_since':  p.available_since,
+            'average_rating':   float(avg),
+            'min_price':        float(min_price) if min_price else None,
+            'attributes':       p.attributes or {},
+        })
+
+    return Response(data)

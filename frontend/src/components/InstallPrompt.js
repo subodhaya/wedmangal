@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './InstallPrompt.css';
 
 function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -18,14 +19,11 @@ function InstallPrompt() {
       setDeferredPrompt(null);
       localStorage.setItem('a2hs_installed', '1');
     };
-
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
-
     if (isIos && !localStorage.getItem('a2hs_dismissed_v1') && !localStorage.getItem('a2hs_installed')) {
       setShowIosModal(true);
     }
-
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
@@ -52,37 +50,44 @@ function InstallPrompt() {
   return (
     <>
       {!isIos && showToast && (
-        <div className="pwa-toast" role="dialog" aria-live="polite">
-          <div className="pwa-toast-left">📲</div>
-          <div className="pwa-toast-body">
-            <div className="pwa-toast-title">Install BookYourCelebration</div>
-            <div className="pwa-toast-sub">Faster access & offline support.</div>
+        <div className="wm-pwa-toast" role="dialog" aria-live="polite">
+          <div className="wm-pwa-toast__icon">💍</div>
+          <div className="wm-pwa-toast__body">
+            <div className="wm-pwa-toast__title">Install WedMangal</div>
+            <div className="wm-pwa-toast__sub">Faster access &amp; works offline</div>
           </div>
-          <div className="pwa-toast-actions">
-            <button className="pwa-btn pwa-btn-secondary" onClick={() => setShowToast(false)}>Dismiss</button>
-            <button className="pwa-btn pwa-btn-primary" onClick={handleInstall}>Install</button>
+          <div className="wm-pwa-toast__actions">
+            <button className="wm-btn wm-btn--ghost" onClick={() => setShowToast(false)}>Later</button>
+            <button className="wm-btn wm-btn--primary" onClick={handleInstall}>Install</button>
           </div>
         </div>
       )}
 
       {isIos && showIosModal && (
-        <div className="a2hs-overlay" role="dialog" aria-modal="true">
-          <div className="a2hs-card">
-            <button className="a2hs-close" onClick={() => closeIosModal(false)} aria-label="Close">✕</button>
-            <div className="a2hs-icon-wrap">📲</div>
-            <h3 className="a2hs-title">Add to Home Screen</h3>
-            <div className="a2hs-steps">
-              <p><strong>iPhone / iPad (Safari)</strong></p>
-              <ol>
-                <li>Tap the <strong>Share</strong> icon at the bottom of Safari.</li>
-                <li>Select <strong>Add to Home Screen</strong>.</li>
-                <li>Tap <strong>Add</strong>. The icon will appear on your home screen.</li>
-              </ol>
-              <p className="a2hs-note">For other browsers on iOS, open this page in Safari to add to your home screen.</p>
+        <div className="wm-a2hs-overlay" role="dialog" aria-modal="true">
+          <div className="wm-a2hs-card">
+            <button className="wm-a2hs-close" onClick={() => closeIosModal(false)} aria-label="Close">✕</button>
+            <div className="wm-a2hs-icon">💍</div>
+            <h3 className="wm-a2hs-title">Add to Home Screen</h3>
+            <p className="wm-a2hs-desc">Install WedMangal for the best experience</p>
+            <div className="wm-a2hs-steps">
+              <div className="wm-a2hs-step">
+                <span className="wm-a2hs-step__num">1</span>
+                <span>Tap the <strong>Share</strong> icon at the bottom of Safari</span>
+              </div>
+              <div className="wm-a2hs-step">
+                <span className="wm-a2hs-step__num">2</span>
+                <span>Select <strong>Add to Home Screen</strong></span>
+              </div>
+              <div className="wm-a2hs-step">
+                <span className="wm-a2hs-step__num">3</span>
+                <span>Tap <strong>Add</strong> — done!</span>
+              </div>
             </div>
-            <div className="a2hs-actions">
-              <button className="pwa-btn pwa-btn-primary" onClick={() => closeIosModal(false)}>Got it</button>
-              <button className="pwa-btn pwa-btn-secondary" onClick={() => closeIosModal(true)}>Don't show again</button>
+            <p className="wm-a2hs-note">Only available in Safari on iOS</p>
+            <div className="wm-a2hs-actions">
+              <button className="wm-btn wm-btn--primary wm-btn--full" onClick={() => closeIosModal(false)}>Got it</button>
+              <button className="wm-btn wm-btn--ghost wm-btn--full" onClick={() => closeIosModal(true)}>Don't show again</button>
             </div>
           </div>
         </div>

@@ -1,0 +1,221 @@
+/* EmergencySection.css */
+.es-wrap {
+  background: linear-gradient(135deg, #fff9f5 0%, #fff3f8 100%);
+  border: 2px solid #f5c6d0;
+  border-radius: 16px;
+  padding: 20px 20px 24px;
+  margin: 24px 0;
+}
+
+/* ── Header ── */
+.es-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.es-header-left { display: flex; align-items: center; gap: 12px; }
+
+.es-pulse {
+  width: 14px;
+  height: 14px;
+  background: #e74c3c;
+  border-radius: 50%;
+  display: block;
+  animation: es-pulse 1.4s infinite;
+  flex-shrink: 0;
+}
+@keyframes es-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(231,76,60,0.5); }
+  70%  { box-shadow: 0 0 0 10px rgba(231,76,60,0); }
+  100% { box-shadow: 0 0 0 0 rgba(231,76,60,0); }
+}
+
+.es-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #8b1a4a;
+  margin: 0;
+}
+.es-subtitle {
+  font-size: 0.8rem;
+  color: #888;
+  margin: 2px 0 0;
+}
+.es-count {
+  background: #8b1a4a;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+/* ── Category pills ── */
+.es-categories {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  scrollbar-width: none;
+}
+.es-categories::-webkit-scrollbar { display: none; }
+
+.es-cat-pill {
+  white-space: nowrap;
+  padding: 5px 13px;
+  border: 1.5px solid #ddd;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.es-cat-pill.active {
+  background: #8b1a4a;
+  color: #fff;
+  border-color: #8b1a4a;
+}
+
+/* ── Grid ── */
+.es-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 4px;
+}
+
+/* ── Card ── */
+.es-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.es-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(139,26,74,0.12);
+}
+
+.es-card-img-wrap { position: relative; }
+.es-card-img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+}
+.es-live-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #e74c3c;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+
+.es-card-body { padding: 10px 12px 12px; }
+.es-card-category {
+  font-size: 0.7rem;
+  color: #8b1a4a;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 3px;
+}
+.es-card-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #222;
+  margin: 0 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.es-card-city {
+  font-size: 0.78rem;
+  color: #888;
+  margin: 0 0 6px;
+}
+.es-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.es-card-rating { font-size: 0.8rem; color: #555; }
+.es-card-price  { font-size: 0.8rem; color: #27ae60; font-weight: 600; }
+
+.es-call-btn {
+  display: block;
+  text-align: center;
+  background: linear-gradient(135deg, #8b1a4a, #c0392b);
+  color: #fff;
+  padding: 7px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.es-call-btn:hover { opacity: 0.88; color: #fff; }
+
+/* ── States ── */
+.es-loading {
+  text-align: center;
+  padding: 30px;
+  color: #888;
+  font-size: 0.9rem;
+}
+.es-empty {
+  text-align: center;
+  padding: 24px;
+  color: #999;
+}
+.es-empty span { font-size: 2rem; }
+.es-empty p { margin-top: 8px; font-size: 0.88rem; }
+
+/* ── Image placeholder ── */
+.es-card-img-placeholder {
+  width: 100%;
+  height: 140px;
+  background: linear-gradient(135deg, #f5e6ec, #fce4ec);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #8b1a4a;
+  text-align: center;
+  padding: 10px;
+}
+
+/* ── View more ── */
+.es-view-more-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+.es-view-more-btn {
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #8b1a4a, #c0392b);
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.es-view-more-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}

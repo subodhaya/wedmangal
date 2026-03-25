@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Button, Col, Row } from 'react-bootstrap';
+import { Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import FormContainer from '../components/FormContainer';
 import CheckoutSteps from '../components/CheckoutSteps';
@@ -7,7 +7,6 @@ import CheckoutSteps from '../components/CheckoutSteps';
 function ShippingScreen() {
     const navigate = useNavigate();
 
-    // Load shipping address from local storage or default values
     const storedAddress = JSON.parse(localStorage.getItem('shippingAddress')) || {
         address: '',
         city: '',
@@ -17,36 +16,25 @@ function ShippingScreen() {
 
     const [shippingAddress, setShippingAddress] = useState(storedAddress);
     const { address, city, postalCode, country } = shippingAddress;
-
     const [errors, setErrors] = useState({});
 
-    // Function to handle form input changes
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setShippingAddress({
-            ...shippingAddress,
-            [name]: value
-        });
+        setShippingAddress({ ...shippingAddress, [name]: value });
     };
 
-    // Validate form fields
     const validateFields = () => {
         let validationErrors = {};
-
         if (!address.trim()) validationErrors.address = "Address is required";
         if (!city.trim()) validationErrors.city = "City is required";
         if (!postalCode.trim()) validationErrors.postalCode = "Postal code is required";
         if (!country.trim()) validationErrors.country = "Country is required";
-
         return validationErrors;
     };
 
     const submitHandler = (e) => {
         e.preventDefault();
-
-        // Validate before submission
         const validationErrors = validateFields();
-
         if (Object.keys(validationErrors).length === 0) {
             localStorage.setItem('shippingAddress', JSON.stringify(shippingAddress));
             navigate('/placeorder');

@@ -1,68 +1,123 @@
-
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Row, Col, Image, ListGroup, Button, Card, Form, Carousel } from 'react-bootstrap';
+import { Row, Col, Carousel } from 'react-bootstrap';
 import Rating from '../components/Rating';
 import Loader from '../components/Loader';
-import Message from '../components/Message';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import './ProductScreen.css';
 import React, { useState, useEffect, useCallback } from 'react';
-import api from '../utils/api';  
+import api from '../utils/api';
 import { useLocation } from 'react-router-dom';
+import ClaimButton from '../components/ClaimButton';
+import SlotPicker from '../components/SlotPicker';
 
-
-
-// Utility function to debounce a function call
 const debounce = (func, delay) => {
-  let debounceTimer;
-  return (...args) => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => func.apply(null, args), delay);
-  };
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => func.apply(null, args), delay); };
 };
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const formatPrice = (price) => {
+  if (!price || Number(price) === 0) return null;
+  return `₹${Number(price).toLocaleString('en-IN')}`;
+};
 
+const formatTime = (t) => {
+  if (!t || t === 'null' || t === 'undefined') return 'By Appointment';
+  return t.slice(0, 5);
+};
+
+const normalizePhone = (phone) => {
+  if (!phone) return '';
+  const cleaned = phone.replace(/\D/g, '');
+  if (!cleaned || cleaned === '0000') return '';
+  if (cleaned.startsWith('0') && cleaned.length >= 10) return '91' + cleaned.slice(1);
+  if (cleaned.length === 10) return '91' + cleaned;
+  return cleaned;
+};
+
+// ── PhoneBlock ────────────────────────────────────────────────────────────────
+const PhoneBlock = ({ label, phone, businessName }) => {
+  if (!phone) return null;
+  const clean = normalizePhone(phone);
+  if (!clean) return null;
+  const msg = encodeURIComponent(
+    `Hi, I found you on BookYourCelebration! I'm interested in your ${businessName || ''} services. Can you please share more details?`
+  );
+  return (
+    <div className="ps-phone-row">
+      <div className="ps-phone-info">
+        <span className="ps-phone-label">{label}</span>
+        <span className="ps-phone-number">{phone}</span>
+      </div>
+      <div className="ps-phone-actions">
+        <a href={`tel:${clean}`} className="ps-contact-btn ps-call-btn" title="Call">
+          <i className="fas fa-phone-alt"></i>
+        </a>
+        <a
+          href={`https://wa.me/${clean}?text=${msg}`}
+          target="_blank" rel="noreferrer"
+          className="ps-contact-btn ps-wa-btn" title="WhatsApp"
+        >
+          <i className="fab fa-whatsapp"></i>
+        </a>
+      </div>
+    </div>
+  );
+};
+
+// ── Main Component ────────────────────────────────────────────────────────────
 function ProductScreen() {
-  const { id } = useParams();
+  const { id }   = useParams();
   const navigate = useNavigate();
-  const [product, setProduct] = useState(null);
-  const [selectedQuantities, setSelectedQuantities] = useState({});
-  const [selectedDates, setSelectedDates] = useState({});
-  const [bookedDates, setBookedDates] = useState({});
-  const [selectedStartTimes, setSelectedStartTimes] = useState({});
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [successReview, setSuccessReview] = useState(false);
-  const [loadingReview, setLoadingReview] = useState(false);
-  const [errorReview, setErrorReview] = useState('');
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
-  const [reviewData, setReviewData] = useState({});
-  const [reviewState, setReviewState] = useState({}); 
-
-  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-
   const location = useLocation();
 
+  const [product, setProduct]                       = useState(null);
+  const [loading, setLoading]                       = useState(true);
+  const [error, setError]                           = useState('');
+  const [selectedQuantities, setSelectedQuantities] = useState({});
+  const [selectedDates, setSelectedDates]           = useState({});
+  const [bookedDates, setBookedDates]               = useState({});
 
+  // ✅ FIX 1: per-service time + duration (NOT single shared state)
+  const [selectedStartTimes, setSelectedStartTimes] = useState({});  // { serviceId: "09:00" }
+  const [selectedDurations, setSelectedDurations]   = useState({});  // { serviceId: "3 Hours" }
+  const [selectedEndTimes, setSelectedEndTimes] = useState({});
+  const [reviewData, setReviewData]         = useState({});
+  const [reviewState, setReviewState]       = useState({});
+  const [reviewedServices, setReviewedServices] = useState({});
+  const [expandedCalendar, setExpandedCalendar] = useState(null);
+  const [errorMessage, setErrorMessage]     = useState('');
 
+  const userInfo = (() => {
+    try { return JSON.parse(localStorage.getItem('userInfo')) || null; }
+    catch { return null; }
+  })();
+
+  // ── Fetch product ─────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const res = await fetch(`/api/products/${id}/`);
         if (!res.ok) throw new Error('Product not found');
         const data = await res.json();
-        const productWithInitializedReviews = {
+        const normalized = {
           ...data,
-          services: data.services.map(service => ({
-            ...service,
-            reviews: service.reviews || [], 
-          })),
+          services: (data.services || []).map(s => ({ ...s, reviews: s.reviews || [] })),
         };
-        setProduct(productWithInitializedReviews);
+        setProduct(normalized);
+
+        if (userInfo?._id) {
+          const reviewed = {};
+          normalized.services.forEach(svc => {
+            const already = svc.reviews.some(
+              r => r.user === userInfo.name
+                || r.user === `${userInfo.first_name || ''} ${userInfo.last_name || ''}`.trim()
+            );
+            if (already) reviewed[svc._id] = true;
+          });
+          setReviewedServices(reviewed);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -71,529 +126,435 @@ function ProductScreen() {
     };
     if (id) fetchProduct();
   }, [id]);
-  
 
+  useEffect(() => {
+    if (product?.services)
+      product.services.forEach(s => fetchBookedDates(s._id));
+  }, [product]);
 
-useEffect(() => {
-  if (product?.services) {
-    product.services.forEach((service) => fetchBookedDates(service._id));
-  }
-}, [product]);
-
-
-useEffect(() => {
-  // Reset selected dates when path changes (e.g., back navigation)
-  setSelectedDates({});
-  console.log('Resetting selectedDates due to navigation change');
-}, [location.pathname]);
-
-
-  
+  // ✅ FIX 2: clear ALL time state on route change (fixes back-button ghost block)
+  useEffect(() => {
+    setSelectedDates({});
+    setSelectedStartTimes({});
+    setSelectedDurations({});
+  }, [location.pathname]);
 
   const fetchBookedDates = async (serviceId) => {
     try {
       const res = await fetch(`/api/products/bookings/${serviceId}/dates`);
-      if (!res.ok) throw new Error('Booked dates not found');
+      if (!res.ok) return;
       const { booked_dates } = await res.json();
-      const formattedDates = booked_dates.map((date) => new Date(date).toISOString().split('T')[0]);
-      setBookedDates((prev) => ({ ...prev, [serviceId]: formattedDates }));
-    } catch (err) {
-      console.error('Error fetching booked dates:', err);
-    }
+      const formatted = booked_dates.map(d => new Date(d).toISOString().split('T')[0]);
+      setBookedDates(prev => ({ ...prev, [serviceId]: formatted }));
+    } catch {}
   };
 
-  // Function to check if a user has booked and the service is delivered
-  const hasUserBookedService = async (serviceId) => {
-    try {
-      const res = await fetch(`/api/orders?user=${userInfo._id}&service=${serviceId}&isDelivered=true`);
-      if (!res.ok) throw new Error('Order not found');
-      const data = await res.json();
-      return data.length > 0;
-    } catch (error) {
-      console.error('Error checking if the user booked the service:', error);
-      return false;
-    }
+  // ── Cart & booking ────────────────────────────────────────────────────────
+  const buildItem = (serviceId) => {
+    const service = product.services.find(s => s._id === serviceId);
+    return {
+      userId:      userInfo._id,
+      service:     serviceId,
+      name:        service.name,
+      image:       service.images?.[0]?.image || product.image,
+      price:       service.price,
+      qty:         selectedQuantities[serviceId] || 1,
+      bookingDate: selectedDates[serviceId].toLocaleDateString('en-CA'),
+      startTime:   selectedStartTimes[serviceId] || '',
+      endTime:     selectedEndTimes[serviceId]   || '',   // ← add this
+      duration:    selectedDurations[serviceId]  || '',
+    };
   };
 
   const addToCartHandler = (serviceId) => {
     if (!userInfo) return navigate('/login');
-
-    const service = product.services.find((s) => s._id === serviceId);
-    const cartItem = {
-      userId: userInfo._id,
-      service: serviceId,
-      name: service.name,
-      image: service.images[0]?.image || product.image,
-      price: service.price,
-      qty: selectedQuantities[serviceId] || 1,
-      
-      bookingDate: selectedDates[serviceId].toLocaleDateString('en-CA'), // YYYY-MM-DD
-
-      startTime: selectedStartTimes[serviceId] || '', 
-    };
-
-    const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-    const existItem = cartItems.find((item) => item.service === serviceId && item.userId === userInfo._id);
-    const updatedCart = existItem
-      ? cartItems.map((x) => (x.service === existItem.service ? cartItem : x))
-      : [...cartItems, cartItem];
-
-    localStorage.setItem('cartItems', JSON.stringify(updatedCart));
+    if (!selectedDates[serviceId])      return alert('Please select a booking date.');
+    if (!selectedStartTimes[serviceId]) return alert('Please select a start time.');
+    const item = buildItem(serviceId);
+    const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
+    const exists = cart.find(x => x.service === serviceId && x.userId === userInfo._id);
+    localStorage.setItem('cartItems', JSON.stringify(
+      exists ? cart.map(x => x.service === serviceId ? item : x) : [...cart, item]
+    ));
     navigate('/cart');
   };
 
-  const handleReviewChange = useCallback(
-    debounce((serviceId, field, value) => {
-      setReviewData((prevState) => ({
-        ...prevState,
-        [serviceId]: {
-          ...prevState[serviceId],
-          [field]: value,
-        },
-      }));
-    }, 300),
-    []
-  ); // Debounce with a 300ms delay
-
-  const submitReviewHandler = async (e, serviceId) => {
-    e.preventDefault();
-  
-    if (!userInfo) {
-      return navigate('/login');
-    }
-  
-    // Get rating and comment from reviewData for the specific service
-    const { rating, comment } = reviewData[serviceId] || {};
-  
-    // Log the values to debug
-    console.log('Submitting Review:', { rating, comment });
-  
-    // Ensure rating is provided, but allow an empty comment
-    if (!rating) {
-      setReviewState((prevState) => ({
-        ...prevState,
-        [serviceId]: { loading: false, success: false, error: 'Rating is required' },
-      }));
-      return;
-    }
-  
-    // Initialize loading for the current service
-    setReviewState((prevState) => ({
-      ...prevState,
-      [serviceId]: { loading: true, success: false, error: '' },
-    }));
-  
-    try {
-      // Submit the review with a rating and optional comment (trim to avoid accidental spaces)
-      const res = await fetch(`/api/products/${serviceId}/reviews/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-        body: JSON.stringify({
-          rating: rating,  // Ensure rating is sent
-          comment: comment?.trim() || '',  // Submit empty string if comment is empty
-        }),
-      });
-  
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.detail || 'Review submission failed');
-      }
-  
-    const newReviewResponse = await res.json();
-
-    if (!res.ok) {
-        throw new Error(newReviewResponse.detail || 'Review submission failed');
-    }
-
-    const newReview = newReviewResponse.review; // 
-  
-      // Update the product's services in state with the new review
-      setProduct((prevProduct) => {
-        const updatedServices = prevProduct.services.map((service) => {
-            if (service._id === serviceId) {
-                return {
-                    ...service,
-                    reviews: [newReview, ...(service.reviews || [])], // Add the new review to the front
-                };
-            }
-            return service;
-        });
-
-        return { ...prevProduct, services: updatedServices };
-    });
-
-  
-      // Log updated product state
-      //console.log('Updated Product State:', prevProduct);
-  
-      // Set success state for the current service
-      setReviewState((prevState) => ({
-        ...prevState,
-        [serviceId]: { loading: false, success: true, error: '' },
-      }));
-  
-      setTimeout(() => {
-        setReviewState((prevState) => ({
-          ...prevState,
-          [serviceId]: { ...prevState[serviceId], success: false },
-        }));
-      }, 3000);
-  
-      // Reset the review form fields for this service
-      setReviewData((prevData) => ({
-        ...prevData,
-        [serviceId]: { rating: 0, comment: '' },
-      }));
-    } catch (err) {
-      // Handle error state
-      setReviewState((prevState) => ({
-        ...prevState,
-        [serviceId]: { loading: false, success: false, error: err.message },
-      }));
-  
-      if (err.message === 'Review submission failed') {
-        alert('You have already submitted a review for this service.');
-      }
-    }
-  };
-  
-  
-  const [alertMessage, setAlertMessage] = useState("");
-
-  const tileClassName = ({ date, view }, serviceId) => {
-    if (view === 'month') {
-      const dateString = date.toISOString().split('T')[0];
-      return bookedDates[serviceId]?.includes(dateString) ? 'booked-date' : 'available-date';
-    }
-    return null;
-  };
   const handleDirectBooking = async (serviceId) => {
-    if (!userInfo) {
-      navigate('/login');
-      return;
-    }
-  
-    const service = product.services.find((s) => s._id === serviceId);
-  
-    const bookingItem = {
-      userId: userInfo._id, // Ensure consistency with backend expectations
-      service: serviceId,
-      name: service.name,
-      image: service.images[0]?.image || product.image,
-      price: service.price,
-      qty: selectedQuantities[serviceId] || 1,
-      
-      bookingDate: selectedDates[serviceId].toLocaleDateString('en-CA'), // YYYY-MM-DD
-
-      startTime: selectedStartTimes[serviceId] || '', 
-    };
-  
+    if (!userInfo) return navigate('/login');
+    if (!selectedDates[serviceId])      return alert('Please select a booking date.');
+    if (!selectedStartTimes[serviceId]) return alert('Please select a start time.');
+    const item = buildItem(serviceId);
     try {
-      const { data } = await api.post('/api/products/cart/', {
-        items: [bookingItem], // Ensure items array contains userId inside each object
-      }, {
-        headers: {
-          Authorization: `Bearer ${userInfo.token}`,
-        },
+      await api.post('/api/products/cart/', { items: [item] }, {
+        headers: { Authorization: `Bearer ${userInfo.token}` },
       });
-      localStorage.setItem('directBookingItem', JSON.stringify(bookingItem));
+      localStorage.setItem('directBookingItem', JSON.stringify(item));
       navigate('/location');
-
-      navigate('/location');
-    } catch (error) {
-      console.error('Direct Booking Error:', error);
+    } catch {
       setErrorMessage('Error occurred while booking. Please try again.');
     }
   };
-  
-    
- const handleQtyChange = (serviceId, qty) => setSelectedQuantities({ ...selectedQuantities, [serviceId]: qty });
- const handleDateChange = (serviceId, date) => {
-  const isBookedDate = bookedDates[serviceId]?.some(
-    (bookedDate) => new Date(bookedDate).toDateString() === date.toDateString()
+
+  const handleDateChange = (serviceId, date) => {
+    const blocked = bookedDates[serviceId]?.some(
+      d => new Date(d).toDateString() === date.toDateString()
+    );
+    if (blocked) { alert('This date is not available.'); return; }
+    setSelectedDates(prev => ({ ...prev, [serviceId]: date }));
+  };
+
+  // ── Reviews ───────────────────────────────────────────────────────────────
+  const handleReviewChange = useCallback(
+    debounce((serviceId, field, value) => {
+      setReviewData(prev => ({ ...prev, [serviceId]: { ...prev[serviceId], [field]: value } }));
+    }, 300), []
   );
 
-  if (isBookedDate) {
-    alert("This date is not available for booking.");
-    return; // Exit the function without updating the selected date
-  }
-
-  // If date is available, proceed with setting the selected date
-  setSelectedDates((prevDates) => ({
-    ...prevDates,
-    [serviceId]: date,
-  }));
-};
-
-
-  return (
-    <div>
-      <Link to="/" className="btn btn-outline-primary my-3">
-    <i className="fas fa-arrow-left"></i> Go Back
-</Link>
-
-{loading ? (
-    <Loader />
-) : error ? (
-    <Message variant="danger">{error}</Message>
-) : product ? (
-        <>
-        <Row className="justify-content-center g-4">
-    <Card className="shadow-lg border-0 rounded p-4">
-    <Card.Title className="text-primary text-center fw-bold fs-4 slide-title">
-    {product.name}
-</Card.Title>
-
-        <Row className="align-items-center">
-            {/* Left: Product Image */}
-            <Col md={6} className="d-flex justify-content-center">
-                <Image 
-                    src={product.image} 
-                    alt={product.name} 
-                    fluid 
-                    className="rounded shadow-sm"
-                    
-                />
-            </Col>
-
-            {/* Right: Product Details */}
-            <Col md={6}>
-                <Card.Body>
-                    
-                    <hr className="mb-3" />
-                    <ListGroup variant="flush">
-                        <ListGroup.Item className="border-0">
-                            <strong>📍 Area:</strong> {product.area_name}
-                        </ListGroup.Item>
-
-                        <ListGroup.Item className="border-0">
-                            <strong>🏠 Address:</strong> {product.address}
-                        </ListGroup.Item>
-
-                        <ListGroup.Item className="border-0">
-                            <strong>⏰ Opening Time:</strong> {product.opening_time}
-                        </ListGroup.Item>
-
-                        <ListGroup.Item className="border-0">
-                            <strong>⏳ Closing Time:</strong> {product.closing_time}
-                        </ListGroup.Item>
-
-                        <ListGroup.Item className="border-0">
-                            <strong>📞 Business Phone:</strong> {product.business_phone || 'N/A'}
-                        </ListGroup.Item>
-
-                        <ListGroup.Item className="border-0">
-                            <strong>📱 Personal Phone:</strong> {product.personal_phone || 'N/A'}
-                        </ListGroup.Item>
-                    </ListGroup>
-                </Card.Body>
-            </Col>
-        </Row>
-    </Card>
-</Row>
-
-
-          <h5 className="mt-4">Services</h5>
-          <Row>
-            {product.services?.map((service) => (
-              <Col key={service._id} md={6}>
-                <Card>
-                  <Card.Body>
-                    <h6>{service.name}</h6>
-                    <Carousel interval={null}>
-  {service.images?.length > 0 ? (
-    service.images.map((img) => (
-      <Carousel.Item key={img._id}>
-        <div className= 'bg-custom'>
-        <img
-          className="d-block w-100"
-          src={img.image}
-          alt={service.name}
-          style={{ maxWidth: "500px", maxHeight: "300px", objectFit: "contain" }}
-        /></div>
-      </Carousel.Item>
-    ))
-  ) : (
-    <p>No images available.</p>
-  )}
-</Carousel>
-
-                    <p>{service.description || 'No description available.'}</p>
-                    <Rating value={service.rating} text={`${service.numReviews} reviews`} />
-                    <ListGroup variant="flush">
-                      <ListGroup.Item>
-                        <Row>
-                          <Col>Price:</Col>
-                          <Col>
-                            <strong>₹{service.price}</strong>
-                          </Col>
-                        </Row>
-                      </ListGroup.Item>
-                      <ListGroup.Item>
-                      <Row>
-    <Col>Date:</Col>
-    {/* Legend box for date colors */}
-    <div className="my-2">
-      <Card className="p-1 legend-card">
-        <Card.Body className="py-1 px-2">
-          <Row>
-            <Col className="d-flex align-items-center">
-              <span className="booked-date p-1 me-2"></span>
-              <small>Not available</small>
-            </Col>
-            <Col className="d-flex align-items-center">
-              <span className="booking-date p-1 me-2"></span>
-              <small>Booking Date</small>
-            </Col>
-          
-          </Row>
-        </Card.Body>
-      </Card>
-    </div>
-    <Col>
-      <Calendar
-        onChange={(date) => handleDateChange(service._id, date)}
-        value={selectedDates[service._id] || new Date()}
-        minDate={new Date()}
-        tileClassName={(props) => tileClassName(props, service._id)}
-        tileDisabled={({ date }) => {
-          const today = new Date();
-          // Disable date if it's a booked date or if it's in the past
-          return (
-            bookedDates[service._id]?.some(
-              (bookedDate) => new Date(bookedDate).toDateString() === date.toDateString()
-            ) || date < today
-          );
-        }}
-      />
-    </Col>
-    <Col >
-    <Form.Group controlId={`startTime-${service._id}`} className="mt-2">
-  <Form.Label>Appointment:</Form.Label>
-  <Form.Control
-    type="time"
-    value={selectedStartTimes[service._id] || ''}
-    onChange={(e) =>
-      setSelectedStartTimes((prev) => ({
-        ...prev,
-        [service._id]: e.target.value,
-      }))
+  const submitReviewHandler = async (e, serviceId) => {
+    e.preventDefault();
+    if (!userInfo) return navigate('/login');
+    const { rating, comment } = reviewData[serviceId] || {};
+    if (!rating) {
+      setReviewState(prev => ({ ...prev, [serviceId]: { loading: false, success: false, error: 'Rating is required' } }));
+      return;
     }
-    style={{ maxWidth: '120px' }} // 👈 small width
-  />
-</Form.Group>
+    setReviewState(prev => ({ ...prev, [serviceId]: { loading: true, success: false, error: '' } }));
+    try {
+      const res = await fetch(`/api/products/${serviceId}/reviews/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userInfo.token}` },
+        body: JSON.stringify({ rating, comment: comment?.trim() || '' }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.detail || 'Review submission failed');
+      setProduct(prev => ({
+        ...prev,
+        services: prev.services.map(s =>
+          s._id === serviceId ? { ...s, reviews: [json.review, ...s.reviews] } : s
+        ),
+      }));
+      setReviewedServices(prev => ({ ...prev, [serviceId]: true }));
+      setReviewState(prev => ({ ...prev, [serviceId]: { loading: false, success: true, error: '' } }));
+      setReviewData(prev => ({ ...prev, [serviceId]: { rating: 0, comment: '' } }));
+      setTimeout(() => setReviewState(prev => ({ ...prev, [serviceId]: { ...prev[serviceId], success: false } })), 3000);
+    } catch (err) {
+      setReviewState(prev => ({ ...prev, [serviceId]: { loading: false, success: false, error: err.message } }));
+    }
+  };
 
-  </Col>
-  </Row>
-</ListGroup.Item>
-<ListGroup.Item>
-  <Button
-    onClick={() => addToCartHandler(service._id)}
-    disabled={!selectedDates[service._id] || !selectedStartTimes[service._id]} // Disable if no date or time is selected
-    type="button"
-  >
-    Add to Cart
-  </Button>
-</ListGroup.Item>
+  const tileClassName = ({ date, view }, serviceId) => {
+    if (view !== 'month') return null;
+    const ds = date.toISOString().split('T')[0];
+    return bookedDates[serviceId]?.includes(ds) ? 'booked-date' : 'available-date';
+  };
 
-<ListGroup.Item>
-  <Button
-    onClick={() => handleDirectBooking(service._id)}
-    disabled={!selectedDates[service._id] || !selectedStartTimes[service._id]} // Disable if no date or time is selected
-    type="button"
-  >
-    Book Now
-  </Button>
-</ListGroup.Item>
-                    </ListGroup>
+  // ── Render ────────────────────────────────────────────────────────────────
+  return (
+    <div className="ps-page">
 
-                    <h4 className="mt-4">Reviews</h4>
-                    {service.reviews && Array.isArray(service.reviews) && service.reviews.length === 0 ? (
-                      <Message variant="info">No Reviews</Message>
-                    ) : (
-                      <ListGroup variant="flush">
-                        {(service.reviews || []).map((review) => (
-                          <ListGroup.Item key={review._id} className="my-3">
-                            <div className="d-flex justify-content-between align-items-center">
-                              <h5 className="mb-1" style={{ fontWeight: 'bold' }}>{review.user}</h5>
-                              <Rating value={review.rating} color="#f8e825" />
-                            </div>
-                            <small className="text-muted">
-                              {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : 'N/A'}
-                            </small>
-                            <p className="mt-2" style={{ fontStyle: review.comment ? 'normal' : 'italic' }}>
-                              {review.comment || 'No comment provided.'}
-                            </p>
-                          </ListGroup.Item>
-                        ))}
-                      </ListGroup>
-                    )}
+      <Link to="/" className="ps-back-btn">
+        <i className="fas fa-arrow-left"></i> Go Back
+      </Link>
 
-                    <ListGroup.Item>
-                      <h5>Write a Review for {service.name}</h5>
-                      
-                      {userInfo ? (
-                        <Form onSubmit={(e) => submitReviewHandler(e, service._id)}>
-                         
-                        <Form.Group controlId="rating">
-                          <Form.Label>Rating</Form.Label>
-                          <Form.Control
-                            as="select"
-                              value={reviewData[service._id]?.rating || 0}
-                              onChange={(e) => handleReviewChange(service._id, 'rating', e.target.value)}
-                          >
-                            <option value="">Select...</option>
-                            <option value="1">1 - Poor</option>
-                            <option value="2">2 - Fair</option>
-                            <option value="3">3 - Good</option>
-                            <option value="4">4 - Very Good</option>
-                            <option value="5">5 - Excellent</option>
-                          </Form.Control>
-                        </Form.Group>
-                  
-                        <Form.Group controlId="comment">
-                          <Form.Label>Comment</Form.Label>
-                          <Form.Control
-                            as="textarea"
-                            rows="3"
-                            value={reviewData[service._id]?.comment || ''}
-                            onChange={(e) =>
-                              setReviewData((prevState) => ({
-                                ...prevState,
-                                [service._id]: {
-                                  ...prevState[service._id],
-                                  comment: e.target.value, // Immediate update for the comment
-                                },
-                              }))
-                            }
-                          ></Form.Control>
-                        </Form.Group>
-                          {reviewState[service._id]?.success && <Message variant="success">Review Submitted</Message>}
-          {reviewState[service._id]?.loading && <Loader />}
-          {reviewState[service._id]?.error && (
-            <Message variant="danger">{reviewState[service._id]?.error}</Message>
-          )}
-                        <Button type="submit" variant="primary">
-                          Submit
-                        </Button>
-                      </Form>
+      {errorMessage && <div className="ps-alert ps-alert-danger">{errorMessage}</div>}
+
+      {loading ? (
+        <Loader />
+      ) : error ? (
+        <div className="ps-alert ps-alert-danger">{error}</div>
+      ) : product ? (
+        <>
+          {/* ── Hero ──────────────────────────────────────────────── */}
+          <div className="ps-hero">
+            <div className="ps-hero-banner">
+              <h1 className="ps-business-name">{product.name}</h1>
+              {product.category && (
+                <span className="ps-category-badge">🎊 {product.category.replace(/_/g, ' ')}</span>
+              )}
+            </div>
+
+            <div className="ps-hero-body">
+              <div className="ps-photo-wrap">
+                {product.image ? (
+                  <img src={product.image} alt={product.name} />
+                ) : (
+                  <div className="ps-photo-placeholder">
+                    <span>🏪</span>
+                    <small style={{ fontSize: '0.8rem', marginTop: 8 }}>No photo yet</small>
+                  </div>
+                )}
+              </div>
+
+              <div className="ps-info-grid">
+                {product.area_name && (
+                  <div className="ps-info-item">
+                    <span className="ps-info-icon">📍</span>
+                    <div>
+                      <div className="ps-info-label">Area</div>
+                      <div className="ps-info-value">{product.area_name}</div>
+                    </div>
+                  </div>
+                )}
+                {product.address && (
+                  <div className="ps-info-item">
+                    <span className="ps-info-icon">🏠</span>
+                    <div>
+                      <div className="ps-info-label">Address</div>
+                      <div className="ps-info-value">{product.address}</div>
+                    </div>
+                  </div>
+                )}
+                <div className="ps-info-item">
+                  <span className="ps-info-icon">⏰</span>
+                  <div>
+                    <div className="ps-info-label">Working Hours</div>
+                    <div className={`ps-info-value ${!product.opening_time ? 'appointment' : ''}`}>
+                      {product.opening_time && product.opening_time !== 'null'
+                        ? `${formatTime(product.opening_time)} – ${formatTime(product.closing_time)}`
+                        : 'By Appointment'}
+                    </div>
+                  </div>
+                </div>
+                {product.business_phone && (
+                  <PhoneBlock label="📞 Business Phone" phone={product.business_phone} businessName={product.name} />
+                )}
+                {product.personal_phone && product.personal_phone !== product.business_phone && (
+                  <PhoneBlock label="📱 Personal Phone" phone={product.personal_phone} businessName={product.name} />
+                )}
+                <div className="ps-info-item ps-claim-row">
+                  <ClaimButton product={product} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Services ──────────────────────────────────────────── */}
+          <h2 className="ps-section-title">✨ Services Offered</h2>
+
+          <Row>
+            {product.services?.map((service) => {
+              const priceFormatted = formatPrice(service.price);
+              const isCalOpen      = expandedCalendar === service._id;
+              const dateSelected   = selectedDates[service._id];
+              const timeSelected   = selectedStartTimes[service._id];
+
+              // ✅ FIX 3: canBook = date + time both selected
+              //const canBook = !!dateSelected && !!timeSelected;
+              const canBook = !!dateSelected && !!timeSelected && !!selectedEndTimes[service._id];
+              return (
+                <Col key={service._id} md={6}>
+                  <div className="ps-service-card">
+
+                    {/* Service header */}
+                    <div className="ps-service-header">
+                      <h3 className="ps-service-name">{service.name}</h3>
+                      <div className="ps-service-rating">
+                        ⭐ {Number(service.rating || 0).toFixed(1)}
+                        <span style={{ opacity: 0.7 }}>({service.numReviews})</span>
+                      </div>
+                    </div>
+
+                    {/* Images */}
+                    <div className="ps-carousel-wrap">
+                      {service.images?.length > 0 ? (
+                        <Carousel interval={null}>
+                          {service.images.map(img => (
+                            <Carousel.Item key={img._id || img.image}>
+                              <img
+                                className="d-block w-100"
+                                src={img.image}
+                                alt={service.name}
+                                style={{ maxHeight: '260px', objectFit: 'contain' }}
+                              />
+                            </Carousel.Item>
+                          ))}
+                        </Carousel>
                       ) : (
-                        <Message>
-                          Please <Link to="/login">sign in</Link> to write a review{' '}
-                        </Message>
+                        <div className="ps-no-image">📷</div>
                       )}
-                    </ListGroup.Item>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
+                    </div>
+
+                    <div className="ps-service-body">
+                      {service.description && (
+                        <p className="ps-service-desc">{service.description}</p>
+                      )}
+
+                      <div className="ps-price-row">
+                        <span className="ps-price-label">Price</span>
+                        {priceFormatted ? (
+                          <span className="ps-price-value">{priceFormatted}</span>
+                        ) : (
+                          <span className="ps-price-value contact">📞 Contact for Price</span>
+                        )}
+                      </div>
+
+                      {/* ── Booking section ── */}
+                      <div className="ps-booking-section">
+                        <div className="ps-booking-title">📅 Select Date & Time</div>
+
+                        {/* ✅ FIX 4: toggle button shows selected date when picked */}
+                        <button
+                          className={`ps-cal-toggle ${isCalOpen ? 'active' : ''}`}
+                          onClick={() => setExpandedCalendar(isCalOpen ? null : service._id)}
+                        >
+                          {dateSelected
+                            ? `📅 ${dateSelected.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} — Change Date`
+                            : '📅 Pick a Date'}
+                        </button>
+
+                        {isCalOpen && (
+                          <>
+                            <div className="ps-legend">
+                              <div className="ps-legend-item">
+                                <div className="ps-legend-dot booked"></div> Not available
+                              </div>
+                              <div className="ps-legend-item">
+                                <div className="ps-legend-dot available"></div> Available
+                              </div>
+                            </div>
+                            <Calendar
+                              onChange={(date) => {
+                                handleDateChange(service._id, date);
+                                setExpandedCalendar(null);
+                              }}
+                              value={dateSelected || new Date()}
+                              minDate={new Date()}
+                              tileClassName={props => tileClassName(props, service._id)}
+                              tileDisabled={({ date }) =>
+                                bookedDates[service._id]?.some(
+                                  d => new Date(d).toDateString() === date.toDateString()
+                                ) || date < new Date()
+                              }
+                            />
+                          </>
+                        )}
+
+                        {/* ✅ FIX 5: SlotPicker shown after date picked, per-service state */}
+                        {dateSelected && (
+                          <div className="ps-slot-wrap">
+                            <SlotPicker
+  selectedTime={selectedStartTimes[service._id] || ''}
+  selectedEndTime={selectedEndTimes[service._id] || ''}
+  onTimeChange={(time) => setSelectedStartTimes(prev => ({ ...prev, [service._id]: time }))}
+  onEndTimeChange={(time) => setSelectedEndTimes(prev => ({ ...prev, [service._id]: time }))}
+/>
+                          </div>
+                        )}
+
+                        {/* ✅ FIX 6: old <input type="time"> REMOVED */}
+
+                      </div>
+
+                      {/* ── Buttons ── */}
+                      <div className="ps-btn-row">
+                        <button
+                          className="ps-btn ps-btn-shortlist"
+                          onClick={() => addToCartHandler(service._id)}
+                          disabled={!canBook}
+                          title={!canBook ? 'Select date and time first' : ''}
+                        >
+                          🔖 Shortlist
+                        </button>
+                        <button
+                          className="ps-btn ps-btn-book"
+                          onClick={() => handleDirectBooking(service._id)}
+                          disabled={!canBook}
+                          title={!canBook ? 'Select date and time first' : ''}
+                        >
+                          ✨ Book Now
+                        </button>
+                      </div>
+
+                      {/* ── Reviews ── */}
+                      <div className="ps-reviews-section">
+                        <div className="ps-reviews-title">💬 Customer Reviews</div>
+
+                        {service.reviews?.length === 0 ? (
+                          <div className="ps-no-reviews">No reviews yet — be the first!</div>
+                        ) : (
+                          service.reviews.map(review => (
+                            <div key={review._id} className="ps-review-card">
+                              <div className="ps-review-header">
+                                <span className="ps-reviewer-name">{review.user}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <Rating value={review.rating} color="#f8e825" />
+                                  <span className="ps-review-date">
+                                    {review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-IN') : ''}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="ps-review-comment">
+                                {review.comment || <em style={{ opacity: 0.6 }}>No comment provided.</em>}
+                              </p>
+                            </div>
+                          ))
+                        )}
+
+                        <div className="ps-write-review">
+                          <div className="ps-write-review-title">✍️ Write a Review</div>
+
+                          {!userInfo ? (
+                            <div className="ps-login-prompt">
+                              Please <Link to="/login">sign in</Link> to write a review
+                            </div>
+                          ) : reviewedServices[service._id] ? (
+                            <div className="ps-reviewed-badge">
+                              ✅ You've already reviewed this service. Thank you!
+                            </div>
+                          ) : (
+                            <form onSubmit={e => submitReviewHandler(e, service._id)}>
+                              <div className="ps-form-group">
+                                <label className="ps-form-label">Rating</label>
+                                <select
+                                  className="ps-select"
+                                  value={reviewData[service._id]?.rating || ''}
+                                  onChange={e => handleReviewChange(service._id, 'rating', e.target.value)}
+                                >
+                                  <option value="">Select rating...</option>
+                                  <option value="1">⭐ 1 – Poor</option>
+                                  <option value="2">⭐⭐ 2 – Fair</option>
+                                  <option value="3">⭐⭐⭐ 3 – Good</option>
+                                  <option value="4">⭐⭐⭐⭐ 4 – Very Good</option>
+                                  <option value="5">⭐⭐⭐⭐⭐ 5 – Excellent</option>
+                                </select>
+                              </div>
+
+                              <div className="ps-form-group">
+                                <label className="ps-form-label">Comment (optional)</label>
+                                <textarea
+                                  className="ps-textarea"
+                                  rows="3"
+                                  placeholder="Share your experience..."
+                                  value={reviewData[service._id]?.comment || ''}
+                                  onChange={e => setReviewData(prev => ({
+                                    ...prev, [service._id]: { ...prev[service._id], comment: e.target.value }
+                                  }))}
+                                />
+                              </div>
+
+                              {reviewState[service._id]?.success && (
+                                <div className="ps-alert ps-alert-success">✅ Review submitted!</div>
+                              )}
+                              {reviewState[service._id]?.error && (
+                                <div className="ps-alert ps-alert-danger">{reviewState[service._id].error}</div>
+                              )}
+                              {reviewState[service._id]?.loading && <Loader />}
+
+                              <button type="submit" className="ps-submit-btn">Submit Review</button>
+                            </form>
+                          )}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </Col>
+              );
+            })}
           </Row>
         </>
       ) : (
-        <Message variant="danger">Product not found</Message>
+        <div className="ps-alert ps-alert-danger">Product not found</div>
       )}
     </div>
   );

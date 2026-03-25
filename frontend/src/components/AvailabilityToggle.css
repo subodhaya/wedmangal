@@ -1,0 +1,49 @@
+/* AvailabilityToggle.css */
+.av-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  transition: all 0.3s;
+}
+.av-on {
+  background: linear-gradient(135deg, #eafaf1, #d5f5e3);
+  border: 1.5px solid #27ae60;
+}
+.av-off {
+  background: #f9f9f9;
+  border: 1.5px solid #e0e0e0;
+}
+
+.av-left { display: flex; align-items: center; gap: 12px; }
+.av-icon { font-size: 1.4rem; }
+.av-text { display: flex; flex-direction: column; }
+.av-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #222;
+}
+.av-hint {
+  font-size: 0.78rem;
+  color: #777;
+  margin-top: 2px;
+}
+
+.av-btn {
+  padding: 9px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.av-btn-on  { background: #27ae60; color: #fff; }
+.av-btn-on:hover  { background: #219a52; }
+.av-btn-off { background: #e0e0e0; color: #555; }
+.av-btn-off:hover { background: #ccc; }
+.av-btn:disabled { opacity: 0.6; cursor: not-allowed; }

@@ -1,23 +1,23 @@
+// src/screens/CartScreen.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Row, Col, ListGroup, Image, Button, Card } from 'react-bootstrap';
 import Message from '../components/Message';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import api from '../utils/api';  
-import axios from 'axios';
+import api from '../utils/api';
+import './CartScreen.css';
 
 function CartScreen() {
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems]         = useState([]);
   const [editingDateFor, setEditingDateFor] = useState(null);
-  const navigate = useNavigate();
   const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage]     = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     if (userInfo) {
-      const items = JSON.parse(localStorage.getItem('cartItems')) || [];
+      const items         = JSON.parse(localStorage.getItem('cartItems')) || [];
       const userCartItems = items.filter(item => item.userId === userInfo._id);
       setCartItems(userCartItems);
     } else {
@@ -25,35 +25,37 @@ function CartScreen() {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    if (successMessage || errorMessage) {
+      const t = setTimeout(() => { setSuccessMessage(''); setErrorMessage(''); }, 4000);
+      return () => clearTimeout(t);
+    }
+  }, [successMessage, errorMessage]);
+
   const removeFromCartHandler = (id) => {
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const updatedCart = cartItems.filter((item) => item.service !== id);
+    const userInfo       = JSON.parse(localStorage.getItem('userInfo'));
+    const updatedCart    = cartItems.filter((item) => item.service !== id);
     setCartItems(updatedCart);
-  
-    const allCartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-    const updatedAllCartItems = allCartItems.filter(item => !(item.service === id && item.userId === userInfo._id));
+    const allCartItems         = JSON.parse(localStorage.getItem('cartItems')) || [];
+    const updatedAllCartItems  = allCartItems.filter(
+      item => !(item.service === id && item.userId === userInfo._id)
+    );
     localStorage.setItem('cartItems', JSON.stringify(updatedAllCartItems));
   };
 
   const checkoutHandler = async () => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-  
     if (userInfo) {
       try {
-        const { data } = await api.post('/api/products/cart/', {
-        items: cartItems,
-        user: userInfo._id,
+        await api.post('/api/products/cart/', {
+          items: cartItems,
+          user: userInfo._id,
         }, {
-          headers: {
-            Authorization: `Bearer ${userInfo.token}`,
-          },
-      });
-  
-        //localStorage.removeItem('cartItems');
+          headers: { Authorization: `Bearer ${userInfo.token}` },
+        });
         navigate('/location');
-    } catch (error) {
-        
+      } catch (error) {
         setErrorMessage('Error syncing cart with the database.');
         setSuccessMessage('');
       }
@@ -61,17 +63,14 @@ function CartScreen() {
       navigate('/login');
     }
   };
-  
-  
-
 
   const handleDateChange = (date, service) => {
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    const userInfo    = JSON.parse(localStorage.getItem('userInfo'));
     const updatedCart = cartItems.map((x) =>
       x.service === service ? { ...x, bookingDate: date } : x
     );
     setCartItems(updatedCart);
-    const allCartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+    const allCartItems        = JSON.parse(localStorage.getItem('cartItems')) || [];
     const updatedAllCartItems = allCartItems.map((x) =>
       x.service === service && x.userId === userInfo._id ? { ...x, bookingDate: date } : x
     );
@@ -80,117 +79,175 @@ function CartScreen() {
     setEditingDateFor(null);
   };
 
-  // Calculate service price
   const servicesPrice = cartItems.reduce((acc, item) => acc + item.qty * item.price, 0).toFixed(2);
-  const shippingPrice = 100; // Flat conveyance fee
-  const taxPrice = (servicesPrice * 0.1).toFixed(2); // Tax at 10%
-  const totalPrice = (parseFloat(servicesPrice) + parseFloat(shippingPrice) + parseFloat(taxPrice)).toFixed(2);
-  useEffect(() => {
-    if (successMessage || errorMessage) {
-        const timer = setTimeout(() => {
-            setSuccessMessage('');
-            setErrorMessage('');
-        }, 4000);
+  const shippingPrice = 100;
+  const taxPrice      = (servicesPrice * 0.1).toFixed(2);
+  const totalPrice    = (parseFloat(servicesPrice) + parseFloat(shippingPrice) + parseFloat(taxPrice)).toFixed(2);
+  const totalItems    = cartItems.reduce((acc, item) => acc + item.qty, 0);
 
-        return () => clearTimeout(timer);
-    }
-}, [successMessage, errorMessage]);
+  const displayPrice  = (price) => {
+    const p = Number(price);
+    if (!p || p === 0) return '—';
+    return `₹${p.toLocaleString('en-IN')}`;
+  };
 
-return (
-    <div>
-        {successMessage && <div className="alert alert-success">{successMessage}</div>}
-        {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
-    <div className="highlight-section" style={{ marginTop: '30px', padding: '20px' }}>
-      <h1 className="text-center">Booking Details</h1>
+  return (
+    <div className="cs-root">
+
+      {/* Ambient orbs */}
+      <div className="cs-orb cs-orb--1" />
+      <div className="cs-orb cs-orb--2" />
+
+      {/* Alerts */}
+      {successMessage && <div className="cs-alert cs-alert--success">{successMessage}</div>}
+      {errorMessage   && <div className="cs-alert cs-alert--danger">{errorMessage}</div>}
+
+      {/* Header */}
+      <header className="cs-header">
+        <p className="cs-eyebrow">✦ Almost there ✦</p>
+        <h1 className="cs-title">Booking Details</h1>
+        <div className="cs-header-rule">
+          <span /><span className="cs-diamond">◆</span><span />
+        </div>
+      </header>
+
       {cartItems.length === 0 ? (
-        <Message variant="info">
-          Your cart is empty <Link to="/">Go Back</Link>
-        </Message>
+        <div className="cs-empty">
+          <div className="cs-empty-icon">🛒</div>
+          <h3 className="cs-empty-title">Your cart is empty</h3>
+          <p className="cs-empty-sub">Browse vendors and add services to get started</p>
+          <Link to="/" className="cs-browse-btn">Explore Vendors →</Link>
+        </div>
       ) : (
-        <Row>
-          <Col md={8}>
-            <ListGroup variant="flush" className="mb-3">
-              {cartItems.map((item) => (
-                <ListGroup.Item key={item.service}>
-                  <Row className="align-items-center">
-                    <Col xs={3} md={2}>
-                      <Image src={item.image} alt={item.name} fluid rounded />
-                    </Col>
-                    <Col xs={5} md={4}>
-                      <Link to={`/product/service/${item.service}`}>{item.name}</Link>
-                    </Col>
-                    <Col xs={4} md={2}>₹{item.price}</Col>
-                    <Col xs={12} md={3} className="my-2">
-                      {editingDateFor === item.service ? (
+        <div className="cs-layout">
+
+          {/* ── Left: cart items ── */}
+          <div className="cs-items-col">
+            {cartItems.map((item, idx) => (
+              <div
+                key={item.service}
+                className="cs-item-card"
+                style={{ animationDelay: `${idx * 60}ms` }}
+              >
+                {/* Image */}
+                <Link to={`/product/service/${item.service}`} className="cs-item-img-link">
+                  <div className="cs-item-img-box">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="cs-item-img"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.style.objectFit = 'contain';
+                        e.target.style.padding   = '1rem';
+                        e.target.style.background = '#f5eaf0';
+                      }}
+                    />
+                  </div>
+                </Link>
+
+                {/* Details */}
+                <div className="cs-item-details">
+                  <Link to={`/product/service/${item.service}`} className="cs-item-name-link">
+                    <h3 className="cs-item-name">{item.name}</h3>
+                  </Link>
+
+                  <p className="cs-item-price">
+                    {displayPrice(item.price)}
+                    {item.qty > 1 && (
+                      <span className="cs-item-qty"> × {item.qty}</span>
+                    )}
+                  </p>
+
+                  {/* Date picker */}
+                  <div className="cs-date-section">
+                    {editingDateFor === item.service ? (
+                      <div className="cs-calendar-wrap">
+                        <p className="cs-calendar-label">📅 Select your booking date</p>
                         <Calendar
                           onChange={(date) => handleDateChange(date, item.service)}
-                          value={new Date(item.bookingDate)}
+                          value={item.bookingDate ? new Date(item.bookingDate) : new Date()}
                           minDate={new Date()}
                         />
-                      ) : (
-                        <div onClick={() => setEditingDateFor(item.service)}>
-                          <strong>Booking Date:</strong>{' '}
-                          {item.bookingDate ? new Date(item.bookingDate).toLocaleDateString() : 'No date selected'}
-                        </div>
-                      )}
-                    </Col>
-                    <Col xs={2} md={1}>
-                      <Button
-                        type="button"
-                        variant="light"
-                        onClick={() => removeFromCartHandler(item.service)}
+                      </div>
+                    ) : (
+                      <button
+                        className="cs-date-btn"
+                        onClick={() => setEditingDateFor(item.service)}
                       >
-                        <i className="fas fa-trash"></i>
-                      </Button>
-                    </Col>
-                  </Row>
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-          </Col>
+                        <span className="cs-date-icon">📅</span>
+                        <span>
+                          {item.bookingDate
+                            ? new Date(item.bookingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+                            : 'Select booking date'}
+                        </span>
+                        <span className="cs-date-chevron">›</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
 
-          <Col md={4}>
-            <Card>
-              <ListGroup variant="flush">
-                <ListGroup.Item>
-                  <h2>Subtotal ({cartItems.reduce((acc, item) => acc + item.qty, 0)}) items</h2>
-                  ₹{servicesPrice}
-                </ListGroup.Item>
-                <ListGroup.Item>
-                  <Row>
-                    <Col>Conveyance (subject to adjustment based on distance):</Col>
+                {/* Remove */}
+                <button
+                  className="cs-remove-btn"
+                  onClick={() => removeFromCartHandler(item.service)}
+                  aria-label="Remove from cart"
+                  title="Remove"
+                >
+                  🗑
+                </button>
+              </div>
+            ))}
+          </div>
 
-                    <Col>₹{shippingPrice}</Col>
-                  </Row>
-                </ListGroup.Item>
-                <ListGroup.Item>
-                  <Row>
-                    <Col>Tax:</Col>
-                    <Col>₹{taxPrice}</Col>
-                  </Row>
-                </ListGroup.Item>
-                <ListGroup.Item>
-                  <Row>
-                    <Col>Total:</Col>
-                    <Col>₹{totalPrice}</Col>
-                  </Row>
-                </ListGroup.Item>
-                <ListGroup.Item>
-                  <Button
-                    type="button"
-                    className="btn-block"
-                    disabled={cartItems.length === 0}
-                    onClick={checkoutHandler}
-                  >
-                    Proceed To Book
-                  </Button>
-                </ListGroup.Item>
-              </ListGroup>
-            </Card>
-          </Col>
-        </Row>
+          {/* ── Right: order summary ── */}
+          <div className="cs-summary-col">
+            <div className="cs-summary-card">
+              <h2 className="cs-summary-title">Booking Summary</h2>
+              <div className="cs-summary-rule" />
+
+              <div className="cs-summary-rows">
+                <div className="cs-summary-row">
+                  <span>Subtotal ({totalItems} item{totalItems > 1 ? 's' : ''})</span>
+                  <span>₹{Number(servicesPrice).toLocaleString('en-IN')}</span>
+                </div>
+                <div className="cs-summary-row">
+                  <span>
+                    Conveyance
+                    <span className="cs-summary-note"> (adjusted by distance)</span>
+                  </span>
+                  <span>₹{shippingPrice.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="cs-summary-row">
+                  <span>GST (10%)</span>
+                  <span>₹{Number(taxPrice).toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+
+              <div className="cs-summary-total-row">
+                <span>Total</span>
+                <span className="cs-summary-total-amt">
+                  ₹{Number(totalPrice).toLocaleString('en-IN')}
+                </span>
+              </div>
+
+              <button
+                className="cs-checkout-btn"
+                disabled={cartItems.length === 0}
+                onClick={checkoutHandler}
+              >
+                <span>Proceed to Book</span>
+                <span className="cs-checkout-arrow">→</span>
+              </button>
+
+              <p className="cs-summary-note-bottom">
+                🔒 Secure checkout · Free cancellation within 24h
+              </p>
+            </div>
+          </div>
+
+        </div>
       )}
-    </div>
     </div>
   );
 }

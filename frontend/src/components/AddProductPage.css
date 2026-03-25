@@ -1,0 +1,504 @@
+/* ═══════════════════════════════════════════════════════════════
+   AddProductPage.css — BookYourCelebration
+   Wedding theme: plum #5e143f + champagne gold #f9e79f + cream
+═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* ── CSS Variables ────────────────────────────────────────── */
+.add-product-page {
+  --plum:       #5e143f;
+  --plum-light: #7d1d54;
+  --plum-dark:  #3d0d29;
+  --gold:       #f9e79f;
+  --gold-deep:  #d4a843;
+  --gold-warm:  #c8952a;
+  --cream:      #fdf8f0;
+  --cream-dark: #f5ede0;
+  --white:      #ffffff;
+  --text-dark:  #2a1a1f;
+  --text-mid:   #5a3a45;
+  --text-light: #9a7a85;
+  --border:     #e8d5de;
+  --success:    #2e7d52;
+  --danger:     #c0392b;
+  --shadow:     0 4px 24px rgba(94, 20, 63, 0.10);
+  --shadow-lg:  0 8px 40px rgba(94, 20, 63, 0.15);
+  --radius-sm:  8px;
+  --radius-md:  16px;
+  --radius-lg:  24px;
+
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  min-height: 100vh;
+}
+
+/* ── Welcome hero card ────────────────────────────────────── */
+.ap-welcome-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  margin: 24px 0 32px;
+  border: 1px solid var(--border);
+}
+
+.ap-welcome-left {
+  padding: 40px 36px;
+  background: linear-gradient(160deg, var(--cream) 0%, #fdf0f6 100%);
+  position: relative;
+}
+
+.ap-welcome-left::before {
+  content: '💍';
+  position: absolute;
+  top: 20px; right: 24px;
+  font-size: 2.5rem;
+  opacity: 0.25;
+}
+
+.ap-welcome-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--plum);
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.ap-welcome-subtitle {
+  font-size: 1rem;
+  color: var(--text-mid);
+  font-style: italic;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.ap-welcome-text {
+  font-size: 0.9rem;
+  color: var(--text-mid);
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+
+.ap-manage-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--plum), var(--plum-light));
+  color: var(--gold) !important;
+  border: none;
+  border-radius: 50px;
+  padding: 11px 28px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.92rem;
+  text-decoration: none !important;
+  margin-top: 8px;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(94, 20, 63, 0.25);
+}
+
+.ap-manage-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(94, 20, 63, 0.35);
+  color: var(--gold) !important;
+}
+
+.ap-welcome-img {
+  height: 100%;
+  min-height: 280px;
+  object-fit: cover;
+  width: 100%;
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+@media (max-width: 768px) {
+  .ap-welcome-img { border-radius: 0 0 var(--radius-lg) var(--radius-lg); min-height: 200px; }
+  .ap-welcome-left { padding: 28px 20px; }
+  .ap-welcome-title { font-size: 1.4rem; }
+}
+
+/* ── Form section wrapper ─────────────────────────────────── */
+.ap-form-section {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 40px;
+}
+
+/* ── Form header banner ───────────────────────────────────── */
+.ap-form-header {
+  background: linear-gradient(135deg, var(--plum-dark), var(--plum), var(--plum-light));
+  padding: 28px 32px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.ap-form-header::before {
+  content: '';
+  position: absolute;
+  top: -50px; right: -50px;
+  width: 200px; height: 200px;
+  background: rgba(249,231,159,0.07);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ap-form-header::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; left: -30px;
+  width: 180px; height: 180px;
+  background: rgba(249,231,159,0.05);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ap-form-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 0 0 6px;
+}
+
+.ap-form-subtitle {
+  font-size: 0.9rem;
+  color: rgba(249,231,159,0.75);
+  margin: 0;
+}
+
+/* ── Form body ────────────────────────────────────────────── */
+.ap-form-body {
+  padding: 32px;
+}
+
+@media (max-width: 768px) {
+  .ap-form-body { padding: 20px 16px; }
+}
+
+/* ── Section divider ──────────────────────────────────────── */
+.ap-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 28px 0 20px;
+}
+
+.ap-section-label {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--plum);
+  white-space: nowrap;
+}
+
+.ap-section-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(to right, var(--gold-deep), transparent);
+  border-radius: 2px;
+}
+
+/* ── Form groups ──────────────────────────────────────────── */
+.ap-form-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 600px) {
+  .ap-form-group { flex-direction: column; align-items: stretch; gap: 6px; }
+}
+
+.ap-label {
+  min-width: 155px;
+  padding-top: 9px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-mid);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .ap-label { text-align: left; min-width: unset; padding-top: 0; }
+}
+
+.ap-hint {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+/* ── Inputs ───────────────────────────────────────────────── */
+.ap-input,
+.ap-select,
+.ap-textarea {
+  flex: 1;
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  background: var(--cream);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  outline: none;
+}
+
+.ap-input:focus,
+.ap-select:focus,
+.ap-textarea:focus {
+  border-color: var(--plum);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(94, 20, 63, 0.09);
+}
+
+.ap-input::placeholder,
+.ap-textarea::placeholder {
+  color: var(--text-light);
+  font-style: italic;
+}
+
+.ap-textarea {
+  resize: vertical;
+  min-height: 90px;
+  padding-top: 10px;
+}
+
+/* ── File input ───────────────────────────────────────────── */
+.ap-file-input {
+  flex: 1;
+  width: 100%;
+  border: 1.5px dashed var(--gold-deep);
+  border-radius: var(--radius-sm);
+  padding: 9px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  color: var(--text-mid);
+  background: #fffdf5;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.ap-file-input:hover {
+  border-color: var(--plum);
+  background: #fdf8f0;
+}
+
+/* ── Select wrapper (for custom arrow) ───────────────────── */
+.ap-select-wrap {
+  flex: 1;
+  position: relative;
+}
+
+.ap-select-wrap .ap-select {
+  appearance: none;
+  padding-right: 36px;
+  width: 100%;
+}
+
+.ap-select-arrow {
+  position: absolute;
+  top: 50%; right: 12px;
+  transform: translateY(-50%);
+  color: var(--plum);
+  pointer-events: none;
+  font-size: 0.85rem;
+}
+
+/* ── Time row ─────────────────────────────────────────────── */
+.ap-time-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.ap-time-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ap-time-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-mid);
+  white-space: nowrap;
+}
+
+.ap-time-input {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  color: var(--text-dark);
+  background: var(--white);
+  width: 130px;
+  transition: border-color 0.2s;
+  outline: none;
+}
+
+.ap-time-input:focus {
+  border-color: var(--plum);
+  box-shadow: 0 0 0 3px rgba(94, 20, 63, 0.09);
+}
+
+/* ── Service card ─────────────────────────────────────────── */
+.ap-service-card {
+  background: linear-gradient(135deg, #fdf3f8, var(--cream));
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 22px 24px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.ap-service-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.ap-service-number {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--plum);
+  color: var(--gold);
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.ap-service-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--plum);
+  margin: 0;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.ap-add-service-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  color: var(--plum);
+  border: 2px solid var(--plum);
+  border-radius: 50px;
+  padding: 10px 24px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 4px;
+}
+
+.ap-add-service-btn:hover {
+  background: var(--plum);
+  color: var(--gold);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(94,20,63,0.2);
+}
+
+.ap-submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--plum-dark), var(--plum), var(--plum-light));
+  color: var(--gold);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 20px rgba(94,20,63,0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 24px;
+  letter-spacing: 0.3px;
+}
+
+.ap-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(94,20,63,0.38);
+}
+
+/* ── Alert messages ───────────────────────────────────────── */
+.ap-alert {
+  padding: 13px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ap-alert-success {
+  background: rgba(46,205,120,0.1);
+  color: var(--success);
+  border: 1px solid rgba(46,205,120,0.25);
+}
+
+.ap-alert-danger {
+  background: rgba(192,57,43,0.08);
+  color: var(--danger);
+  border: 1px solid rgba(192,57,43,0.2);
+}
+
+/* ── Decorative divider ───────────────────────────────────── */
+.ap-hr {
+  border: none;
+  border-top: 1.5px solid var(--border);
+  margin: 24px 0;
+}
+
+/* ── Services heading ─────────────────────────────────────── */
+.ap-services-heading {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--plum-dark);
+  margin: 28px 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ap-services-heading::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(to right, var(--gold-deep), transparent);
+  border-radius: 2px;
+}
+
+.ap-services-hint {
+  font-size: 0.82rem;
+  color: var(--text-light);
+  margin-bottom: 20px;
+  font-style: italic;
+}

@@ -1,0 +1,357 @@
+/* ============================================================
+   InvitePreview.css — WedMangal
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=Great+Vibes&family=Playfair+Display:ital,wght@0,700;1,400&display=swap');
+
+.ip-root {
+  font-family: 'DM Sans', sans-serif;
+}
+
+.ip-heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #3d0d28;
+  margin: 0 0 2px;
+}
+.ip-sub {
+  font-size: 0.8rem;
+  color: #b08090;
+  margin: 0 0 1.2rem;
+}
+
+/* ── Shared base ── */
+.tmpl {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.14);
+}
+
+/* ══════════════════════════════════
+   Classic
+══════════════════════════════════ */
+.tmpl-classic {
+  background: linear-gradient(155deg, #2a0718 0%, #5e143f 60%, #3d0d28 100%);
+  padding: 8px;
+}
+
+.tc-frame {
+  border: 1.5px solid rgba(201,151,58,0.45);
+  border-radius: 10px;
+  padding: 2.2rem 1.8rem;
+  text-align: center;
+  position: relative;
+  background: linear-gradient(155deg, #2a0718 0%, #5e143f 100%);
+}
+
+/* Corner ornaments */
+.tc-corner {
+  position: absolute;
+  width: 22px; height: 22px;
+  border-color: rgba(201,151,58,0.55);
+  border-style: solid;
+}
+.tc-corner.tl { top: 8px; left: 8px;  border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
+.tc-corner.tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; border-radius: 0 4px 0 0; }
+.tc-corner.bl { bottom: 8px; left: 8px;  border-width: 0 0 2px 2px; border-radius: 0 0 0 4px; }
+.tc-corner.br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+
+.tc-bismillah {
+  font-size: 0.85rem;
+  color: #c9973a;
+  letter-spacing: 10px;
+  margin: 0 0 0.6rem;
+}
+.tc-together {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(240,201,106,0.65);
+  margin: 0 0 1rem;
+}
+
+.tc-photos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+.tc-photo {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(201,151,58,0.5);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+}
+.tc-heart { color: #c9973a; font-size: 1.2rem; }
+
+.tc-names {
+  font-family: 'Great Vibes', cursive;
+  font-size: clamp(2rem, 6vw, 2.8rem);
+  color: #f0c96a;
+  line-height: 1.15;
+  margin: 0 0 0.6rem;
+}
+.tc-amp {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  color: #c9973a;
+  font-style: italic;
+}
+
+.tc-request {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  color: rgba(255,255,255,0.65);
+  margin: 0 0 1rem;
+}
+
+.tc-ornament {
+  color: #c9973a;
+  font-size: 0.85rem;
+  letter-spacing: 6px;
+  margin-bottom: 1rem;
+}
+.tc-ornament.bottom { margin-top: 1rem; margin-bottom: 0.4rem; }
+
+.tc-details { margin-bottom: 0.6rem; }
+.tc-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.95rem;
+  color: rgba(255,255,255,0.88);
+  margin-bottom: 5px;
+}
+.tc-detail-icon { font-size: 0.85rem; }
+.tc-detail-val  { font-weight: 600; }
+
+.tc-desc {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.55);
+  margin: 0.6rem 0 0;
+}
+.tc-footer {
+  font-size: 0.6rem;
+  color: rgba(201,151,58,0.4);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* ══════════════════════════════════
+   Modern
+══════════════════════════════════ */
+.tmpl-modern {
+  background: #fafaf8;
+  padding: 2.8rem 2.2rem;
+  text-align: center;
+  border: 1px solid #e0dbd8;
+}
+
+.tm-rule {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #1a1a1a 25%, #1a1a1a 75%, transparent);
+  margin-bottom: 2rem;
+}
+.tm-rule.bottom { margin-top: 2rem; margin-bottom: 0; }
+
+.tm-eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #999;
+  margin: 0 0 1.2rem;
+}
+
+.tm-photos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: -12px;
+  margin-bottom: 1.2rem;
+}
+.tm-photo {
+  width: 68px; height: 68px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #1a1a1a;
+  margin: 0 -6px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+}
+
+.tm-names {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+  margin: 0 0 1rem;
+}
+
+.tm-thin-rule {
+  width: 48px; height: 1px;
+  background: #1a1a1a;
+  margin: 0 auto 1.4rem;
+}
+
+.tm-details {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: 1rem;
+}
+.tm-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 1.4rem;
+}
+.tm-sep {
+  width: 1px; height: 36px;
+  background: #ddd;
+  align-self: center;
+}
+.tm-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #aaa;
+  font-weight: 600;
+}
+.tm-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  font-weight: 700;
+}
+.tm-desc {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+.tm-footer {
+  font-size: 0.6rem;
+  color: #ccc;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0.8rem 0 0;
+}
+
+/* ══════════════════════════════════
+   Floral
+══════════════════════════════════ */
+.tmpl-floral {
+  background: linear-gradient(135deg, #fff5f7 0%, #fef5ec 50%, #f8f5ff 100%);
+  padding: 2.2rem 1.8rem;
+  text-align: center;
+  border: 1px solid rgba(200,120,150,0.2);
+  position: relative;
+}
+
+.tf-petals {
+  font-size: 1.3rem;
+  letter-spacing: 6px;
+}
+.tf-petals.top  { margin-bottom: 1rem; }
+.tf-petals.bottom { margin-top: 1rem; margin-bottom: 0.3rem; }
+
+.tf-join {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b06080;
+  margin: 0 0 1rem;
+}
+
+.tf-photos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+.tf-photo {
+  width: 68px; height: 68px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2.5px solid rgba(200,120,150,0.45);
+  box-shadow: 0 4px 16px rgba(176,96,128,0.18);
+}
+.tf-heart { color: #c9973a; font-size: 1.3rem; }
+
+.tf-names {
+  font-family: 'Great Vibes', cursive;
+  font-size: clamp(2rem, 6vw, 2.8rem);
+  color: #8a2057;
+  margin: 0 0 0.3rem;
+  line-height: 1.2;
+}
+.tf-names span { color: #c9973a; }
+
+.tf-tagline {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  color: #b06080;
+  margin: 0 0 1rem;
+}
+
+.tf-ribbon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 auto 1rem;
+  max-width: 200px;
+}
+.tf-ribbon span:not(.tf-ribbon-text) {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200,120,150,0.5));
+}
+.tf-ribbon span:last-child {
+  background: linear-gradient(90deg, rgba(200,120,150,0.5), transparent);
+}
+.tf-ribbon-text { font-size: 0.75rem; color: #c9973a; }
+
+.tf-details {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  color: #5a3040;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 0.6rem;
+}
+.tf-details p { margin: 0; }
+
+.tf-desc {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.88rem;
+  color: #9a6070;
+  margin-top: 0.5rem;
+}
+.tf-footer {
+  font-size: 0.6rem;
+  color: rgba(200,120,150,0.5);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 580px) {
+  .tm-details { flex-direction: column; gap: 12px; }
+  .tm-sep { display: none; }
+}

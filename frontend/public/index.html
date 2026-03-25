@@ -1,46 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
 
-    <!-- IMPORTANT: Mobile responsive -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <!-- ── Primary SEO ── -->
+  <title>WedMangal — Find & Book Wedding Vendors in Tamil Nadu</title>
+  <meta name="description" content="Find and book trusted wedding vendors for your dream wedding. Photographers, makeup artists, caterers, decorators and more on WedMangal." />
+  <meta name="theme-color" content="#5e143f" />
 
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  <!-- ── Favicon ── -->
+  <link rel="icon" type="image/x-icon"  href="%PUBLIC_URL%/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png" />
 
-    <!-- Favicon -->
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+  <!-- ── Apple PWA ── -->
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="WedMangal" />
 
-    <!-- Apple Icons -->
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/icons/icon-192x192.ico" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="BookYourCelebrations" />
+  <!-- ── PWA Manifest ── -->
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
-    <!-- Theme Color -->
-    <meta name="theme-color" content="#f8c102" />
+  <!-- ── Open Graph ── -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:site_name"   content="WedMangal" />
+  <meta property="og:title"       content="WedMangal — Find & Book Wedding Vendors in Tamil Nadu" />
+  <meta property="og:description" content="Find and book trusted wedding vendors for your dream wedding. Photographers, makeup artists, caterers, decorators and more." />
+  <meta property="og:image"       content="%PUBLIC_URL%/og-image-1200x630.jpg" />
+  <meta property="og:url"         content="https://wedmangal.com" />
 
-    <!-- FontAwesome -->
-    <link 
-      rel="stylesheet" 
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" 
-    />
+  <!-- ── Twitter Card ── -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="WedMangal — Find & Book Wedding Vendors in Tamil Nadu" />
+  <meta name="twitter:description" content="Find and book trusted wedding vendors for your dream wedding." />
+  <meta name="twitter:image"       content="%PUBLIC_URL%/og-image-1200x630.jpg" />
 
-    <title>BOOK YOUR CELEBRATION</title>
-  </head>
+  <!-- ── FontAwesome ── -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+</head>
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
 
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+  <!-- React root -->
+  <div id="root"></div>
 
-    <!-- Cashfree SDK -->
-    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+  <!-- Cashfree SDK -->
+  <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
 
-    <!-- Google One Tap -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-
-    <!-- React root -->
-    <div id="root"></div>
-
-  </body>
+  <!-- Google One Tap -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</body>
 </html>

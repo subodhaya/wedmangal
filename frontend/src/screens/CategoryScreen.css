@@ -1,0 +1,53 @@
+.cs-page {
+  min-height: 100vh;
+  background: #faf8f5;
+}
+
+.cs-header {
+  background: linear-gradient(135deg, #3d0d28 0%, #5e143f 100%);
+  padding: 1.5rem 1.5rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cs-back {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #f0c96a;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+.cs-back:hover { background: rgba(255,255,255,0.22); }
+
+.cs-header-text { flex: 1; }
+
+.cs-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 4px;
+}
+
+.cs-subtitle {
+  font-size: 0.82rem;
+  color: rgba(240, 201, 106, 0.8);
+  margin: 0;
+}
+
+.cs-filters {
+  padding: 0 1rem;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.cs-body {
+  padding: 1.25rem 1rem 2rem;
+}

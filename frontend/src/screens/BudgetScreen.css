@@ -1,0 +1,363 @@
+/* ============================================================
+   BudgetScreen.css — BookYourCelebration
+   White background, maroon × gold accents
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* ── Page wrapper ──────────────────────────────────────── */
+.budget-screen {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Page header ───────────────────────────────────────── */
+.budget-page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.budget-page-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  font-weight: 600;
+  color: #3d0d28;
+  margin: 0 0 0.3rem;
+  letter-spacing: -0.01em;
+}
+.budget-page-sub {
+  font-size: 0.95rem;
+  color: #9a7a85;
+  margin: 0;
+}
+
+/* ── Summary cards row ─────────────────────────────────── */
+.budget-summary-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.budget-summary-card {
+  flex: 1 1 140px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.1rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 2px 12px rgba(94, 20, 63, 0.08);
+  border: 1px solid rgba(94, 20, 63, 0.10);
+}
+.budget-summary-card.total  { border-top: 3px solid #5e143f; }
+.budget-summary-card.spent  { border-top: 3px solid #c9973a; }
+.budget-summary-card.remaining { border-top: 3px solid #2ecc71; }
+.budget-summary-card.remaining.over { border-top-color: #c0392b; }
+
+.summary-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9a7a85;
+}
+.summary-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #3d0d28;
+  line-height: 1.1;
+}
+
+/* ── Progress bar ──────────────────────────────────────── */
+.budget-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.8rem;
+}
+.budget-progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #f0e6ec;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.budget-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+.budget-progress-label {
+  font-size: 0.78rem;
+  color: #9a7a85;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* ── Main row ──────────────────────────────────────────── */
+.budget-main-row {
+  gap: 0;
+}
+
+/* ── White card panel ──────────────────────────────────── */
+.budget-card {
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid rgba(94, 20, 63, 0.10);
+  box-shadow: 0 2px 16px rgba(94, 20, 63, 0.07);
+  padding: 1.6rem 1.8rem;
+  height: 100%;
+}
+.chart-card {
+  margin-left: 1rem;
+}
+
+/* ── Section sub-title ─────────────────────────────────── */
+.budget-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5e143f;
+  margin-bottom: 0.8rem;
+}
+.section-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #c9973a;
+  flex-shrink: 0;
+}
+
+/* ── Total budget input ────────────────────────────────── */
+.budget-total-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1.5px solid rgba(94, 20, 63, 0.25);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+.budget-total-input-row:focus-within {
+  border-color: #5e143f;
+  box-shadow: 0 0 0 3px rgba(94, 20, 63, 0.08);
+}
+.rupee-prefix {
+  padding: 0 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #5e143f;
+  background: #fdf4e3;
+  border-right: 1.5px solid rgba(94, 20, 63, 0.15);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  line-height: 2.6rem;
+}
+.rupee-prefix.small { line-height: 2.2rem; font-size: 0.88rem; }
+
+.budget-total-input {
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #3d0d28;
+  padding: 0.55rem 0.9rem;
+  background: #fff;
+  flex: 1;
+}
+.budget-total-input:focus { outline: none; box-shadow: none !important; }
+
+/* ── Expense rows ──────────────────────────────────────── */
+.expense-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.expense-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.9rem;
+  background: #fdf8fb;
+  border: 1px solid rgba(94, 20, 63, 0.09);
+  border-radius: 10px;
+  transition: border-color 0.2s ease;
+}
+.expense-row:focus-within {
+  border-color: #c9973a;
+  background: #fffdf7;
+}
+.expense-label-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 130px;
+}
+.expense-icon { font-size: 1.1rem; }
+.expense-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #3d0d28;
+}
+.expense-input-wrap {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid rgba(94, 20, 63, 0.18);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  transition: border-color 0.2s ease;
+}
+.expense-input-wrap:focus-within { border-color: #5e143f; }
+.expense-input {
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  width: 110px;
+  font-size: 0.9rem;
+  color: #3d0d28;
+  padding: 0.4rem 0.7rem;
+}
+.expense-input:focus { outline: none; box-shadow: none !important; }
+
+/* ── Add custom expense ────────────────────────────────── */
+.add-expense-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.add-expense-name {
+  flex: 1;
+  min-width: 120px;
+  border: 1.5px solid rgba(94, 20, 63, 0.20) !important;
+  border-radius: 8px !important;
+  font-size: 0.9rem;
+  color: #3d0d28;
+  padding: 0.45rem 0.8rem;
+}
+.add-expense-name:focus {
+  border-color: #5e143f !important;
+  box-shadow: 0 0 0 3px rgba(94, 20, 63, 0.08) !important;
+}
+.add-expense-amount-wrap {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid rgba(94, 20, 63, 0.20);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+.add-expense-btn {
+  background: #5e143f;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 1.1rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.22s ease;
+}
+.add-expense-btn:hover { background: #3d0d28; }
+
+/* ── Save row ──────────────────────────────────────────── */
+.budget-save-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 1.6rem;
+  flex-wrap: wrap;
+}
+.budget-save-btn {
+  background: linear-gradient(90deg, #5e143f, #8a2057);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.8rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.22s ease, transform 0.18s ease;
+}
+.budget-save-btn:hover {
+  background: linear-gradient(90deg, #3d0d28, #5e143f);
+  transform: translateY(-1px);
+}
+.budget-msg {
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+.budget-msg.success { background: #eafaf1; color: #1e7e48; }
+.budget-msg.error   { background: #fdecea; color: #8b1a1a; }
+
+/* ── Chart area ────────────────────────────────────────── */
+.chart-wrap {
+  max-width: 260px;
+  margin: 0 auto 1.2rem;
+}
+.chart-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #c4a0b0;
+}
+.chart-empty-icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+.chart-empty p { font-size: 0.88rem; margin: 0; }
+
+/* Legend */
+.chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(94, 20, 63, 0.10);
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.legend-label {
+  flex: 1;
+  font-size: 0.83rem;
+  color: #5a3a45;
+}
+.legend-amount {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #3d0d28;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .chart-card { margin-left: 0; margin-top: 1rem; }
+  .budget-summary-row { gap: 10px; }
+  .budget-card { padding: 1.2rem; }
+  .add-expense-row { flex-direction: column; align-items: stretch; }
+  .add-expense-btn { width: 100%; text-align: center; }
+  .expense-row { flex-wrap: wrap; gap: 8px; }
+  .expense-input { width: 90px; }
+}

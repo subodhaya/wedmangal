@@ -1,170 +1,328 @@
-/* Apply the background styling */
-body {
-   
-    background-color: white;
+/* ============================================================
+   LoginScreen.css — BookYourCelebration
+   Split-panel login: maroon side panel + white form
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Great+Vibes&display=swap');
+
+/* ── Tokens ────────────────────────────────────────────── */
+:root {
+  --maroon-deep:  #3d0d28;
+  --maroon:       #5e143f;
+  --maroon-light: #8a2057;
+  --gold:         #c9973a;
+  --gold-light:   #f0c96a;
+  --ivory:        #faf7f2;
+  --ivory-warm:   #f5eaf0;
+  --text-primary: #2a0a1c;
+  --text-muted:   #9a7a85;
+  --border:       rgba(94, 20, 63, 0.13);
+  --shadow-md:    0 8px 32px rgba(94, 20, 63, 0.13);
+  --shadow-lg:    0 20px 60px rgba(94, 20, 63, 0.22);
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body:    'DM Sans', sans-serif;
+  --ease:         cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Card styling for the registration form */
-.login-card, .register-card {
-    background: linear-gradient(225deg, #f9e79f 25%, transparent 25%),
-                linear-gradient(135deg, #f9e79f 25%, transparent 25%) 0 0,
-                linear-gradient(225deg, #f9e79f 25%, transparent 25%) 0 0,
-                linear-gradient(90deg, white 20%, #f9e79fd0 50%),
-                linear-gradient(315deg, white 15%, white 15%) 0 0;
-    border-radius: 10px;
-    padding: 2rem;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    max-width: 700px;
-
-    margin: auto;
-    margin-top: 1.5rem;
-}
-.plain-card {
-    background: linear-gradient(225deg, #f9e79f 25%, transparent 25%),
-                linear-gradient(135deg, #f9e79f 25%, transparent 25%) 0 0,
-                linear-gradient(225deg, #f9e79f 25%, transparent 25%) 0 0,
-                linear-gradient(90deg, white 20%, #f9e79fd0 50%),
-                linear-gradient(315deg, white 15%, white 15%) 0 0;
-    border-radius: 10px;
-    padding: 2rem;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    
-
-    margin: auto;
-    margin-top: 1.5rem;
-}
-.bold-black-text {
-    font-weight: bold; /* Make text bold */
-    color: black; /* Set text color to black */
-}
-.chart-container {
-    width: 300px; /* Set the width for the pie chart container */
-    height: 300px; /* Set a fixed height for the pie chart */
-    margin-left: 20px; /* Add some spacing between form and chart */
-}
-/* Header styling */
-.login-header, .register-header {
-    color: #5e143f; /* Dark purple text */
-    text-align: center;
-    margin-bottom: 1.5rem;
-    font-size: 1.8rem;
-    font-weight: bold;
-
+/* ── Full-page layout ──────────────────────────────────── */
+.ls-page {
+  min-height: 100vh;
+  display: flex;
+  font-family: var(--font-body);
+  background: var(--ivory);
 }
 
-/* Input styling */
-.login-input, .register-input, .form-control {
-    display: flex;
-    color: black;
-    border: 1px solid #5e143f;
-    padding: 0.8rem;
-    border-radius: 5px;
-    transition: box-shadow 0.3s ease;
+/* ── Left decorative panel ─────────────────────────────── */
+.ls-side {
+  width: 42%;
+  flex-shrink: 0;
+  background: linear-gradient(150deg, var(--maroon-deep) 0%, var(--maroon) 55%, #8a2057 100%);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 3rem;
+  animation: lsSlideSide 0.7s var(--ease) both;
 }
-
-.login-input:focus, .register-input:focus, .form-control:focus {
-    flex: 1;
-    box-shadow: 0 0 5px rgba(94, 20, 63, 0.5);
-    border-color: #5e143f;
+.ls-side-inner {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  width: 100%;
 }
-
-/* Button styling */
-.login-button, .register-button, .btn-primary {
-    background-color: #5e143f;
-    color: #f9e79f;
-    border: none;
-    border-radius: 5px;
-    padding: 0.8rem;
-    width: 100%;
-    margin-top: 1rem;
-    font-size: 1rem;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
+.ls-side-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 1rem;
 }
-
-.login-button:hover, .register-button:hover, .btn-primary:hover {
-    background-color: #4a1032;
-    color: #f9e79f;
+.ls-side-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 3vw, 2.8rem);
+  font-weight: 300;
+  color: #fff;
+  margin: 0 0 1.1rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
-
-/* Link styling */
-a {
-    color: #5e143f;
+.ls-side-sub {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.65;
+  max-width: 300px;
+  margin: 0 auto 2rem;
 }
-
-a:hover {
-    color: #4a1032;
+.ls-side-ornament {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  color: rgba(201,151,58,0.5);
+  margin: 0 0 1rem;
 }
-
-/* budget            */
-.d-flex.align-items-center {
-    display: flex;
-    align-items: center;
-    gap: 05px; /* Space between input and button */
-  }
-  
-  .form-control {
-    flex: 1;
-  }
-  
-/* Container for the input and button */
-.position-relative.custom-input-group {
-    position: relative;
-    width: 100%;
-  }
-  
-  .custom-input {
-    width: 100%;
-    padding: 10px 50px 10px 15px; /* space on right for button */
-    border: 1px solid #5a123c;
-    border-radius: 0px;
-    box-sizing: border-box;
-    outline: none;
-  }
-  
-  .custom-button {
-    position: absolute;
-    right: 5px;
-    top: 50%;
-    transform: translateY(-50%);
-    height: 80%;
-    padding: 0 10px;
-    border: none;
-    background-color: #7e275a;
-    color: white;
-    font-weight: bold;
-    font-size: 1.25rem;
-    border-radius: 0px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .custom-button:active {
-    transform: translateY(-50%) scale(0.95);
-  }
-  
-  /* Hide up and down arrows in number input */
-.custom-input::-webkit-outer-spin-button,
-.custom-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
+.ls-side-brand {
+  font-family: 'Great Vibes', cursive;
+  font-size: 1.9rem;
+  color: var(--gold-light);
   margin: 0;
+  letter-spacing: 0.02em;
 }
 
-input[type="number"] {
-    appearance: textfield;
+/* Soft background orbs on side panel */
+.ls-side-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+}
+.ls-side-orb--1 {
+  width: 380px; height: 380px;
+  background: radial-gradient(circle, rgba(201,151,58,0.12), transparent 70%);
+  top: -80px; right: -100px;
+}
+.ls-side-orb--2 {
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(255,255,255,0.04), transparent 70%);
+  bottom: -60px; left: -60px;
 }
 
-.password-input-wrapper {
+/* Diagonal cut on right edge */
+.ls-side::after {
+  content: '';
+  position: absolute;
+  top: 0; right: -1px;
+  width: 60px; height: 100%;
+  background: var(--ivory);
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  z-index: 3;
+}
+
+/* ── Right form panel ──────────────────────────────────── */
+.ls-form-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 2rem;
+  animation: lsFadeUp 0.6s var(--ease) 0.15s both;
+}
+
+/* ── Card ──────────────────────────────────────────────── */
+.ls-card {
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  padding: 2.4rem 2.2rem;
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ── Card header ───────────────────────────────────────── */
+.ls-card-header { text-align: center; margin-bottom: 1.8rem; }
+.ls-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 0.5rem;
+}
+.ls-title {
+  font-family: var(--font-display);
+  font-size: 2.3rem;
+  font-weight: 400;
+  color: var(--maroon-deep);
+  margin: 0 0 0.9rem;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.ls-header-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: 140px;
+  margin: 0 auto;
+}
+.ls-header-rule span:not(.ls-diamond) {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold));
+}
+.ls-header-rule span:last-child { background: linear-gradient(90deg, var(--gold), transparent); }
+.ls-diamond { font-size: 0.5rem; color: var(--gold); flex: none; }
+
+/* ── Error ─────────────────────────────────────────────── */
+.ls-error {
+  background: #fdecea;
+  color: #8b1a1a;
+  border-left: 3px solid #c0392b;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 0.86rem;
+  margin-bottom: 1rem;
+}
+
+/* ── Form ──────────────────────────────────────────────── */
+.ls-form { display: flex; flex-direction: column; gap: 1rem; }
+
+.ls-field { display: flex; flex-direction: column; gap: 5px; }
+.ls-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--maroon-deep);
+  letter-spacing: 0.04em;
+}
+.ls-input {
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 0.62rem 0.9rem;
+  font-family: var(--font-body);
+  font-size: 0.93rem;
+  color: var(--text-primary);
+  background: var(--ivory);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  outline: none;
+  width: 100%;
+}
+.ls-input:focus {
+  border-color: var(--maroon);
+  box-shadow: 0 0 0 3px rgba(94,20,63,0.08);
+  background: #fff;
+}
+.ls-input::placeholder { color: rgba(154,122,133,0.55); }
+
+/* Password wrapper */
+.ls-pw-wrap {
   position: relative;
   display: flex;
   align-items: center;
 }
-
-.password-toggle-icon {
+.ls-pw-wrap .ls-input { padding-right: 2.8rem; }
+.ls-pw-toggle {
   position: absolute;
-  right: 10px;
+  right: 12px;
+  background: none;
+  border: none;
   cursor: pointer;
-  color: #6c757d; /* Optional: Customize icon color */
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  padding: 0;
+  transition: color 0.2s;
+}
+.ls-pw-toggle:hover { color: var(--maroon); }
+
+/* Submit button */
+.ls-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: linear-gradient(110deg, var(--maroon), var(--maroon-light));
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(94,20,63,0.28);
+  transition: background 0.22s, transform 0.18s, box-shadow 0.2s;
+  margin-top: 0.3rem;
+}
+.ls-submit-btn:hover {
+  background: linear-gradient(110deg, var(--maroon-deep), var(--maroon));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 26px rgba(94,20,63,0.36);
+}
+.ls-btn-arrow { font-size: 1.1rem; transition: transform 0.2s; }
+.ls-submit-btn:hover .ls-btn-arrow { transform: translateX(3px); }
+
+/* ── Divider ───────────────────────────────────────────── */
+.ls-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 1.4rem 0;
+}
+.ls-divider span:not(.ls-divider-text) {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.ls-divider-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Google login ──────────────────────────────────────── */
+.ls-google-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.4rem;
+}
+
+/* ── Footer links ──────────────────────────────────────── */
+.ls-links { display: flex; flex-direction: column; gap: 0.5rem; }
+.ls-link-row {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0;
+}
+.ls-link-row a {
+  color: var(--maroon);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.ls-link-row a:hover { color: var(--maroon-deep); text-decoration: underline; }
+
+/* ── Animations ────────────────────────────────────────── */
+@keyframes lsSlideSide {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes lsFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 800px) {
+  .ls-side { display: none; }
+  .ls-side::after { display: none; }
+  .ls-page { background: var(--ivory); }
+  .ls-form-panel { padding: 1.5rem 1rem; align-items: flex-start; padding-top: 2.5rem; }
+  .ls-card { box-shadow: none; border: none; padding: 1.5rem 1rem; }
+}
+@media (max-width: 420px) {
+  .ls-card { padding: 1.2rem 0.8rem; }
 }

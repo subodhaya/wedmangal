@@ -21,6 +21,13 @@ header {
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
+/* Make navbar taller to fit the logo */
+
+
+.header-navbar .navbar-brand {
+  padding-top: 0;
+  padding-bottom: 0;
+}
 
 /* ------------------ BRAND (LOGO + NAME) ------------------ */
 .brand-logo {
@@ -31,12 +38,20 @@ header {
   font-weight: 700;
   letter-spacing: 0.4px;
   white-space: nowrap;
-
+  
   /* let it shrink so toggler is never cut */
   flex: 1 1 auto;
   min-width: 0;
 }
-
+.brand-logo svg {
+  height: 58px;
+  width: auto;
+}
+@media (max-width: 480px) {
+  .brand-logo svg {
+    height: 46px;
+  }
+}
 .brand-logo .logo {
   width: 44px;
   height: 44px;
@@ -157,4 +172,110 @@ header {
     padding-right: 5px !important;
     max-width: 100% !important;
   }
+}
+/* Add these to your existing Header.css */
+
+/* ── Logo ── */
+.header-logo-img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  /* logo has transparent bg so it sits cleanly on the maroon navbar */
+}
+
+/* ── Search wrap in navbar ── */
+.header-search-wrap {
+  flex: 1;
+  max-width: 420px;
+  margin: 0 16px;
+}
+
+/* On mobile: full width search below the toggle */
+@media (max-width: 991px) {
+  .header-search-wrap {
+    width: 100%;
+    max-width: 100%;
+    margin: 10px 0;
+    order: 3; /* push below nav links */
+  }
+}
+
+
+/* search box css-----------------------*/
+/* Add these to your HomeScreen.css */
+
+/* ── Hero search wrapper ── */
+.hero-search-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 24px auto 8px;
+  padding: 0 16px;
+  max-width: 760px;
+  width: 100%;
+}
+
+/* ── Search results header ── */
+.search-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0 8px;
+  border-bottom: 1px solid #f0e0e8;
+  margin-bottom: 12px;
+}
+
+.search-results-meta {
+  font-size: 15px;
+  color: #2d0a1e;
+}
+
+.search-results-count {
+  font-weight: 700;
+  color: #5e143f;
+}
+
+.search-results-label {
+  color: #6b3050;
+}
+
+.search-results-clear {
+  background: none;
+  border: 1.5px solid #e0c0cc;
+  color: #9a5070;
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.search-results-clear:hover {
+  background: #fdf0f5;
+  border-color: #5e143f;
+  color: #5e143f;
+}
+
+/* ── Empty search state ── */
+.search-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b3050;
+}
+
+.search-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.search-empty h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2d0a1e;
+  margin-bottom: 8px;
+}
+
+.search-empty p {
+  font-size: 14px;
+  color: #9a5070;
+  margin-bottom: 20px;
 }

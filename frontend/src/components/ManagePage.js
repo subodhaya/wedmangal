@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Container, Button, Card, Alert,Col,Row } from 'react-bootstrap';
-import axios from 'axios';
-import api from '../utils/api';  
-import { FaTrash, FaTimes } from 'react-icons/fa';
+import { Container, Row, Col } from 'react-bootstrap';
+import api from '../utils/api';
+import { FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import './ManagePage.css';
+import AvailabilityToggle from './AvailabilityToggle';
+
+
 
 function ManagePage() {
     const [productData, setProductData] = useState({
@@ -13,12 +16,12 @@ function ManagePage() {
         category: '',
         description: '',
         city: '',
-        area_name: '', // New Field
-        address: '', // New Field
+        area_name: '',
+        address: '',
         business_phone: '',
         personal_phone: '',
-        opening_time: '', // New Field
-        closing_time: '', // New Field
+        opening_time: '',
+        closing_time: '',
         isApproved: false,
     });
     const [services, setServices] = useState([]);
@@ -30,16 +33,13 @@ function ManagePage() {
     const navigate = useNavigate();
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
 
-    // Fetch data
+    /* ── Fetch data ─────────────────────────────────────────── */
     const fetchData = async () => {
         try {
-            const userId = userInfo.id; // Get the user ID from local storage
+            const userId = userInfo.id;
             const { data } = await api.get(`/api/products/my-business/${userId}/`, {
-                headers: {
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
+                headers: { Authorization: `Bearer ${userInfo.token}` },
             });
-            console.log('Fetched Data:', data); // Debugging statement
             setProductData(data);
             setServices(data.services || []);
         } catch (error) {
@@ -47,40 +47,29 @@ function ManagePage() {
         }
     };
 
-    useEffect(() => {
-        fetchData();
-    }, [userInfo.token]);
+    useEffect(() => { fetchData(); }, [userInfo.token]);
 
-    // Handle form changes
+    /* ── Handle changes ─────────────────────────────────────── */
     const handleProductChange = (e) => {
         const { name, value, files } = e.target;
         if (name === 'image' && files.length > 0) {
-            // Set the image as a preview URL
-            setProductData((prevData) => ({
-                ...prevData,
-                [name]: URL.createObjectURL(files[0]),  // For preview
-                imageFile: files[0],  // For actual upload
+            setProductData((prev) => ({
+                ...prev,
+                [name]: URL.createObjectURL(files[0]),
+                imageFile: files[0],
             }));
         } else {
-            setProductData((prevData) => ({
-                ...prevData,
-                [name]: value,
-            }));
+            setProductData((prev) => ({ ...prev, [name]: value }));
         }
     };
-    
 
-    
-    // Handle product update
+    /* ── Submit ─────────────────────────────────────────────── */
     const handleProductSubmit = async () => {
         try {
             const formData = new FormData();
             for (const [key, value] of Object.entries(productData)) {
-                if (key === 'imageFile') {
-                    formData.append('image', value);  // Send the actual file
-                } else {
-                    formData.append(key, value);
-                }
+                if (key === 'imageFile') formData.append('image', value);
+                else formData.append(key, value);
             }
             if (!productData.personal_phone) {
                 formData.set('personal_phone', productData.business_phone);
@@ -88,270 +77,312 @@ function ManagePage() {
             const response = await fetch(`/api/products/update_product/${userInfo.id}/`, {
                 method: 'POST',
                 body: formData,
-                headers: {
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
+                headers: { Authorization: `Bearer ${userInfo.token}` },
             });
-    
-            if (!response.ok) {
-                throw new Error('Product update failed');
-            }
-    
-            const result = await response.json();
-            setSuccessMessage('Image updated successfully');
+            if (!response.ok) throw new Error('Product update failed');
+            await response.json();
+            setSuccessMessage('Business updated successfully!');
             setErrorMessage('');
             navigate('/services');
         } catch (error) {
-            setErrorMessage('Failed to update product. Please try again.');
+            setErrorMessage('Failed to update. Please try again.');
             setSuccessMessage('');
         }
     };
-    
 
+    /* ── Auto-clear messages ────────────────────────────────── */
     useEffect(() => {
         if (successMessage || errorMessage) {
-            const timer = setTimeout(() => {
-                setSuccessMessage('');
-                setErrorMessage('');
-            }, 4000);
-
-            return () => clearTimeout(timer);
+            const t = setTimeout(() => { setSuccessMessage(''); setErrorMessage(''); }, 4000);
+            return () => clearTimeout(t);
         }
     }, [successMessage, errorMessage]);
 
-    return (
-        <div>
-        {successMessage && <div className="alert alert-success">{successMessage}</div>}
-        {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
-      
-        {/* Product Section */}
-        <Container fluid className="front-page-container">
-            <Card className="plain1-card mt-4 p-4">
-                <Row className="g-0">
-                        {/* Left Column - Welcome Card Content */}
-                    <Col md={6} className="p-4">
-                        <Card.Body>
-                            <Card.Title className="text-primary display-6">
-                                Welcome to Your Business Dashboard
-                            </Card.Title>
-                            <h4 className="mt-3 text-muted">
-                                Grow your wedding business in a way that’s easy and empowering…with the most trusted brand in the industry behind you.
-                            </h4>
-                            <p>
-                                BookYourCelebrations is the only wedding-advertising solution that combines the power of App and realtime clients to bring you better leads and more bookings.
-                            </p>
-                            <p>
-                                Customize your business card beautifully here. First impressions matter. Make the best one and build trust while showing off your work, background, and passion.
-                            </p>
-                        </Card.Body>
-                    </Col>
+    /* ── Approval badge ─────────────────────────────────────── */
+    const ApprovalBadge = () => (
+        <span className={`mp-badge ${productData.isApproved ? 'mp-badge-approved' : 'mp-badge-pending'}`}>
+            {productData.isApproved ? '✅ Verified Business' : '⏳ Pending Approval'}
+        </span>
+    );
 
-                        {/* Right Column - Image */}
-                    <Col md={6} className="p-0">
+    return (
+        <div className="manage-page">
+            <AvailabilityToggle />
+            <Container fluid style={{ padding: '0 16px' }}>
+
+                {/* ── Floating alerts ──────────────────────────────── */}
+                {successMessage && (
+                    <div className="mp-alert mp-alert-success">✅ {successMessage}</div>
+                )}
+                {errorMessage && (
+                    <div className="mp-alert mp-alert-danger">⚠️ {errorMessage}</div>
+                )}
+
+                {/* ── Welcome hero ─────────────────────────────────── */}
+                <div className="mp-welcome-card">
+                    <Row className="g-0">
+                        <Col md={6}>
+                            <div className="mp-welcome-left">
+                                <div className="mp-welcome-top-row">
+                                    <h2 className="mp-welcome-title">Manage Your Business</h2>
+                                    <ApprovalBadge />
+                                </div>
+                                <p className="mp-welcome-subtitle">
+                                    Keep your profile fresh — couples check your details before they reach out.
+                                </p>
+                                <p className="mp-welcome-text">
+                                    Update your business name, photos, contact details, and working hours anytime. A complete profile gets 3× more enquiries.
+                                </p>
+                                <p className="mp-welcome-text">
+                                    Changes go live after a quick review by our team — usually within a few hours.
+                                </p>
+
+                                {/* Quick stats */}
+                                <div className="mp-stats-row">
+                                    <div className="mp-stat">
+                                        <span className="mp-stat-num">{services.length}</span>
+                                        <span className="mp-stat-label">Services</span>
+                                    </div>
+                                    <div className="mp-stat-divider" />
+                                    <div className="mp-stat">
+                                        <span className="mp-stat-num">{productData.city || '—'}</span>
+                                        <span className="mp-stat-label">City</span>
+                                    </div>
+                                    <div className="mp-stat-divider" />
+                                    <div className="mp-stat">
+                                        <span className="mp-stat-num">{productData.category || '—'}</span>
+                                        <span className="mp-stat-label">Category</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </Col>
+                        <Col md={6} className="p-0">
                             <img
                                 src="/images/makeupartist.jpg"
-                                alt="Makeup Artist"
-                                className="img-fluid rounded-end"
-                                style={{ height: '93%', objectFit: 'cover' }}
+                                alt="Wedding Vendor"
+                                className="mp-welcome-img"
                             />
-                    </Col>
-                </Row>
-            </Card>
-      
-          {/* Form Section */}
-          <Card className="mt-4">
-            <Card.Body>
-              <Card.Title>Manage Your Business</Card.Title>
-                    <Form onSubmit={(e) => e.preventDefault()}>
-                            {/* Business Form */}
-                            <Form.Group controlId="name" className="d-flex align-items-center mb-3">
-                                <Form.Label className="mb-0 me-3" style={{ minWidth: '150px' }}>Business Name</Form.Label>
-                                <Form.Control
+                        </Col>
+                    </Row>
+                </div>
+
+                {/* ── Form card ────────────────────────────────────── */}
+                <div className="mp-form-card">
+                    <div className="mp-form-header">
+                        <h2 className="mp-form-title">✏️ Update Business Details</h2>
+                        <p className="mp-form-subtitle">All fields are pre-filled from your current profile</p>
+                    </div>
+
+                    <div className="mp-form-body">
+                        <form onSubmit={(e) => e.preventDefault()}>
+
+                            {/* ── Business info ── */}
+                            <div className="mp-section-divider">
+                                <span className="mp-section-label">🏪 Business Info</span>
+                                <div className="mp-section-line"></div>
+                            </div>
+
+                            <div className="mp-form-group">
+                                <label className="mp-label">Business Name *</label>
+                                <input
                                     type="text"
                                     name="name"
+                                    className="mp-input"
                                     value={productData.name || ''}
                                     onChange={handleProductChange}
                                     placeholder="Enter business name"
                                     required
-                                    style={{ flexGrow: 1 }}
                                 />
-                            </Form.Group>
+                            </div>
 
-                            {/* Image Upload Field */}
-                            <Form.Group controlId="image" className="d-flex align-items-center mb-3">
-                                <Form.Label className="mb-0 me-3" style={{ minWidth: '150px' }}>Business Image</Form.Label>
-                                <Form.Control
-                                    type="file"
-                                    name="image"
-                                    onChange={handleProductChange}
-                                    style={{ flexGrow: 1 }}
-                                />
-                                {productData.image && (
-                                    <div className="mt-3 position-relative">
-                                        <img src={productData.image} alt="Uploaded" style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
-                                        <Button
-                                            variant="danger"
-                                            className="position-absolute top-0 end-0 p-0"
-                                            style={{
-                                                width: '25px',
-                                                height: '25px',
-                                                borderRadius: '50%',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                                                border: 'none',
-                                            }}
-                                            onClick={() => setProductData((prev) => ({ ...prev, image: null }))}
-                                        >
-                                            <FaTimes style={{ fontSize: '14px', color: '#fff' }} />
-                                        </Button>
-                                    </div>
-                                )}
-                            </Form.Group>
+                            {/* Image with preview */}
+                            <div className="mp-form-group">
+                                <label className="mp-label">Business Image</label>
+                                <div style={{ flex: 1 }}>
+                                    <input
+                                        type="file"
+                                        name="image"
+                                        className="mp-file-input"
+                                        onChange={handleProductChange}
+                                    />
+                                    {productData.image && (
+                                        <div className="mp-img-preview-wrap">
+                                            <img
+                                                src={productData.image}
+                                                alt="Preview"
+                                                className="mp-img-preview"
+                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="mp-img-remove-btn"
+                                                onClick={() => setProductData((prev) => ({ ...prev, image: null }))}
+                                                title="Remove image"
+                                            >
+                                                <FaTimes size={10} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
 
-                            <Form.Group controlId="brand" className="d-flex align-items-center mb-3">
-                                
-                             <Form.Label className="mb-0 me-3" style={{ minWidth: '150px' }}>Brand(optional)</Form.Label>
-                             
-                                <Form.Control
+                            <div className="mp-form-group">
+                                <label className="mp-label">Brand</label>
+                                <input
                                     type="text"
                                     name="brand"
+                                    className="mp-input"
                                     value={productData.brand || ''}
                                     onChange={handleProductChange}
-                                    placeholder="Enter brand"
-                                    style={{ flexGrow: 1 }}
+                                    placeholder="Enter brand name (optional)"
                                 />
-                            </Form.Group>
+                            </div>
 
-                            <Form.Group controlId="category" className="d-flex align-items-center mb-3">
-                                <Form.Label className="mb-0 me-3" style={{ minWidth: '150px' }}>Category</Form.Label>
-                                <Form.Control
+                            <div className="mp-form-group">
+                                <label className="mp-label">Category</label>
+                                <input
                                     type="text"
                                     name="category"
+                                    className="mp-input"
                                     value={productData.category || ''}
                                     onChange={handleProductChange}
-                                    placeholder="Enter category"
-                                    style={{ flexGrow: 1 }}
+                                    placeholder="e.g. Makeup_Artist"
                                 />
-                            </Form.Group>
+                            </div>
 
-                            <Form.Group controlId="description" className="d-flex align-items-center mb-3">
-                                <Form.Label className="mb-0 me-3" style={{ minWidth: '150px' }}>Description</Form.Label>
-                                <Form.Control
-                                    as="textarea"
-                                    rows={3}
+                            <div className="mp-form-group">
+                                <label className="mp-label">Description</label>
+                                <textarea
                                     name="description"
+                                    className="mp-textarea"
+                                    rows={3}
                                     value={productData.description || ''}
                                     onChange={handleProductChange}
-                                    placeholder="Describe your business"
-                                    style={{ flexGrow: 1 }}
+                                    placeholder="Describe your business..."
                                 />
-                            </Form.Group>
+                            </div>
 
-                            <Form.Group controlId="city" className="d-flex align-items-center mb-3">
-                                <Form.Label className="mb-0 me-3" style={{ minWidth: '150px' }}>City</Form.Label>
-                                <Form.Control
+                            {/* ── Location ── */}
+                            <div className="mp-section-divider">
+                                <span className="mp-section-label">📍 Location</span>
+                                <div className="mp-section-line"></div>
+                            </div>
+
+                            <div className="mp-form-group">
+                                <label className="mp-label">City</label>
+                                <input
                                     type="text"
                                     name="city"
+                                    className="mp-input"
                                     value={productData.city || ''}
                                     onChange={handleProductChange}
-                                    placeholder="Enter city"
-                                    style={{ flexGrow: 1 }}
+                                    placeholder="e.g. Chennai"
                                 />
-                            </Form.Group>
-                           
+                            </div>
 
-<Form.Group controlId="address" className="d-flex align-items-center mb-3">
-    <Form.Label className="mb-0 me-3" style={{ minWidth: '150px' }}>Full Address</Form.Label>
-    <Form.Control
-        type="text"
-        name="address"
-        value={productData.address || ''}
-        onChange={handleProductChange}
-        placeholder="Enter full address"
-        style={{ flexGrow: 1 }}
-    />
-</Form.Group>
-<Form.Group controlId="area_name" className="d-flex align-items-center mb-3">
-    <Form.Label className="mb-0 me-3" style={{ minWidth: '150px' }}>Area Name</Form.Label>
-    <Form.Control
-        type="text"
-        name="area_name"
-        value={productData.area_name || ''}
-        onChange={handleProductChange}
-        placeholder="Enter area name"
-        style={{ flexGrow: 1 }}
-    />
-</Form.Group>
-
-                            <Form.Group controlId="business_phone" className="d-flex align-items-center mb-3">
-                                <Form.Label className="mb-0 me-3" style={{ minWidth: '150px' }}>Business Phone*</Form.Label>
-                                <Form.Control
+                            <div className="mp-form-group">
+                                <label className="mp-label">Area</label>
+                                <input
                                     type="text"
-                                    name="business_phone"
-                                    value={productData.business_phone || ''}
+                                    name="area_name"
+                                    className="mp-input"
+                                    value={productData.area_name || ''}
                                     onChange={handleProductChange}
-                                    placeholder="Enter business phone number"
-                                    style={{ flexGrow: 1 }}
+                                    placeholder="e.g. Anna Nagar, T. Nagar"
                                 />
-                            </Form.Group>
+                            </div>
 
-                            <Form.Group controlId="personal_phone" className="d-flex align-items-center mb-3">
-                                <Form.Label className="mb-0 me-3" style={{ minWidth: '150px' }}>Alternate Phone</Form.Label>
-                                <Form.Control
+                            <div className="mp-form-group">
+                                <label className="mp-label">Full Address</label>
+                                <textarea
+                                    name="address"
+                                    className="mp-textarea"
+                                    rows={2}
+                                    value={productData.address || ''}
+                                    onChange={handleProductChange}
+                                    placeholder="Enter full address"
+                                />
+                            </div>
+
+                            {/* ── Contact ── */}
+                            <div className="mp-section-divider">
+                                <span className="mp-section-label">📞 Contact</span>
+                                <div className="mp-section-line"></div>
+                            </div>
+
+                            <div className="mp-form-group">
+                                <label className="mp-label">Business Phone *</label>
+                                <div style={{ flex: 1 }}>
+                                    <input
+                                        type="text"
+                                        name="business_phone"
+                                        className="mp-input"
+                                        value={productData.business_phone || ''}
+                                        onChange={handleProductChange}
+                                        placeholder="10-digit mobile number"
+                                    />
+                                    <div className="mp-hint">Include country code if already saved (e.g. 919876543210)</div>
+                                </div>
+                            </div>
+
+                            <div className="mp-form-group">
+                                <label className="mp-label">Alt. Phone</label>
+                                <input
                                     type="text"
                                     name="personal_phone"
+                                    className="mp-input"
                                     value={productData.personal_phone || ''}
                                     onChange={handleProductChange}
-                                    placeholder="Enter personal phone number"
-                                    style={{ flexGrow: 1 }}
+                                    placeholder="Optional alternative number"
                                 />
-                            </Form.Group>
+                            </div>
 
+                            {/* ── Working hours ── */}
+                            <div className="mp-section-divider">
+                                <span className="mp-section-label">⏰ Working Hours</span>
+                                <div className="mp-section-line"></div>
+                            </div>
 
-<Form.Group className="d-flex align-items-center mb-3">
-    <Form.Label className="mb-0 me-3" style={{ minWidth: '150px' }}>Opening Time</Form.Label>
-    <Form.Control
-        type="time"
-        name="opening_time"
-        value={productData.opening_time || ''}
-        onChange={handleProductChange}
-        style={{ flexGrow: 1, marginRight: '10px' }}
-    />
+                            <div className="mp-time-row">
+                                <div className="mp-time-group">
+                                    <label className="mp-time-label">Opens at</label>
+                                    <input
+                                        type="time"
+                                        name="opening_time"
+                                        className="mp-time-input"
+                                        value={productData.opening_time || ''}
+                                        onChange={handleProductChange}
+                                    />
+                                </div>
+                                <div className="mp-time-group">
+                                    <label className="mp-time-label">Closes at</label>
+                                    <input
+                                        type="time"
+                                        name="closing_time"
+                                        className="mp-time-input"
+                                        value={productData.closing_time || ''}
+                                        onChange={handleProductChange}
+                                    />
+                                </div>
+                            </div>
 
-    <Form.Label className="mb-0 me-3" style={{ minWidth: '150px' }}>Closing Time</Form.Label>
-    <Form.Control
-        type="time"
-        name="closing_time"
-        value={productData.closing_time || ''}
-        onChange={handleProductChange}
-        style={{ flexGrow: 1 }}
-    />
-</Form.Group>
+                            {/* ── Submit ── */}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                                <button
+                                    type="button"
+                                    className="mp-submit-btn"
+                                    onClick={handleProductSubmit}
+                                    disabled={isSubmitDisabled}
+                                >
+                                    💾 Save & Continue →
+                                </button>
+                            </div>
 
-                            {/* Submit Button */}
-                        <div className="d-flex justify-content-end">
-                            <Button variant="primary" onClick={handleProductSubmit}>
-                                Update/Next
-                            </Button>
-                        </div>
-                    </Form>
+                        </form>
+                    </div>
+                </div>
 
-                    {successMessage && (
-                        <Alert variant="success" className="mt-3">
-                            {successMessage}
-                        </Alert>
-                    )}
-
-                    {errorMessage && (
-                        <Alert variant="danger" className="mt-3">
-                            {errorMessage}
-                        </Alert>
-                    )}
-                </Card.Body>
-            </Card>
-        </Container>
+            </Container>
         </div>
     );
 }

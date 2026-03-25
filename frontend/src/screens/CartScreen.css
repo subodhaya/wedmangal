@@ -1,0 +1,461 @@
+/* ============================================================
+   CartScreen.css — BookYourCelebration
+   Luxury Indian wedding aesthetic · maroon × gold × ivory
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* ── Tokens ────────────────────────────────────────────── */
+:root {
+  --maroon-deep:  #3d0d28;
+  --maroon:       #5e143f;
+  --maroon-light: #8a2057;
+  --gold:         #c9973a;
+  --gold-light:   #f0c96a;
+  --ivory:        #faf7f2;
+  --ivory-warm:   #f5eaf0;
+  --text-primary: #2a0a1c;
+  --text-muted:   #9a7a85;
+  --border:       rgba(94, 20, 63, 0.10);
+  --shadow-sm:    0 2px 12px rgba(94, 20, 63, 0.07);
+  --shadow-md:    0 8px 28px rgba(94, 20, 63, 0.13);
+  --shadow-lg:    0 18px 48px rgba(94, 20, 63, 0.18);
+  --radius:       16px;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body:    'DM Sans', sans-serif;
+  --ease:         cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Root ──────────────────────────────────────────────── */
+.cs-root {
+  font-family: var(--font-body);
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Background orbs ───────────────────────────────────── */
+.cs-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+.cs-orb--1 {
+  width: 480px; height: 480px;
+  background: radial-gradient(circle, rgba(201,151,58,0.07), transparent 70%);
+  top: -100px; right: -120px;
+}
+.cs-orb--2 {
+  width: 360px; height: 360px;
+  background: radial-gradient(circle, rgba(94,20,63,0.06), transparent 70%);
+  bottom: 80px; left: -80px;
+}
+
+/* ── Alerts ────────────────────────────────────────────── */
+.cs-alert {
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 10;
+}
+.cs-alert--success { background: #eafaf1; color: #1a7a48; border-left: 3px solid #1a7a48; }
+.cs-alert--danger  { background: #fdecea; color: #8b1a1a; border-left: 3px solid #c0392b; }
+
+/* ── Page header ───────────────────────────────────────── */
+.cs-header {
+  text-align: center;
+  margin-bottom: 2.8rem;
+  position: relative;
+  z-index: 1;
+  animation: csFadeDown 0.55s var(--ease) both;
+}
+.cs-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 0.6rem;
+}
+.cs-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+  font-weight: 300;
+  color: var(--maroon-deep);
+  margin: 0 0 1rem;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.cs-header-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: 160px;
+  margin: 0 auto;
+}
+.cs-header-rule span:not(.cs-diamond) {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold));
+}
+.cs-header-rule span:last-child { background: linear-gradient(90deg, var(--gold), transparent); }
+.cs-diamond { font-size: 0.52rem; color: var(--gold); flex: none; }
+
+/* ── Empty state ───────────────────────────────────────── */
+.cs-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 5rem 1rem;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 1;
+  animation: csFadeUp 0.5s var(--ease) both;
+}
+.cs-empty-icon {
+  font-size: 4rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.35;
+}
+.cs-empty-title {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 400;
+  color: var(--maroon-deep);
+  margin: 0;
+}
+.cs-empty-sub {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  max-width: 260px;
+  margin: 0.2rem 0 0.8rem;
+  line-height: 1.6;
+}
+.cs-browse-btn {
+  display: inline-block;
+  background: linear-gradient(110deg, var(--maroon), var(--maroon-light));
+  color: #fff !important;
+  text-decoration: none !important;
+  border-radius: 999px;
+  padding: 0.62rem 1.7rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 16px rgba(94,20,63,0.25);
+  transition: background 0.22s, transform 0.18s, box-shadow 0.2s;
+}
+.cs-browse-btn:hover {
+  background: linear-gradient(110deg, var(--maroon-deep), var(--maroon));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(94,20,63,0.32);
+}
+
+/* ── Two-column layout ─────────────────────────────────── */
+.cs-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 26px;
+  align-items: start;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Item card ─────────────────────────────────────────── */
+.cs-item-card {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 1.1rem;
+  margin-bottom: 16px;
+  position: relative;
+  animation: csCardIn 0.42s var(--ease) both;
+  transition: box-shadow 0.26s var(--ease), transform 0.26s var(--ease);
+}
+.cs-item-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* Image */
+.cs-item-img-link { flex-shrink: 0; }
+.cs-item-img-box {
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--ivory-warm);
+  border: 1px solid var(--border);
+}
+.cs-item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  display: block;
+  transition: transform 0.4s var(--ease);
+}
+.cs-item-card:hover .cs-item-img { transform: scale(1.06); }
+
+/* Details */
+.cs-item-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.cs-item-name-link { text-decoration: none !important; }
+.cs-item-name {
+  font-family: var(--font-display);
+  font-size: 1.12rem;
+  font-weight: 600;
+  color: var(--maroon-deep);
+  margin: 0;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s;
+}
+.cs-item-name-link:hover .cs-item-name { color: var(--maroon); }
+
+.cs-item-price {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 0;
+}
+.cs-item-qty {
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* Date button */
+.cs-date-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--ivory);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0.42rem 0.85rem;
+  font-family: var(--font-body);
+  font-size: 0.83rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  width: 100%;
+  text-align: left;
+}
+.cs-date-btn:hover { border-color: var(--gold); background: #fdf8f0; }
+.cs-date-icon { font-size: 0.95rem; }
+.cs-date-chevron {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* Calendar */
+.cs-calendar-wrap { margin-top: 4px; }
+.cs-calendar-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--maroon);
+  margin: 0 0 6px;
+}
+
+/* Override react-calendar with brand colors */
+.cs-calendar-wrap .react-calendar {
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  overflow: hidden;
+}
+.cs-calendar-wrap .react-calendar__navigation button {
+  color: var(--maroon-deep);
+  font-weight: 600;
+}
+.cs-calendar-wrap .react-calendar__navigation button:hover,
+.cs-calendar-wrap .react-calendar__navigation button:focus {
+  background: var(--ivory-warm);
+}
+.cs-calendar-wrap .react-calendar__tile--active {
+  background: var(--maroon) !important;
+  color: #fff !important;
+  border-radius: 8px;
+}
+.cs-calendar-wrap .react-calendar__tile--now {
+  background: rgba(201,151,58,0.15);
+  border-radius: 8px;
+}
+.cs-calendar-wrap .react-calendar__tile:hover {
+  background: var(--ivory-warm);
+  border-radius: 8px;
+}
+
+/* Remove button */
+.cs-remove-btn {
+  width: 34px; height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ivory-warm);
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  font-size: 0.88rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s, transform 0.18s;
+  align-self: flex-start;
+}
+.cs-remove-btn:hover {
+  background: #fdecea;
+  border-color: #c0392b;
+  transform: scale(1.12);
+}
+
+/* ── Summary card ──────────────────────────────────────── */
+.cs-summary-col {
+  position: sticky;
+  top: 90px;
+}
+.cs-summary-card {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  padding: 1.6rem 1.5rem;
+  animation: csFadeUp 0.5s var(--ease) 0.15s both;
+}
+.cs-summary-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--maroon-deep);
+  margin: 0 0 0.8rem;
+  letter-spacing: -0.01em;
+}
+.cs-summary-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin-bottom: 1.1rem;
+}
+
+/* Rows */
+.cs-summary-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1rem; }
+.cs-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  gap: 10px;
+}
+.cs-summary-row span:last-child { font-weight: 500; color: var(--text-primary); white-space: nowrap; }
+.cs-summary-note { font-size: 0.76rem; font-style: italic; color: var(--text-muted); }
+
+/* Total row */
+.cs-summary-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(110deg, rgba(94,20,63,0.05), rgba(201,151,58,0.06));
+  border-radius: 10px;
+  border: 1px solid rgba(201,151,58,0.2);
+  padding: 0.8rem 1rem;
+  margin: 0.5rem 0 1.2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--maroon-deep);
+}
+.cs-summary-total-amt {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--maroon);
+}
+
+/* Checkout button */
+.cs-checkout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(110deg, var(--maroon), var(--maroon-light));
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.78rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(94,20,63,0.28);
+  transition: background 0.22s, transform 0.18s, box-shadow 0.2s;
+}
+.cs-checkout-btn:hover:not(:disabled) {
+  background: linear-gradient(110deg, var(--maroon-deep), var(--maroon));
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(94,20,63,0.36);
+}
+.cs-checkout-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.cs-checkout-arrow { font-size: 1.1rem; transition: transform 0.2s; }
+.cs-checkout-btn:hover:not(:disabled) .cs-checkout-arrow { transform: translateX(3px); }
+
+.cs-summary-note-bottom {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin: 0.9rem 0 0;
+  line-height: 1.5;
+}
+
+/* ── Animations ────────────────────────────────────────── */
+@keyframes csFadeDown {
+  from { opacity: 0; transform: translateY(-14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes csFadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes csCardIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .cs-layout {
+    grid-template-columns: 1fr;
+  }
+  .cs-summary-col { position: static; }
+}
+@media (max-width: 560px) {
+  .cs-root { padding: 2rem 1rem 3.5rem; }
+  .cs-item-card { flex-wrap: wrap; }
+  .cs-item-img-box { width: 80px; height: 80px; }
+  .cs-item-name { font-size: 1rem; }
+}

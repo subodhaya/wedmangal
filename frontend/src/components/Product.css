@@ -1,0 +1,365 @@
+/* ============================================================
+   Product.css — BookYourCelebration
+   Luxury wedding marketplace · Refined editorial aesthetic
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* ── CSS Variables ─────────────────────────────────────── */
+:root {
+  --maroon:        #5e143f;
+  --maroon-deep:   #3d0d28;
+  --maroon-light:  #8a2057;
+  --gold:          #c9973a;
+  --gold-light:    #f0c96a;
+  --gold-pale:     #fdf4e3;
+  --blush:         #f7eaf0;
+  --text-dark:     #2a0918;
+  --text-mid:      #7a5060;
+  --text-light:    #b09aa5;
+  --card-bg:       #ffffff;
+  --border:        rgba(94, 20, 63, 0.10);
+  --shadow-sm:     0 2px 16px rgba(62, 13, 40, 0.07);
+  --shadow-hover:  0 20px 52px rgba(62, 13, 40, 0.20);
+  --radius:        18px;
+}
+
+/* ── Card wrapper ──────────────────────────────────────── */
+.product-card-byc {
+  background: var(--card-bg);
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-sm) !important;
+  transition: transform 0.32s cubic-bezier(0.34, 1.36, 0.64, 1),
+              box-shadow 0.32s ease;
+  height: 100%;
+  padding: 0 !important;
+  margin: 0 !important;
+  position: relative;
+}
+
+.product-card-byc:hover {
+  transform: translateY(-7px) scale(1.012);
+  box-shadow: var(--shadow-hover) !important;
+}
+
+/* ── Image area ────────────────────────────────────────── */
+.product-img-link {
+  display: block;
+  text-decoration: none;
+}
+
+.product-img-box {
+  position: relative;
+  width: 100%;
+  padding-top: 62%;
+  overflow: hidden;
+  background: var(--blush);
+}
+
+/* Bottom gradient overlay for legibility of price chip */
+.product-img-box::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.03) 0%,
+    transparent 35%,
+    rgba(45, 8, 28, 0.50) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.product-img {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center 20% !important; /* slightly above center — shows faces without cutting tops */
+  border-radius: 0 !important;
+  display: block;
+  transition: transform 0.52s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card-byc:hover .product-img {
+  transform: scale(1.08);
+}
+
+/* ── Placeholder ───────────────────────────────────────── */
+.product-img-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--gold-pale) 0%, var(--blush) 100%);
+  gap: 10px;
+}
+.placeholder-icon {
+  font-size: 3rem;
+  line-height: 1;
+  opacity: 0.55;
+}
+.placeholder-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-mid);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+/* ── Category badge ────────────────────────────────────── */
+.product-category-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  background: rgba(45, 8, 28, 0.80);
+  color: var(--gold-light);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.60rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  padding: 4px 11px;
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(240, 201, 106, 0.22);
+  white-space: nowrap;
+}
+
+/* ── Price chip ────────────────────────────────────────── */
+.product-price-chip {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 2;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.70rem;
+  font-weight: 700;
+  padding: 5px 13px;
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+}
+.price-contact {
+  background: rgba(45, 8, 28, 0.80);
+  color: var(--gold-light);
+  border: 1px solid rgba(240, 201, 106, 0.22);
+}
+.price-paid {
+  background: rgba(201, 151, 58, 0.92);
+  color: var(--maroon-deep);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* ── Card body ─────────────────────────────────────────── */
+.product-body {
+  padding: 1.1rem 1.15rem 1.2rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex-grow: 1;
+  position: relative;
+  background: #fff;
+}
+
+/* Gold top accent line */
+.product-body::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 1.15rem;
+  right: 1.15rem;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(201, 151, 58, 0.55) 30%,
+    rgba(201, 151, 58, 0.55) 70%,
+    transparent
+  );
+}
+
+/* ── Wishlist button ───────────────────────────────────── */
+.product-wishlist-btn {
+  position: absolute;
+  top: 13px;
+  right: 13px;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  width: 33px;
+  height: 33px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(62, 13, 40, 0.14);
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s ease;
+  z-index: 2;
+}
+.product-wishlist-btn:hover {
+  transform: scale(1.18);
+  box-shadow: 0 4px 16px rgba(62, 13, 40, 0.20);
+}
+.product-heart {
+  font-size: 1rem;
+  color: var(--text-light);
+  transition: color 0.2s ease;
+  line-height: 1;
+}
+.product-heart.wishlisted {
+  color: #c0392b;
+}
+.product-wishlist-btn:hover .product-heart {
+  color: #c0392b;
+}
+
+/* ── Vendor name ───────────────────────────────────────── */
+.product-name {
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  font-size: 1.18rem !important;
+  font-weight: 600 !important;
+  color: var(--text-dark) !important;
+  margin: 0.55rem 0 5px !important;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  padding-right: 2.2rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  /* Allow up to 2 lines — much friendlier than hard truncation at 1 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  min-height: 2.9rem; /* always reserves 2 lines — keeps all cards same height */
+}
+.product-name:hover {
+  color: var(--maroon) !important;
+}
+
+/* ── Rating row ────────────────────────────────────────── */
+.product-rating-row {
+  margin-bottom: 8px !important;
+}
+
+/* ── Gold divider ──────────────────────────────────────── */
+.product-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(201, 151, 58, 0.45) 25%,
+    rgba(201, 151, 58, 0.45) 75%,
+    transparent
+  );
+  margin: 8px 0 10px;
+}
+
+/* ── Location meta ─────────────────────────────────────── */
+.product-meta {
+  margin-bottom: 14px !important;
+}
+.product-meta-item {
+  border: none !important;
+  padding: 0 !important;
+  background: transparent !important;
+  display: flex !important;
+  align-items: center;
+  gap: 5px;
+}
+.meta-icon {
+  font-size: 0.78rem;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.meta-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.80rem;
+  color: var(--text-mid);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+}
+
+/* ── CTA button ────────────────────────────────────────── */
+.product-cta-btn {
+  width: 100%;
+  background: linear-gradient(110deg, var(--maroon) 0%, var(--maroon-light) 100%);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.62rem 1rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  cursor: pointer;
+  transition: background 0.25s ease,
+              transform 0.2s ease,
+              box-shadow 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: auto;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shimmer sweep on hover */
+.product-cta-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.20),
+    transparent
+  );
+  transform: skewX(-18deg);
+  transition: left 0.5s ease;
+}
+.product-cta-btn:hover::after {
+  left: 150%;
+}
+
+.product-cta-btn:hover {
+  background: linear-gradient(110deg, var(--maroon-deep) 0%, var(--maroon) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(94, 20, 63, 0.38);
+}
+
+.cta-arrow {
+  display: inline-block;
+  transition: transform 0.22s ease;
+}
+.product-cta-btn:hover .cta-arrow {
+  transform: translateX(4px);
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 576px) {
+  .product-name  { font-size: 1rem !important; }
+  .product-body  { padding: 0.9rem 1rem 1rem !important; }
+  .product-img-box { padding-top: 58%; }
+}

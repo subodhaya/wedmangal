@@ -1,5 +1,5 @@
-// src/screens/HomeScreen.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+// src/screens/HomeScreen.js
+import React, { useState, useEffect, useMemo ,useRef} from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 import Product from '../components/Product';
@@ -11,191 +11,175 @@ import DateCalculation from '../components/DateCalculation';
 import HomeInvitePage from '../components/HomeInvitePage';
 import AddProductPage from '../components/AddProductPage';
 import ManagePage from '../components/ManagePage';
-import ServiceAppointmentsScreen from '../components/ServiceAppointmentsScreen';
+import EmergencySection from '../components/EmergencySection';
+import FilterBar from '../components/FilterBar';
+import { Helmet } from 'react-helmet';
 import './HomeScreen.css';
 import api from '../utils/api';
-//import InstallPrompt from '../components/InstallPrompt';
 
+const SITE_URL = process.env.REACT_APP_SITE_URL || 'https://wedmangal.com';
+const SITE_NAME = 'WedMangal';
+const DEFAULT_DESCRIPTION = 'Find and book trusted wedding vendors for your dream wedding. Discover photographers, makeup artists, caterers, decorators and more on WedMangal.';
+// Shared module-level ref — persists across renders, accessible to both components
+// Top of HomeScreen.js — outside both components
+const pwaPromptRef = { current: null };
+const showBannerRef = { current: null }; // ← add this
+// ── Place this OUTSIDE both components, at the top of HomeScreen.js ──
+// const pwaPromptRef = { current: null };
 
-
-
+/* ── PWA Install Banner ───────────────────────── */
 function InstallBanner() {
-  const [deferredPrompt, setDeferredPrompt] = useState(() => {
-    return (typeof window !== "undefined" && window.deferredPWAEvent) || null;
-  });
-  const [showBanner, setShowBanner] = useState(false);
+  const [showBanner, setShowBanner]     = useState(false);
   const [showIosModal, setShowIosModal] = useState(false);
-  const [dontShowAgain, setDontShowAgain] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState('');
+  const bannerRef = useRef(null);
+  const isIos             = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const supportsBeforeInstall = 'onbeforeinstallprompt' in window;
 
-  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-  const isIos = /iphone|ipad|ipod/i.test(ua);
-  const supportsBeforeInstall =
-    typeof window !== "undefined" && "onbeforeinstallprompt" in window;
-
+  const isDismissed = !!localStorage.getItem('a2hs_dismissed') && !localStorage.getItem('a2hs_installed');
   useEffect(() => {
-    if (localStorage.getItem("a2hs_dismissed")) {
-      setDontShowAgain(true);
-      return;
-    }
-
-    function beforeInstallHandler(e) {
-      console.log("[PWA] beforeinstallprompt event fired (component)", e);
+  if (showBanner && bannerRef.current) {
+    bannerRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}, [showBanner]);
+  useEffect(() => {
+    showBannerRef.current = setShowBanner;
+    const onBeforeInstall = (e) => {
       e.preventDefault();
-      setDeferredPrompt(e);
-      if (typeof window !== "undefined") window.deferredPWAEvent = e;
+      pwaPromptRef.current = e;          // shared module-level ref
       setShowBanner(true);
-    }
+    };
 
-    function onAppInstalled() {
-      console.log("[PWA] appinstalled event");
+    const onAppInstalled = () => {
+      pwaPromptRef.current = null;
       setShowBanner(false);
-      localStorage.setItem("a2hs_installed", "1");
-      setStatusMessage("App installed");
-      setTimeout(() => setStatusMessage(""), 2500);
-    }
+      localStorage.setItem('a2hs_installed', '1');
+      setStatusMessage('App installed!');
+      setTimeout(() => setStatusMessage(''), 2500);
+    };
 
-    window.addEventListener("beforeinstallprompt", beforeInstallHandler);
-    window.addEventListener("appinstalled", onAppInstalled);
+    window.addEventListener('beforeinstallprompt', onBeforeInstall);
+    window.addEventListener('appinstalled', onAppInstalled);
 
-    // Use any global captured event (index.js)
-    if (!deferredPrompt && typeof window !== "undefined" && window.deferredPWAEvent) {
-      console.log("[PWA] using global deferred event in InstallBanner");
-      setDeferredPrompt(window.deferredPWAEvent);
+    // If the event already fired before this component mounted
+    if (pwaPromptRef.current) {
       setShowBanner(true);
     }
-
-    // For iOS fallback
-    if (!supportsBeforeInstall && isIos && !localStorage.getItem("a2hs_dismissed")) {
+    
+    // iOS — show manually after short delay
+    if (!supportsBeforeInstall && isIos && !localStorage.getItem('a2hs_dismissed')) {
       const t = setTimeout(() => setShowBanner(true), 1200);
       return () => {
         clearTimeout(t);
-        window.removeEventListener("beforeinstallprompt", beforeInstallHandler);
-        window.removeEventListener("appinstalled", onAppInstalled);
+        window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+        window.removeEventListener('appinstalled', onAppInstalled);
       };
     }
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", beforeInstallHandler);
-      window.removeEventListener("appinstalled", onAppInstalled);
+      window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+      window.removeEventListener('appinstalled', onAppInstalled);
     };
-  }, [isIos, supportsBeforeInstall, deferredPrompt]);
-  
-   
+  }, []); // runs once on mount
 
+ const handleInstall = async () => {
+  const prompt = pwaPromptRef.current;
 
-  const handleInstallClick = async () => {
-    setStatusMessage("");
-    console.log("[PWA] Install clicked. local deferred:", !!deferredPrompt, "global:", !!(typeof window !== "undefined" && window.deferredPWAEvent));
-
-    // Prefer the local saved event, fallback to global
-    const promptEvent =
-      deferredPrompt || (typeof window !== "undefined" && window.deferredPWAEvent);
-
-    if (promptEvent) {
-      try {
-        // some browsers keep the original event; call prompt on it
-        console.log("[PWA] calling prompt() on event", promptEvent);
-        // In case the event object was stored as plain object, try call via window.deferredPWAEvent
-        if (typeof promptEvent.prompt === "function") {
-          promptEvent.prompt();
-          // userChoice may be a promise
-          const choice = await (promptEvent.userChoice || Promise.resolve({ outcome: "dismissed" }));
-          console.log("[PWA] userChoice:", choice);
-          if (choice && choice.outcome === "accepted") {
-            localStorage.setItem("a2hs_installed", "1");
-            setStatusMessage("Thanks — app installed!");
-          } else {
-            setStatusMessage("Install dismissed");
-          }
-        } else if (typeof window !== "undefined" && window.deferredPWAEvent && typeof window.deferredPWAEvent.prompt === "function") {
-          // defensive: call on the global stored event
-          window.deferredPWAEvent.prompt();
-          const choice = await (window.deferredPWAEvent.userChoice || Promise.resolve({ outcome: "dismissed" }));
-          console.log("[PWA] userChoice (global):", choice);
-          if (choice && choice.outcome === "accepted") {
-            localStorage.setItem("a2hs_installed", "1");
-            setStatusMessage("Thanks — app installed!");
-          } else {
-            setStatusMessage("Install dismissed");
-          }
-        } else {
-          console.warn("[PWA] prompt() function not available on event");
-          setStatusMessage("Install prompt not available");
-        }
-      } catch (err) {
-        console.warn("Install prompt error", err);
-        setStatusMessage("Install failed — please try again");
-      } finally {
-        setDeferredPrompt(null);
-        if (typeof window !== "undefined") window.deferredPWAEvent = null;
-        setShowBanner(false);
-        setTimeout(() => setStatusMessage(""), 2500);
+  if (prompt?.prompt) {
+    try {
+      await prompt.prompt();
+      const { outcome } = await prompt.userChoice;
+      if (outcome === 'accepted') {
+        localStorage.setItem('a2hs_installed', '1');
+        setStatusMessage('Thanks — app installed!');
+      } else {
+        setStatusMessage('Maybe later!');
       }
-      return;
+    } catch {
+      setStatusMessage('Install failed — please try again.');
+    } finally {
+      pwaPromptRef.current = null;
+      setShowBanner(false);
+      setTimeout(() => setStatusMessage(''), 2500);
     }
+    return;
+  }
 
-    // iOS fallback
-    if (isIos) {
-      setShowIosModal(true);
-      return;
-    }
+  if (isIos) {
+    setShowIosModal(true);
+    return;
+  }
 
-    // Fallback message for unsupported browsers
-    setStatusMessage(
-      "Install is available on Chrome/Edge on Android. On iOS open Safari → Share → Add to Home Screen."
-    );
-    setTimeout(() => setStatusMessage(""), 4000);
-  };
+  // Better Android detection
+  const isAndroid = /android/i.test(navigator.userAgent);
+  const isChrome = /chrome|chromium|crios/i.test(navigator.userAgent);
+  
+  if (isAndroid && !isChrome) {
+    // Android non-Chrome browsers (Firefox, Samsung Internet, etc.)
+    setStatusMessage('Use "Add to Home Screen" in browser menu');
+    setTimeout(() => setStatusMessage(''), 4000);
+  } else if (isAndroid && isChrome) {
+    // Android Chrome - should have triggered beforeinstallprompt
+    setStatusMessage('Use ⋮ menu → "Install app" or "Add to Home Screen"');
+    setTimeout(() => setStatusMessage(''), 4000);
+  } else {
+    // Desktop or other browsers
+    setStatusMessage('Open in Chrome on Android to install.');
+    setTimeout(() => setStatusMessage(''), 4000);
+  }
+};
 
+  
   const handleDismiss = (permanent = false) => {
     setShowBanner(false);
     if (permanent) {
-      localStorage.setItem("a2hs_dismissed", Date.now());
-      setDontShowAgain(true);
+      localStorage.setItem('a2hs_dismissed', Date.now());
     }
   };
 
-  if (dontShowAgain && !localStorage.getItem("a2hs_installed")) return null;
+  if (isDismissed) return null;
 
   return (
     <>
       {showBanner && (
-        <div className="install-banner-top" role="region" aria-label="Install BookYourCelebration">
+        <div ref={bannerRef} className="install-banner-top" role="region" aria-label="Install WedMangal App">
           <div className="install-left">
-            <span className="install-emoji">📲</span>
+            <span className="install-emoji" aria-hidden="true">📲</span>
             <div className="install-copy">
-              <div className="install-title">Get the app — faster access & offline</div>
-              {statusMessage && <div className="install-status">{statusMessage}</div>}
+              <div className="install-title">Get the app — faster access &amp; offline</div>
+              {statusMessage && (
+                <div className="install-status" role="status">{statusMessage}</div>
+              )}
             </div>
           </div>
-
           <div className="install-actions">
-            <button className="install-btn-primary" onClick={handleInstallClick}>Install</button>
-            <button className="install-btn-secondary" onClick={() => handleDismiss(false)}>Later</button>
-            <button className="install-btn-close" onClick={() => handleDismiss(true)} title="Don't show again">✕</button>
+            <button className="install-btn-primary"   onClick={handleInstall}              aria-label="Install app">Install</button>
+            <button className="install-btn-secondary" onClick={() => handleDismiss(false)} aria-label="Remind me later">Later</button>
+            <button className="install-btn-close"     onClick={() => handleDismiss(true)}  aria-label="Dismiss permanently">✕</button>
           </div>
         </div>
       )}
 
       {showIosModal && (
-        <div className="a2hs-overlay" role="dialog" aria-modal="true">
+        <div className="a2hs-overlay" role="dialog" aria-modal="true" aria-labelledby="a2hs-title">
           <div className="a2hs-card">
-            <button className="a2hs-close" onClick={() => setShowIosModal(false)}>✕</button>
-            <div className="a2hs-icon-wrap">📲</div>
-            <h3 className="a2hs-title">Add to Home Screen</h3>
+            <button className="a2hs-close" onClick={() => setShowIosModal(false)} aria-label="Close modal">✕</button>
+            <div className="a2hs-icon-wrap" aria-hidden="true">📲</div>
+            <h3 id="a2hs-title" className="a2hs-title">Add to Home Screen</h3>
             <div className="a2hs-steps">
               <p><strong>iPhone / iPad (Safari)</strong></p>
               <ol>
-                <li>Tap the <strong>Share</strong> icon (a square with an arrow) at the bottom of Safari.</li>
+                <li>Tap the <strong>Share</strong> icon at the bottom of Safari.</li>
                 <li>Select <strong>Add to Home Screen</strong>.</li>
-                <li>Tap <strong>Add</strong>. The BookYourCelebration icon will appear on your home screen.</li>
+                <li>Tap <strong>Add</strong>.</li>
               </ol>
-              <p className="a2hs-note">If you use another browser on iOS, open this page in Safari to be able to add to the home screen.</p>
+              <p className="a2hs-note">Open this page in Safari to add to your home screen.</p>
             </div>
-
             <div className="a2hs-actions">
-              <button className="pwa-btn pwa-btn-primary" onClick={() => setShowIosModal(false)}>Got it</button>
+              <button className="pwa-btn pwa-btn-primary"   onClick={() => setShowIosModal(false)}>Got it</button>
               <button className="pwa-btn pwa-btn-secondary" onClick={() => { localStorage.setItem('a2hs_dismissed', Date.now()); setShowIosModal(false); }}>Don't show again</button>
             </div>
           </div>
@@ -204,24 +188,21 @@ function InstallBanner() {
     </>
   );
 }
-
-
-
-
-/* -------------------- Main HomeScreen -------------------- */
+/* ── Main HomeScreen ───────────────────────── */
 function HomeScreen() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  const [error, setError] = useState(''); // fetch error
+  const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [hasProduct, setHasProduct] = useState(false);
   const [checkingProduct, setCheckingProduct] = useState(false);
-
   const [showIosModal, setShowIosModal] = useState(false);
+
+  // ── Filters ─────────────────────────
+  const [filters, setFilters] = useState({ sort: 'newest' });
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -229,135 +210,208 @@ function HomeScreen() {
   const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const keyword = queryParams.get('keyword') || '';
   const pageNumber = Number(queryParams.get('page') || 1);
+  const categoryParam = queryParams.get('category') || '';
 
-  // safe parse userInfo
   const userInfo = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem('userInfo')) || {};
-    } catch (e) {
-      console.warn('Invalid userInfo in localStorage');
-      return {};
-    }
+    try { return JSON.parse(localStorage.getItem('userInfo')) || {}; }
+    catch { return {}; }
   }, []);
   const role = userInfo?.role || 'customer';
 
-  const categories = useMemo(
-    () => [
-      { name: 'Makeup_Artist', image: '/images/categories/makeup.jpg' },
-      { name: 'Photographers', image: '/images/categories/photographer.jpg' },
-      { name: 'Caterers', image: '/images/categories/catering.jpeg' },
-      { name: 'Event Planners', image: '/images/categories/planners.jpg' },
-      { name: 'Halls', image: '/images/categories/halls.jpg' },
-      { name: 'Decorators', image: '/images/categories/decors.webp' },
-      { name: 'Mehandi Artist', image: '/images/categories/mehandi.jpg' },
-      { name: 'Invitation', image: '/images/categories/invitation.jpg' },
-      { name: 'Jewellery', image: '/images/categories/jewellers.jpg' },
-      { name: 'DJ Artist', image: '/images/categories/dj.jpg' },
-      { name: 'Music', image: '/images/categories/nadaswaram.jpg' },
-      { name: 'Travel and Transport', image: '/images/categories/travel.jpg' },
-      { name: 'Entertainment', image: '/images/categories/entertainment.jpg' },
-      { name: 'Pandit', image: '/images/categories/pandit.jpg' },
-    ],
-    []
-  );
+  const categories = useMemo(() => [
+    { name: 'Makeup_Artist', label: 'Makeup Artist', image: '/images/categories/makeup.jpg' },
+    { name: 'Photographers', label: 'Photographers', image: '/images/categories/photographer.jpg' },
+    { name: 'Caterers', label: 'Caterers', image: '/images/categories/catering.jpeg' },
+    { name: 'Planners', label: 'Event Planners', image: '/images/categories/planners.jpg' },
+    { name: 'Halls', label: 'Halls', image: '/images/categories/halls.jpg' },
+    { name: 'Decorators', label: 'Decorators', image: '/images/categories/decors.webp' },
+    { name: 'Mehandi_Artist', label: 'Mehandi Artist', image: '/images/categories/mehandi.jpg' },
+    { name: 'Invitation', label: 'Invitation', image: '/images/categories/invitation.jpg' },
+    { name: 'Jewellery', label: 'Jewellery', image: '/images/categories/jewellers.jpg' },
+    { name: 'DJ_Artist', label: 'DJ Artist', image: '/images/categories/dj.jpg' },
+    { name: 'Entertainment', label: 'Music', image: '/images/categories/nadaswaram.jpg' },
+    { name: 'Travel_Transport', label: 'Travel & Transport', image: '/images/categories/travel.jpg' },
+    { name: 'Pandit', label: 'Pandit', image: '/images/categories/pandit.jpg' },
+  ], []);
+
   const handleHeaderDownloadClick = async () => {
-    console.log("[PWA] Download button clicked");
+  const ua = navigator.userAgent;
 
-   const promptEvent = window.deferredPWAEvent;
-
-   if (promptEvent) {
-    console.log("[PWA] Found deferred prompt. Calling prompt()...");
-    promptEvent.prompt();
-
-    const choice = await promptEvent.userChoice;
-    console.log("[PWA] User choice:", choice);
-
-    // Clear it so user cannot install twice
-    window.deferredPWAEvent = null;
-    return;
-     }
-
-  // iOS fallback
-  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  if (isIos) {
+  // iOS — always show instructions
+  if (/iphone|ipad|ipod/i.test(ua)) {
     setShowIosModal(true);
     return;
   }
 
-  alert("Install prompt not available yet. Refresh page and try again.");
+  // Firefox — not supported
+  if (/firefox/i.test(ua)) {
+    alert('Please open wedmangal.com in Chrome to install the app.');
+    return;
+  }
+
+  // Chrome/Edge — use deferred prompt if available
+  const prompt = pwaPromptRef.current;
+  if (prompt?.prompt) {
+    try {
+      await prompt.prompt();
+      await prompt.userChoice;
+    } finally {
+      pwaPromptRef.current = null;
+    }
+    return;
+  }
+
+  // Chrome/Edge but already installed or prompt not ready
+  if (/android/i.test(ua)) {
+    // Check if already running as installed PWA
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      alert('App is already installed!');
+    } else {
+      alert('Tap the ⋮ menu in Chrome → "Add to Home screen" to install.');
+    }
+    return;
+  }
+
+  // Desktop Chrome — prompt not available yet
+  showBannerRef.current?.(true);
 };
   const handleCategoryClick = (category) => {
-    navigate(`/?keyword=${encodeURIComponent(category)}&page=1`);
-
-    setTimeout(() => {
-      const grid = document.querySelector('.product-grid');
-      if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      else window.scrollTo({ top: window.innerHeight / 2, behavior: 'smooth' });
-    }, 350);
+    navigate(`/category/${category}?page=1`);
   };
 
-  // fetch products
+  // ── SEO: Generate dynamic meta tags ─────────────────────────
+  const getPageTitle = () => {
+    if (keyword) {
+      return `${keyword.replace('_', ' ')} Wedding Vendors | Find & Book ${keyword.replace('_', ' ')} for Your Dream Wedding | ${SITE_NAME}`;
+    }
+    return `Find & Book Wedding Vendors for Your Dream Wedding | ${SITE_NAME}`;
+  };
+
+  const getPageDescription = () => {
+    const cleanKeyword = keyword.replace('_', ' ');
+    if (keyword) {
+      return `Find and book the best ${cleanKeyword} for your dream wedding. Compare top-rated wedding vendors, view portfolios, read reviews, and contact them instantly on ${SITE_NAME}.`;
+    }
+    return DEFAULT_DESCRIPTION;
+  };
+
+  const getCanonicalUrl = () => {
+    const baseUrl = `${SITE_URL}/`;
+    const params = new URLSearchParams();
+    if (keyword) params.append('keyword', keyword);
+    if (pageNumber > 1) params.append('page', pageNumber);
+    return params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+  };
+
+  // ── SEO: JSON-LD Structured Data ─────────────────────────
+  const getStructuredData = () => {
+    const cleanKeyword = keyword ? keyword.replace('_', ' ') : 'wedding vendors';
+    
+    return {
+      '@context': 'https://schema.org',
+      '@type': keyword ? 'LocalBusiness' : 'WebSite',
+      name: keyword ? `${cleanKeyword} - ${SITE_NAME}` : SITE_NAME,
+      url: getCanonicalUrl(),
+      description: getPageDescription(),
+      ...(keyword && {
+        '@type': 'LocalBusiness',
+        areaServed: 'India',
+        makesOffer: {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: `${cleanKeyword} Services`,
+            description: `Professional ${cleanKeyword} services for weddings`
+          }
+        }
+      }),
+      publisher: {
+        '@type': 'Organization',
+        name: SITE_NAME,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${SITE_URL}/logo.png`
+        }
+      }
+    };
+  };
+
+  // ── Fetch products with filters ─────────────────────────
   useEffect(() => {
     let isMounted = true;
     const fetchProducts = async () => {
       try {
-        setLoading(true);
+        setLoading(true); 
         setError('');
-        const { data } = await api.get('/api/products/all', {
-          params: { keyword, page: pageNumber },
-        });
-
+        const params = {
+          keyword,
+          page: pageNumber,
+          ...(filters.sort && { sort: filters.sort }),
+          ...(filters.city && { city: filters.city }),
+          ...(filters.min_price && { min_price: filters.min_price }),
+          ...(filters.max_price && { max_price: filters.max_price }),
+          ...(filters.min_rating && { min_rating: filters.min_rating }),
+          // category-specific filters
+          ...(filters.food_type && { food_type: filters.food_type }),
+          ...(filters.shoot_type && { shoot_type: filters.shoot_type }),
+          ...(filters.makeup_type && { makeup_type: filters.makeup_type }),
+          ...(filters.trial && { trial: filters.trial }),
+          ...(filters.hall_ac && { hall_ac: filters.hall_ac }),
+          ...(filters.hall_parking && { hall_parking: filters.hall_parking }),
+          ...(filters.hall_capacity && { hall_capacity: filters.hall_capacity }),
+          ...(filters.dj_venue && { dj_venue: filters.dj_venue }),
+          ...(filters.dj_equipment && { dj_equipment: filters.dj_equipment }),
+          ...(filters.mehandi_type && { mehandi_type: filters.mehandi_type }),
+          ...(filters.home_visit && { home_visit: filters.home_visit }),
+        };
+        const { data } = await api.get('/api/products/all', { params });
         if (!isMounted) return;
-        setProducts(Array.isArray(data.products) ? data.products : data.products || []);
-        setPage(data.page ? Number(data.page) : 1);
-        setPages(data.pages ? Number(data.pages) : 1);
+        setProducts(Array.isArray(data.products) ? data.products : []);
+        setPage(Number(data.page) || 1);
+        setPages(Number(data.pages) || 1);
       } catch (err) {
-        console.error('Fetch products error', err);
         if (!isMounted) return;
         setError('Failed to fetch services. Please try again.');
+        console.error('Fetch error:', err);
       } finally {
-        if (!isMounted) return;
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
-
     fetchProducts();
     return () => { isMounted = false; };
-  }, [keyword, pageNumber]);
+  }, [keyword, pageNumber, filters]);
 
-  // check if service-owner has a product
+  // ── Check if service-owner has product ─────────────────────────
   useEffect(() => {
     let isMounted = true;
     const checkProduct = async () => {
       if (role !== 'service-owner') return;
       setCheckingProduct(true);
-      setErrorMessage('');
       try {
-        const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-        const { data } = await api.get('/api/products/mine/', config);
+        const { data } = await api.get('/api/products/mine/');
         if (!isMounted) return;
         if (Array.isArray(data)) setHasProduct(data.length > 0);
-        else if (data && typeof data === 'object') {
-          if ('product' in data) setHasProduct(!!data.product);
-          else setHasProduct(true);
-        } else setHasProduct(false);
+        else if (data && typeof data === 'object') setHasProduct('product' in data ? !!data.product : true);
+        else setHasProduct(false);
       } catch (err) {
-        console.error('Error checking product:', err);
         if (!isMounted) return;
         setErrorMessage('Could not verify product registration.');
+        console.error('Product check error:', err);
       } finally {
-        if (!isMounted) return;
-        setCheckingProduct(false);
+        if (isMounted) setCheckingProduct(false);
       }
     };
-
     checkProduct();
     return () => { isMounted = false; };
-  }, [role, userInfo]);
+  }, [role]);
 
   const handlePageChange = (newPage) => {
-    const safePage = Math.max(1, Number(newPage) || 1);
-    navigate(`/?keyword=${encodeURIComponent(keyword)}&page=${safePage}`);
+    const cleanPage = Math.max(1, Number(newPage) || 1);
+    const params = new URLSearchParams();
+    if (keyword) params.append('keyword', keyword);
+    params.append('page', cleanPage);
+    navigate(`/?${params.toString()}`);
+    
     setTimeout(() => {
       const grid = document.querySelector('.product-grid');
       if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -365,145 +419,169 @@ function HomeScreen() {
     }, 200);
   };
 
-  const handleScroll = () => {
-    const grid = document.querySelector('.product-grid');
-    if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    else window.scrollTo({ top: window.innerHeight / 2, behavior: 'smooth' });
-  };
-
-  // Header Download button -> show iOS modal for iOS, otherwise try to open toast/prompt
-  
   useEffect(() => {
     if (successMessage || errorMessage) {
-      const timer = setTimeout(() => {
-        setSuccessMessage('');
-        setErrorMessage('');
-      }, 4000);
-      return () => clearTimeout(timer);
+      const t = setTimeout(() => { setSuccessMessage(''); setErrorMessage(''); }, 4000);
+      return () => clearTimeout(t);
     }
   }, [successMessage, errorMessage]);
-return (
-  <div>
-    {/* PWA Install Prompt (handles Android toast + iOS modal) */}
-    <InstallBanner />
 
+  // Update document title for SEO (fallback if Helmet fails)
+  useEffect(() => {
+    document.title = getPageTitle();
+  }, [keyword]);
 
-    {/* Success / Error messages */}
-    {successMessage && (
-      <div className="alert alert-success" role="alert">
-        {successMessage}
-      </div>
-    )}
-    {errorMessage && (
-      <div className="alert alert-danger" role="alert">
-        {errorMessage}
-      </div>
-    )}
+  return (
+    <div>
+      {/* ── SEO: Dynamic Meta Tags & Structured Data ── */}
+      <Helmet>
+        <title>{getPageTitle()}</title>
+        <meta name="description" content={getPageDescription()} />
+        <meta name="keywords" content="wedding vendors, book wedding vendors, wedding marketplace, wedding photographers, wedding makeup artists, wedding decorators, wedding planning services, Indian wedding" />
+        <link rel="canonical" href={getCanonicalUrl()} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={getCanonicalUrl()} />
+        <meta property="og:title" content={getPageTitle()} />
+        <meta property="og:description" content={getPageDescription()} />
+        <meta property="og:image" content={`${SITE_URL}/og-image.jpg`} />
+        <meta property="og:site_name" content={SITE_NAME} />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={getCanonicalUrl()} />
+        <meta name="twitter:title" content={getPageTitle()} />
+        <meta name="twitter:description" content={getPageDescription()} />
+        <meta name="twitter:image" content={`${SITE_URL}/og-image.jpg`} />
+        
+        {/* Structured Data JSON-LD */}
+        <script type="application/ld+json">
+          {JSON.stringify(getStructuredData())}
+        </script>
+      </Helmet>
 
+      <InstallBanner />
 
-     {role === 'customer' && (
-  <div className="background-section">
-    <div className="carousel-custom">
-      <ProductCarousel />
-      <HomeInvitePage />
-    </div>
+      {successMessage && <div className="alert alert-success" role="alert" aria-live="polite">{successMessage}</div>}
+      {errorMessage && <div className="alert alert-danger" role="alert" aria-live="assertive">{errorMessage}</div>}
 
-    <div className="title-bar">
-      <h1 className="home-screen-title">Discover Our Exclusive Wedding Services</h1>
-      <p className="welcome-message">
-        At <span className="brand-name">BookYourCelebrations</span>, we help you find
-        top-notch wedding services that make your day unforgettable.
-      </p>
+      {/* ── Customer view ── */}
+      {role === 'customer' && (
+        <main className="background-section" role="main">
+          <section className="carousel-custom" aria-label="Featured wedding services">
+            <ProductCarousel />
+            <HomeInvitePage />
+          </section>
 
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
-        <Button variant="outline-light" size="lg" className="explore-button" onClick={handleScroll}>
-          Explore Services
-        </Button>
-        <Button variant="success" size="lg" className="download-button" onClick={handleHeaderDownloadClick}>
-          📲 Download App
-        </Button>
-      </div>
-    </div>
+          <section className="title-bar" aria-label="Welcome section">
+            <h1 className="home-screen-title">Discover Our Exclusive Wedding Services</h1>
+            <p className="welcome-message">
+              At <span className="brand-name">WedMangal</span>, we help you find
+              top-notch wedding services that make your day unforgettable.
+            </p>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+              <Button variant="outline-light" className="plan-button" size="lg" onClick={() => navigate('/plan')} aria-label="Plan my wedding">🗓 Plan my wedding</Button>
+              <Button variant="outline-light" size="lg" className="explore-button" onClick={() => { const g = document.querySelector('.product-grid'); if (g) g.scrollIntoView({ behavior: 'smooth' }); else window.scrollTo({ top: window.innerHeight / 2, behavior: 'smooth' }); }} aria-label="Explore all services">Explore Services</Button>
+              <Button variant="success" size="lg" className="download-button" onClick={handleHeaderDownloadClick} aria-label="Download mobile app">📲 Download App</Button>
+            </div>
+          </section>
 
-    {/* ✅ Show countdown only if logged in */}
-    {userInfo?._id ? (
-      <DateCalculation />
-    ) : (
-      <div className="container-fluid" style={{ marginTop: '30px' }}>
-        <div
-          className="plain-card"
-          style={{
-            textAlign: 'center',
-            padding: '20px',
-            borderRadius: '10px',
-            background: '#fff3cd',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-          }}
-        >
-          <h4><b>Save Your Wedding Date</b></h4>
-          <p>Login to track your wedding countdown and receive reminders!</p>
-          <Button variant="warning" href="/login">Login</Button>
-        </div>
-      </div>
-    )}
+          {userInfo?._id ? <DateCalculation /> : (
+            <div className="container-fluid" style={{ marginTop: 30 }}>
+              <div className="plain-card" style={{ textAlign: 'center', padding: 20, borderRadius: 10, background: '#fff3cd', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}>
+                <h2><b>Save Your Wedding Date</b></h2>
+                <p>Login to track your wedding countdown and receive personalized reminders!</p>
+                <Button variant="warning" href="/login">Login</Button>
+              </div>
+            </div>
+          )}
+        </main>
+      )}
 
-  </div>
-)}
-
-      {/* Category section */}
+      {/* ── Category grid ── */}
       {role !== 'service-owner' && (
-        <div className="category-section">
+        <section className="category-section" aria-label="Wedding vendor categories">
           <h2 className="category-title">Top Wedding Vendor Categories</h2>
           <div className="category-grid">
-            {categories.map((category) => (
-              <div
-                key={category.name}
-                className="category-card"
-                onClick={() => handleCategoryClick(category.name)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && handleCategoryClick(category.name)}
+            {categories.map(cat => (
+              <article 
+                key={cat.name} 
+                className="category-card" 
+                onClick={() => handleCategoryClick(cat.name)}
+                role="button" 
+                tabIndex={0} 
+                onKeyDown={e => e.key === 'Enter' && handleCategoryClick(cat.name)}
+                aria-label={`Browse ${cat.label} vendors`}
               >
-                <img src={category.image} alt={category.name} className="category-image" />
-                <h3 className="category-name">{category.name}</h3>
-              </div>
+                <img 
+                  src={cat.image} 
+                  alt={`${cat.label} wedding services`} 
+                  className="category-image" 
+                  loading="lazy"
+                />
+                <h3 className="category-name">{cat.label}</h3>
+              </article>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Service-owner view */}
-      {role === 'service-owner' && (
-        <>
-          {checkingProduct ? <Loader /> : hasProduct ? <ManagePage /> : <AddProductPage />}
-        </>
-      )}
-
-      {/* Products listing */}
+      {/* ── Emergency / Available Today section ── */}
       {role !== 'service-owner' && (
-        <>
+        <section style={{ padding: '0 16px' }} aria-label="Available today services">
+          <EmergencySection />
+        </section>
+      )}
+
+      {/* ── Service owner view ── */}
+      {role === 'service-owner' && (
+        checkingProduct ? <Loader /> : hasProduct ? <ManagePage /> : <AddProductPage />
+      )}
+
+      {/* ── Product listing with FilterBar ── */}
+      {role !== 'service-owner' && (
+        <section style={{ padding: '0 16px' }} aria-label="Search results">
+          {keyword && (
+            <FilterBar
+              category={keyword}
+              filters={filters}
+              onChange={(updater) => {
+                setFilters(updater);
+                navigate(`/?keyword=${encodeURIComponent(keyword)}&page=1`);
+              }}
+            />
+          )}
+
           {loading ? (
             <Loader />
           ) : error ? (
             <Message variant="danger">{error}</Message>
           ) : products.length === 0 ? (
-            <Message>No products found</Message>
+            <Message>
+              No {keyword ? keyword.replace('_', ' ') + ' ' : ''}vendors found. 
+              Try adjusting your filters or <a href="/contact">contact us</a> for assistance.
+            </Message>
           ) : (
             <>
-              <div className="product-grid">
-                {products.map((product) => (
-                  <div key={product._id} className="product-card">
+              {keyword && (
+                <h1 className="search-title" aria-label={`Search results for ${keyword.replace('_', ' ')}`}>
+                  Find & Book {keyword.replace('_', ' ')} for Your Dream Wedding
+                </h1>
+              )}
+              <div className="product-grid" role="list">
+                {products.map(product => (
+                  <article key={product._id} className="product-card" role="listitem">
                     <Product product={product} />
-                  </div>
+                  </article>
                 ))}
               </div>
-
-              <div className="paginate-container">
+              <nav className="paginate-container" aria-label="Pagination">
                 <Paginate page={page} pages={pages} keyword={keyword} handlePageChange={handlePageChange} />
-              </div>
+              </nav>
             </>
           )}
-        </>
+        </section>
       )}
     </div>
   );

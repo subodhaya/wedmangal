@@ -1,9 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError 
-
-from django.contrib.postgres.fields import JSONField
-
+from django.core.exceptions import ValidationError
 
 
 class Profile(models.Model):
@@ -14,10 +11,11 @@ class Profile(models.Model):
         ('service-owner', 'Service Owner'),
         ('product-manager', 'Product Manager'),
         ('admin', 'Admin')
-    ], default='customer')  # Default role is 'customer'
+    ], default='customer')
 
     def __str__(self):
         return self.user.username
+
 
 class Product(models.Model):
     user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True)
@@ -26,20 +24,38 @@ class Product(models.Model):
     brand = models.CharField(max_length=200, null=True, blank=True)
     category = models.CharField(max_length=200, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    
     createdAt = models.DateTimeField(auto_now_add=True)
     _id = models.AutoField(primary_key=True, editable=False)
     city = models.CharField(max_length=100, null=True, blank=True)
-    area_name = models.CharField(max_length=150, null=True, blank=True)  # 🏠 New field for area name
-    address = models.TextField(null=True, blank=True)  # 🏡 New field for full address
-
+    area_name = models.CharField(max_length=150, null=True, blank=True)
+    address = models.TextField(null=True, blank=True)
     business_phone = models.CharField(max_length=15, null=True, blank=True)
     personal_phone = models.CharField(max_length=15, null=True, blank=False)
-    
-    opening_time = models.TimeField(null=True, blank=True)  # ⏰ New field for opening time
-    closing_time = models.TimeField(null=True, blank=True)  # ⏳ New field for closing time
-
+    opening_time = models.TimeField(null=True, blank=True)
+    closing_time = models.TimeField(null=True, blank=True)
     is_approved = models.BooleanField(default=False)
+
+    # ── Claim ─────────────────────────────────────────────
+    is_claimed = models.BooleanField(default=False)
+    claimed_by = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='claimed_listings'
+    )
+    claimed_at = models.DateTimeField(null=True, blank=True)
+
+    # ── Emergency availability ────────────────────────────
+    is_available_today = models.BooleanField(default=False)
+    available_since    = models.DateTimeField(null=True, blank=True)
+
+    # ── Category-specific filter attributes ───────────────
+    # Stored as flat JSON dict. Examples:
+    # Makeup_Artist:  { "type": "bridal|non-bridal", "trial_available": true }
+    # Photographers:  { "shoot_type": "wedding|pre-wedding|candid" }
+    # Caterers:       { "food_type": "veg|nonveg|both", "cuisine": "South Indian" }
+    # Halls:          { "capacity": "500", "ac": true, "parking": true }
+    # DJ_Artist:      { "venue_type": "indoor|outdoor", "equipment_included": true }
+    # Mehandi_Artist: { "type": "bridal|regular", "home_visit": true }
+    attributes = models.JSONField(default=dict, blank=True)
 
     def __str__(self):
         return self.name if self.name else 'Unnamed business'
@@ -49,8 +65,7 @@ class Service(models.Model):
     product = models.ForeignKey(Product, related_name='services', on_delete=models.CASCADE)
     name = models.CharField(max_length=200, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    
-    rating = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, default=1.0)  # Default rating is 1.0
+    rating = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, default=1.0)
     numReviews = models.IntegerField(null=True, blank=True, default=0)
     price = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
     countInStock = models.IntegerField(null=True, blank=True, default=0)
@@ -59,8 +74,7 @@ class Service(models.Model):
     def __str__(self):
         return self.name if self.name else 'Unnamed service'
 
-   
-    
+
 class ServiceImage(models.Model):
     service = models.ForeignKey(Service, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='service_images/')
@@ -71,8 +85,9 @@ class ServiceImage(models.Model):
             raise ValidationError('A service can have a maximum of 10 images.')
 
     def __str__(self):
-        return f'Image for {self.service.name if self.service.name else "Unnamed service"}'        
-    
+        return f'Image for {self.service.name if self.service.name else "Unnamed service"}'
+
+
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     isCancelled = models.BooleanField(default=False)
@@ -88,13 +103,13 @@ class Order(models.Model):
     _id = models.AutoField(primary_key=True, editable=False)
 
     def __str__(self):
-        return str(self.createdAt)    
-    
+        return str(self.createdAt)
+
+
 class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
-
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True)
-    service = models.ForeignKey(Service, related_name='bookings', on_delete=models.CASCADE, default=1)  # Default service ID is 1
+    service = models.ForeignKey(Service, related_name='bookings', on_delete=models.CASCADE, default=1)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     is_read = models.BooleanField(default=False)
     start_date = models.DateField(default='2020-01-01')
@@ -108,8 +123,7 @@ class OrderItem(models.Model):
     _id = models.AutoField(primary_key=True, editable=False)
 
     def __str__(self):
-        return str(self.name)    
-
+        return str(self.name)
 
 
 class ShippingAddress(models.Model):
@@ -118,12 +132,13 @@ class ShippingAddress(models.Model):
     city = models.CharField(max_length=200, null=True, blank=True)
     postalCode = models.CharField(max_length=200, null=True, blank=True)
     country = models.CharField(max_length=200, null=True, blank=True)
-    shippingPrice = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True,default=100.00)
+    shippingPrice = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, default=100.00)
     _id = models.AutoField(primary_key=True, editable=False)
 
     def __str__(self):
         return str(self.address)
-    
+
+
 class CartItem(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
@@ -136,11 +151,12 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f'{self.name} - {self.user}'
-    
+
+
 class Wishlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    weddingDate = models.DateField(null=True, blank=True)  # Optional field
+    weddingDate = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.user.username} - {self.product.name}'
@@ -158,7 +174,37 @@ class Review(models.Model):
     def __str__(self):
         return str(self.rating)
 
+
 class Budget(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    total_budget = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=False, blank=False)
+    total_budget = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     expenses = models.JSONField(default=dict)
+
+
+class UnavailableDate(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='unavailable_dates')
+    date = models.DateField()
+    reason = models.CharField(max_length=200, blank=True, default='Unavailable')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('product', 'date')
+        ordering = ['date']
+
+    def __str__(self):
+        return f"{self.product.name} — {self.date}"
+
+
+class ServiceOwnerClaim(models.Model):
+    STATUS_CHOICES = [('approved', 'Approved'), ('revoked', 'Revoked')]
+    product    = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='service_owner_claims')
+    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='service_owner_claims')
+    phone      = models.CharField(max_length=15)
+    status     = models.CharField(max_length=20, choices=STATUS_CHOICES, default='approved')
+    claimed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-claimed_at']
+
+    def __str__(self):
+        return f"{self.user.email} claimed {self.product.name} [{self.status}]"

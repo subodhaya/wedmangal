@@ -1,8 +1,9 @@
+// src/screens/BudgetScreen.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Pie } from 'react-chartjs-2';
 import { Row, Col, Form, Button } from 'react-bootstrap';
-import api from '../utils/api';  
+import api from '../utils/api';
+import './BudgetScreen.css';
 
 const BudgetScreen = () => {
   const [totalBudget, setTotalBudget] = useState(0);
@@ -19,212 +20,245 @@ const BudgetScreen = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Default expenses
   const defaultExpenses = {
-    venue: 0,
-    jewels: 0,
-    catering: 0,
-    decoration: 0,
-    photography: 0,
+    venue: 0, jewels: 0, catering: 0, decoration: 0, photography: 0,
   };
 
-  // Fetch Budget Data
   const fetchBudget = () => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     const pk = userInfo?.id;
-
-    if (!pk) {
-      setErrorMessage('User not found.');
-      return;
-    }
-
-    const config = {
-      headers: {
-        Authorization: `Bearer ${userInfo.token}`,
-      },
-    };
-
+    if (!pk) { setErrorMessage('User not found.'); return; }
+    const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
     setLoading(true);
-    api
-      .get(`/api/orders/get-budget/${pk}/`, config)
+    api.get(`/api/orders/get-budget/${pk}/`, config)
       .then((response) => {
         if (response.data) {
           setTotalBudget(response.data.total_budget || 0);
-
-          // Set expenses with default values if not present
-          const fetchedExpenses = response.data.expenses || {};
-          setExpenses({
-            ...defaultExpenses,
-            ...fetchedExpenses,
-          });
+          setExpenses({ ...defaultExpenses, ...(response.data.expenses || {}) });
           setErrorMessage('');
         }
       })
-      .catch((error) => {
-        setErrorMessage('Error fetching budget. Please try again.');
-        console.error('Error fetching budget:', error);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      .catch(() => setErrorMessage('Error fetching budget. Please try again.'))
+      .finally(() => setLoading(false));
   };
 
-  // Save Budget Data
   const handleSave = () => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     const pk = userInfo?.id;
-
-    if (!pk) {
-      setErrorMessage('User not found.');
-      return;
-    }
-
-    const data = {
-      total_budget: totalBudget,
-      expenses,
-    };
-
-    const config = {
-      headers: {
-        Authorization: `Bearer ${userInfo.token}`,
-      },
-    };
-
-    api
-      .post(`/api/orders/update-budget/${pk}/`, data, config)
-      .then(() => {
-        setSuccessMessage('Budget saved successfully!');
-        setErrorMessage('');
-      })
-      .catch((error) => {
-        setErrorMessage('Failed to save budget. Please try again.');
-        setSuccessMessage('');
-        console.error('Error saving budget:', error);
-      });
+    if (!pk) { setErrorMessage('User not found.'); return; }
+    const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+    api.post(`/api/orders/update-budget/${pk}/`, { total_budget: totalBudget, expenses }, config)
+      .then(() => { setSuccessMessage('Budget saved successfully!'); setErrorMessage(''); })
+      .catch(() => { setErrorMessage('Failed to save budget. Please try again.'); setSuccessMessage(''); });
   };
 
-  // Chart Data
+  const totalSpent = Object.values(expenses).reduce((a, b) => a + b, 0);
+  const remaining = totalBudget - totalSpent;
+  const spentPct  = totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
+
+  const COLORS = ['#5e143f', '#c9973a', '#8a2057', '#e8b86d', '#b5436a', '#d4a055'];
+
   const chartData = {
-    labels: Object.keys(expenses),
-    datasets: [
-      {
-        label: 'Expenses',
-        data: Object.values(expenses),
-        backgroundColor: [
-          '#FF6384',
-          '#36A2EB',
-          '#FFCE56',
-          '#4BC0C0',
-          '#9966FF',
-          '#FF9F40',
-        ],
-      },
-    ],
+    labels: Object.keys(expenses).map(k => k.charAt(0).toUpperCase() + k.slice(1)),
+    datasets: [{
+      data: Object.values(expenses),
+      backgroundColor: COLORS,
+      borderColor: '#fff',
+      borderWidth: 2,
+    }],
   };
 
-  useEffect(() => {
-    fetchBudget();
-  }, []);
+  const chartOptions = {
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          font: { family: "'DM Sans', sans-serif", size: 12 },
+          padding: 12,
+          usePointStyle: true,
+        },
+      },
+    },
+  };
 
+  useEffect(() => { fetchBudget(); }, []);
 
-    return (
-      <div className="budget-screen">
-        <h2>Budget Management</h2>
-        <Row>
-          <Col md={8}>
-            <Form>
-              <Form.Group as={Row} className="mb-3 align-items-center">
-                <Form.Label column sm="4">
-                  Total Budget:
-                </Form.Label>
-                <Col sm="4">
-                  <Form.Control
-                    type="number"
-                    value={totalBudget}
-                    onChange={(e) => setTotalBudget(parseFloat(e.target.value) || 0)}
-                  />
-                </Col>
-              </Form.Group>
-  
-              <h3>Expenses</h3>
-              {Object.keys(expenses).map((key) => (
-                <Form.Group as={Row} key={key} className="mb-3 align-items-center">
-                  <Form.Label column sm="4">
-                    {key.charAt(0).toUpperCase() + key.slice(1)}:
-                  </Form.Label>
-                  <Col sm="4">
+  const expenseIcons = {
+    venue: '🏛️', jewels: '💎', catering: '🍽️',
+    decoration: '🌸', photography: '📷',
+  };
+
+  return (
+    <div className="budget-screen">
+
+      {/* ── Page header ── */}
+      <div className="budget-page-header">
+        <h2 className="budget-page-title">💰 Budget Planner</h2>
+        <p className="budget-page-sub">Plan and track your wedding expenses in one place</p>
+      </div>
+
+      {/* ── Summary cards ── */}
+      <div className="budget-summary-row">
+        <div className="budget-summary-card total">
+          <span className="summary-label">Total Budget</span>
+          <span className="summary-value">₹{Number(totalBudget).toLocaleString('en-IN')}</span>
+        </div>
+        <div className="budget-summary-card spent">
+          <span className="summary-label">Total Spent</span>
+          <span className="summary-value">₹{Number(totalSpent).toLocaleString('en-IN')}</span>
+        </div>
+        <div className={`budget-summary-card remaining ${remaining < 0 ? 'over' : ''}`}>
+          <span className="summary-label">Remaining</span>
+          <span className="summary-value">₹{Number(remaining).toLocaleString('en-IN')}</span>
+        </div>
+      </div>
+
+      {/* ── Progress bar ── */}
+      {totalBudget > 0 && (
+        <div className="budget-progress-wrap">
+          <div className="budget-progress-bar">
+            <div
+              className="budget-progress-fill"
+              style={{ width: `${spentPct}%`, background: spentPct > 90 ? '#c0392b' : '#5e143f' }}
+            />
+          </div>
+          <span className="budget-progress-label">{spentPct.toFixed(1)}% spent</span>
+        </div>
+      )}
+
+      <Row className="budget-main-row">
+
+        {/* ── Left: Form ── */}
+        <Col md={7}>
+          <div className="budget-card">
+
+            {/* Total budget input */}
+            <div className="budget-section-title">
+              <span className="section-dot" />
+              Set Total Budget
+            </div>
+            <div className="budget-total-input-row">
+              <span className="rupee-prefix">₹</span>
+              <Form.Control
+                type="number"
+                className="budget-total-input"
+                value={totalBudget}
+                onChange={(e) => setTotalBudget(parseFloat(e.target.value) || 0)}
+                placeholder="Enter your total budget"
+              />
+            </div>
+
+            {/* Expenses list */}
+            <div className="budget-section-title" style={{ marginTop: '1.5rem' }}>
+              <span className="section-dot" />
+              Expense Categories
+            </div>
+
+            <div className="expense-list">
+              {Object.keys(expenses).map((key, i) => (
+                <div className="expense-row" key={key}>
+                  <div className="expense-label-wrap">
+                    <span className="expense-icon">{expenseIcons[key] || '💸'}</span>
+                    <span className="expense-label">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                  </div>
+                  <div className="expense-input-wrap">
+                    <span className="rupee-prefix small">₹</span>
                     <Form.Control
                       type="number"
+                      className="expense-input"
                       value={expenses[key]}
-                      onChange={(e) =>
-                        setExpenses({
-                          ...expenses,
-                          [key]: parseFloat(e.target.value) || 0,
-                        })
-                      }
+                      onChange={(e) => setExpenses({ ...expenses, [key]: parseFloat(e.target.value) || 0 })}
                     />
-                  </Col>
-                </Form.Group>
+                  </div>
+                </div>
               ))}
-  
-              <h4>Add New Expense</h4>
-              <Form.Group as={Row} className="mb-3 align-items-center">
-  <Col sm="3">
-    <Form.Control
-      type="text"
-      placeholder="Expense Name"
-      value={newExpenseName}
-      onChange={(e) => setNewExpenseName(e.target.value)}
-    />
-  </Col>
-  <Col sm="3">
-    <Form.Control
-      type="number"
-      placeholder="Expense Amount"
-      value={newExpenseAmount}
-      onChange={(e) => setNewExpenseAmount(parseFloat(e.target.value) || 0)}
-    />
-  </Col>
-  <Col sm="1" className="p-0">
-    <Button
-      onClick={() => {
-        if (newExpenseName && newExpenseAmount) {
-          setExpenses({
-            ...expenses,
-            [newExpenseName]: newExpenseAmount,
-          });
-          setNewExpenseName('');
-          setNewExpenseAmount('');
-        }
-      }}
-      className="btn btn-primary mt-0"
-    >
-      +
-    </Button>
-  </Col>
-</Form.Group>
+            </div>
 
-  
-              <Row className="mt-3">
-  <Col sm="4">
-    <Button onClick={handleSave} className="btn btn-primary btn-sm">
-      Save Budget
-    </Button>
-  </Col>
-</Row>
-  
-              {successMessage && <p className="text-success mt-2">{successMessage}</p>}
-              {errorMessage && <p className="text-danger mt-2">{errorMessage}</p>}
-            </Form>
-          </Col>
-          <Col md={4}>
-            <h3>Expenses Breakdown</h3>
-            <Pie data={chartData} />
-          </Col>
-        </Row>
-      </div>
-    );
-  };
-  
-  export default BudgetScreen;
-  
+            {/* Add new expense */}
+            <div className="budget-section-title" style={{ marginTop: '1.5rem' }}>
+              <span className="section-dot" />
+              Add Custom Expense
+            </div>
+            <div className="add-expense-row">
+              <Form.Control
+                type="text"
+                className="add-expense-name"
+                placeholder="Expense name"
+                value={newExpenseName}
+                onChange={(e) => setNewExpenseName(e.target.value)}
+              />
+              <div className="add-expense-amount-wrap">
+                <span className="rupee-prefix small">₹</span>
+                <Form.Control
+                  type="number"
+                  className="expense-input"
+                  placeholder="Amount"
+                  value={newExpenseAmount}
+                  onChange={(e) => setNewExpenseAmount(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+              <button
+                className="add-expense-btn"
+                onClick={() => {
+                  if (newExpenseName && newExpenseAmount) {
+                    setExpenses({ ...expenses, [newExpenseName.toLowerCase()]: newExpenseAmount });
+                    setNewExpenseName('');
+                    setNewExpenseAmount('');
+                  }
+                }}
+              >
+                + Add
+              </button>
+            </div>
+
+            {/* Save button + messages */}
+            <div className="budget-save-row">
+              <button className="budget-save-btn" onClick={handleSave}>
+                💾 Save Budget
+              </button>
+              {successMessage && <span className="budget-msg success">✓ {successMessage}</span>}
+              {errorMessage   && <span className="budget-msg error">✗ {errorMessage}</span>}
+            </div>
+
+          </div>
+        </Col>
+
+        {/* ── Right: Chart ── */}
+        <Col md={5}>
+          <div className="budget-card chart-card">
+            <div className="budget-section-title">
+              <span className="section-dot" />
+              Expenses Breakdown
+            </div>
+            {totalSpent > 0 ? (
+              <div className="chart-wrap">
+                <Pie data={chartData} options={chartOptions} />
+              </div>
+            ) : (
+              <div className="chart-empty">
+                <span className="chart-empty-icon">📊</span>
+                <p>Add expenses to see your breakdown</p>
+              </div>
+            )}
+
+            {/* Mini legend with amounts */}
+            {totalSpent > 0 && (
+              <div className="chart-legend">
+                {Object.entries(expenses).filter(([, v]) => v > 0).map(([key, val], i) => (
+                  <div className="legend-item" key={key}>
+                    <span className="legend-dot" style={{ background: COLORS[i % COLORS.length] }} />
+                    <span className="legend-label">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                    <span className="legend-amount">₹{Number(val).toLocaleString('en-IN')}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Col>
+
+      </Row>
+    </div>
+  );
+};
+
+export default BudgetScreen;

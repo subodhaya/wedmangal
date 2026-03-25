@@ -1,0 +1,110 @@
+/* src/components/SplashScreen.css */
+
+.splash-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: #5e143f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.4s ease;
+  opacity: 1;
+}
+
+.splash-fade {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Center content ── */
+.splash-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  animation: splash-rise 0.6s ease both;
+}
+
+@keyframes splash-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── W Badge ── */
+.splash-badge {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background-color: #f9e79f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 6px rgba(249, 231, 159, 0.2);
+}
+
+.splash-w {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 54px;
+  font-weight: 700;
+  color: #5e143f;
+  line-height: 1;
+  margin-top: 4px;
+}
+
+/* ── Wordmark ── */
+.splash-wordmark {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  letter-spacing: 1px;
+}
+
+.splash-wed {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #f9e79f;
+}
+
+.splash-mangal {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: #ffffff;
+}
+
+/* ── Tagline ── */
+.splash-tagline {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 13px;
+  font-style: italic;
+  color: rgba(249, 231, 159, 0.8);
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+/* ── Bottom ── */
+.splash-bottom {
+  position: absolute;
+  bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.splash-divider {
+  width: 40px;
+  height: 1px;
+  background: rgba(249, 231, 159, 0.4);
+}
+
+.splash-sub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin: 0;
+}

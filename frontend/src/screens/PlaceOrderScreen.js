@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../utils/api';  
 import Message from '../components/Message';
 import CheckoutSteps from '../components/CheckoutSteps';
+import './PlaceOrderScreen.css';
 
 function PlaceOrderScreen() {
     const navigate = useNavigate();
@@ -23,26 +24,21 @@ function PlaceOrderScreen() {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        if (!paymentMethod) {
-            navigate('/payment');
-        }
-
         const calculatePrices = () => {
-            const itemsPrice = parseFloat(
+            const items = parseFloat(
                 cartItems.reduce((acc, item) => acc + item.price * item.qty, 0).toFixed(2)
             );
-            const shippingPrice = 100;
-            const taxPrice = parseFloat((0.082 * itemsPrice).toFixed(2));
-            const totalPrice = parseFloat((itemsPrice + shippingPrice + taxPrice).toFixed(2));
-
-            setItemsPrice(itemsPrice);
-            setShippingPrice(shippingPrice);
-            setTaxPrice(taxPrice);
-            setTotalPrice(totalPrice);
+            const shipping = 100;
+            const tax = parseFloat((0.082 * items).toFixed(2));
+            const total = parseFloat((items + shipping + tax).toFixed(2));
+            setItemsPrice(items);
+            setShippingPrice(shipping);
+            setTaxPrice(tax);
+            setTotalPrice(total);
         };
 
         calculatePrices();
-    }, [cartItems, paymentMethod, navigate]);
+    }, [paymentMethod, navigate]);
 
     const removeFromCartHandler = (id) => {
         const updatedCartItems = cartItems.filter((item) => item.service !== id);
@@ -69,14 +65,14 @@ function PlaceOrderScreen() {
                 },
             });
 
-            // Clear cart or direct booking based on source
+            // Clear cart or direct booking after confirmed order
             if (directBookingItem) {
                 localStorage.removeItem('directBookingItem');
             } else {
                 localStorage.removeItem('cartItems');
             }
 
-            navigate(`/order/${data._id}`);
+            navigate(`/order/${data._id}`, { state: { justBooked: true } });
         } catch (error) {
             console.error('Error placing order:', error.response ? error.response.data : error.message);
             setError('Booking creation failed. Please try again.');
@@ -84,7 +80,7 @@ function PlaceOrderScreen() {
     };
 
     return (
-        <div>
+        <div className="place-order-screen">
             <CheckoutSteps step1 step2 step3 step4 />
             <Row>
                 <Col md={8}>
@@ -167,7 +163,7 @@ function PlaceOrderScreen() {
                             </ListGroup.Item>
                             <ListGroup.Item>
                                 <Row>
-                                    <Col>Shipping:</Col>
+                                    <Col>Conveyance:</Col>
                                     <Col>₹{shippingPrice.toFixed(2)}</Col>
                                 </Row>
                             </ListGroup.Item>

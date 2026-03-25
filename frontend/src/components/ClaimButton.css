@@ -1,0 +1,89 @@
+/* ClaimButton.css */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+
+.claim-cta-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 1rem;
+}
+
+.claim-cta-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem;
+  color: #9a7a85;
+  margin: 0;
+  font-weight: 400;
+}
+
+.claim-cta-btn {
+  background: transparent;
+  border: 1.5px solid rgba(94, 20, 63, 0.35);
+  color: #5e143f;
+  border-radius: 999px;
+  padding: 0.48rem 1.1rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background 0.2s ease,
+              color 0.2s ease,
+              border-color 0.2s ease,
+              transform 0.2s ease,
+              box-shadow 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.claim-cta-btn:hover {
+  background: #5e143f;
+  color: #f0c96a;
+  border-color: #5e143f;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(94, 20, 63, 0.25);
+}
+
+/* Verified chip */
+.claim-verified-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(110deg, #5e143f, #8a2057);
+  color: #f0c96a;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 5px 14px;
+  border-radius: 999px;
+}
+.claim-verified-chip.owned {
+  background: linear-gradient(110deg, #1a6e3a, #2e9e58);
+  color: #c6f0d5;
+}
+
+.claim-owned {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.claim-dashboard-link {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #5e143f;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.claim-dashboard-link:hover {
+  color: #c9973a;
+}
+
+.claim-already {
+  margin-top: 1rem;
+}
