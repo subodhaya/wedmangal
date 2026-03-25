@@ -7,3 +7,4 @@ __pycache__/
 *.pyc
 .env
 
+backend/google-chrome-stable_current_amd64.deb
