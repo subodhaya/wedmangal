@@ -1,7 +1,9 @@
 import axios from "axios";
 const BASE_URL = window.location.origin.includes("localhost")
   ? "http://127.0.0.1:8000"
-  : "https://www.bookyourcelebration.com";
+  : window.location.origin.includes("5.223.87.80")
+  ? "http://5.223.87.80"
+  : "https://wedmangal.com";
 
 
 const api = axios.create({
