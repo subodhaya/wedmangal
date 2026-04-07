@@ -344,6 +344,8 @@ function HomeScreen() {
         setLoading(true); 
         setError('');
         const params = {
+          // Add home=true when no keyword (homepage)
+          ...((!keyword && !Object.values(filters).some(v => v)) && { home: 'true' }),
           keyword,
           page: pageNumber,
           ...(filters.sort && { sort: filters.sort }),

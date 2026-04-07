@@ -616,19 +616,36 @@ def get_booked_dates(request, service_id):
     
 #########&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&****************************#############@&&&&&&&&&&&%%%%%%%%%%%%%%%%%%3
 @api_view(['GET'])
-def getTopProducts(request):
-    # Step 1: Get the top services with a rating of 2 or greater, along with their related product details
-    top_services = Service.objects.filter(rating__gte=2).order_by('-rating')[:12].select_related('product')
-    
-    top_product_ids = [service.product._id for service in top_services]
-    print(top_product_ids)
-    # Step 3: Get the products using the product ids
-    top_products = Product.objects.filter(_id__in=top_product_ids)
-    # Step 4: Limit the results to 12 products (after the query is done)
-    top_products = top_products[:12]
 
-    # Serialize the results and return
-    serializer = ProductSerializer(top_products, many=True)
+def getTopProducts(request):
+    # Get top services with rating >= 2
+    top_services = Service.objects.filter(
+        rating__gte=2
+    ).order_by('-rating').select_related('product')
+    
+    # Get unique product IDs while preserving order
+    seen = set()
+    unique_product_ids = []
+    for service in top_services:
+        pid = service.product._id
+        if pid not in seen:
+            seen.add(pid)
+            unique_product_ids.append(pid)
+        if len(unique_product_ids) >= 12:
+            break
+
+    # Fetch products and preserve rating order
+    products = Product.objects.filter(_id__in=unique_product_ids)
+    
+    # Preserve the order from top_services
+    product_map = {p._id: p for p in products}
+    ordered_products = [
+        product_map[pid] 
+        for pid in unique_product_ids 
+        if pid in product_map
+    ]
+
+    serializer = ProductSerializer(ordered_products, many=True)
     return Response(serializer.data)
 
 
@@ -1080,11 +1097,11 @@ def mark_order_as_done(request, pk):
     print("🔧 Marked updated")
     serializer = OrderSerializer(order, many=False)
     return Response(serializer.data)
-
-
 @api_view(['GET'])
 def getProducts(request):
-    from django.db.models import Avg, Min, Q
+    from django.db.models import Avg, Min, Q, Sum
+    from django.core.paginator import Paginator
+    from django.db.models.functions import Random
 
     keyword      = request.query_params.get('keyword', '')
     category     = request.query_params.get('category', '')
@@ -1095,6 +1112,9 @@ def getProducts(request):
     sort         = request.query_params.get('sort', 'newest')
     available    = request.query_params.get('available', '')
     page         = request.query_params.get('page', 1)
+
+    # 🔥 Homepage flag
+    is_home      = request.query_params.get('home', '') == 'true'
 
     food_type    = request.query_params.get('food_type', '')
     shoot_type   = request.query_params.get('shoot_type', '')
@@ -1110,7 +1130,7 @@ def getProducts(request):
 
     qs = Product.objects.filter(is_approved=True)
 
-    # ── Keyword — searches name, category, description, city ──
+    # 🔍 Search
     if keyword:
         qs = qs.filter(
             Q(name__icontains=keyword) |
@@ -1128,6 +1148,7 @@ def getProducts(request):
     if available == 'true':
         qs = qs.filter(is_available_today=True)
 
+    # 🎯 Attribute filters
     if food_type:
         qs = qs.filter(attributes__food_type=food_type)
     if shoot_type:
@@ -1151,11 +1172,13 @@ def getProducts(request):
     if home_visit == 'true':
         qs = qs.filter(attributes__home_visit=True)
 
+    # 📊 Annotations
     qs = qs.annotate(
         avg_rating=Avg('services__rating'),
         min_price_val=Min('services__price'),
     )
 
+    # 💰 Price & rating filters
     if min_price:
         qs = qs.filter(min_price_val__gte=float(min_price))
     if max_price:
@@ -1163,18 +1186,35 @@ def getProducts(request):
     if min_rating:
         qs = qs.filter(avg_rating__gte=float(min_rating))
 
-    if sort == 'price_asc':
-        qs = qs.order_by('min_price_val')
-    elif sort == 'price_desc':
-        qs = qs.order_by('-min_price_val')
-    elif sort == 'rating':
-        qs = qs.order_by('-avg_rating')
+    # 🔥 HOMEPAGE LOGIC (Trending + Random)
+    if is_home and not keyword:
+        # ⭐ Trending: top 4 rated products
+        trending_qs = qs.order_by('-avg_rating')[:4]
+        trending_ids = list(trending_qs.values_list('id', flat=True))
+
+        # 🎲 Random: 5 products excluding trending ones
+        random_qs = qs.exclude(id__in=trending_ids).order_by(Random())[:5]
+        
+        # Combine: trending + random = 9 products total
+        final_qs = list(trending_qs) + list(random_qs)
+        products_page = final_qs
+        paginator = None
+
     else:
-        qs = qs.order_by('-createdAt')
+        # 📊 Normal sorting (with pagination)
+        if sort == 'price_asc':
+            qs = qs.order_by('min_price_val')
+        elif sort == 'price_desc':
+            qs = qs.order_by('-min_price_val')
+        elif sort == 'rating':
+            qs = qs.order_by('-avg_rating')
+        else:
+            qs = qs.order_by('-createdAt')
 
-    paginator = Paginator(qs, 10)
-    products_page = paginator.get_page(page)
+        paginator = Paginator(qs, 9)
+        products_page = paginator.get_page(page)
 
+    # 📦 Response building
     response_data = []
     for product in products_page:
         services = product.services.all()
@@ -1208,10 +1248,9 @@ def getProducts(request):
 
     return Response({
         'products': response_data,
-        'page': int(page),
-        'pages': paginator.num_pages,
+        'page': 1 if is_home else int(page),
+        'pages': 1 if is_home else (paginator.num_pages if paginator else 1),
     })
-
 # ── Toggle availability (vendor ON/OFF) ───────────────────────────────────────
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

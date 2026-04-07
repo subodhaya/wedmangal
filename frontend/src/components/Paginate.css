@@ -1,0 +1,94 @@
+/* ============================================================
+   Paginate.css — BookYourCelebration / WedMangal
+   Maroon × gold pill pagination
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+
+.pg-root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 2rem 1rem;
+  flex-wrap: wrap;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Base button ───────────────────────────────────────── */
+.pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  min-width: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(94, 20, 63, 0.18);
+  background: #fff;
+  color: #5e143f;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s,
+              transform 0.18s, box-shadow 0.2s;
+  user-select: none;
+  white-space: nowrap;
+}
+.pg-btn:hover:not(.pg-disabled):not(.pg-active) {
+  background: #f5eaf0;
+  border-color: #5e143f;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(94, 20, 63, 0.12);
+}
+
+/* ── Active page ───────────────────────────────────────── */
+.pg-active {
+  background: linear-gradient(110deg, #5e143f, #8a2057);
+  color: #f0c96a !important;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(94, 20, 63, 0.30);
+  font-weight: 700;
+  transform: scale(1.08);
+  pointer-events: none;
+}
+
+/* ── Prev / Next arrows ────────────────────────────────── */
+.pg-arrow {
+  padding: 0 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── Disabled ──────────────────────────────────────────── */
+.pg-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Numbers row ───────────────────────────────────────── */
+.pg-numbers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ── Ellipsis ──────────────────────────────────────────── */
+.pg-ellipsis {
+  color: #9a7a85;
+  font-size: 1rem;
+  padding: 0 4px;
+  user-select: none;
+  line-height: 40px;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .pg-btn  { height: 36px; min-width: 36px; font-size: 0.82rem; }
+  .pg-arrow { padding: 0 12px; }
+  .pg-root { gap: 5px; }
+}
