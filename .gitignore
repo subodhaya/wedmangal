@@ -1,6 +1,6 @@
 backend/backend/settings.py
 backend/settings.py
-
+backend/static/images/
 backend/venv/
 frontend/node_modules/
 __pycache__/
