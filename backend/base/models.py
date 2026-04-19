@@ -33,6 +33,13 @@ class Product(models.Model):
     personal_phone = models.CharField(max_length=15, null=True, blank=False)
     opening_time = models.TimeField(null=True, blank=True)
     closing_time = models.TimeField(null=True, blank=True)
+    # ── Social links ───────────────────────────────────────
+    instagram_url = models.URLField(max_length=300, null=True, blank=True)
+    facebook_url  = models.URLField(max_length=300, null=True, blank=True)
+
+# ── Price range ────────────────────────────────────────
+    min_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    max_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     is_approved = models.BooleanField(default=False)
 
     # ── Claim ─────────────────────────────────────────────

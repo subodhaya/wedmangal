@@ -19,6 +19,10 @@ const AddProductPage = () => {
         personal_phone: '',
         opening_time: '',
         closing_time: '',
+        instagram_url: '',   // NEW
+        facebook_url: '',    // NEW
+        min_price: '',       // NEW
+        max_price: '',       // NEW
     });
 
     const [services, setServices] = useState([
@@ -71,10 +75,19 @@ const AddProductPage = () => {
         Object.keys(finalProductData).forEach(key => formData.append(key, finalProductData[key]));
 
         services.forEach((service, index) => {
-            formData.append(`services[${index}][name]`, service.name);
-            formData.append(`services[${index}][description]`, service.description);
-            formData.append(`services[${index}][price]`, service.price);
-            formData.append(`services[${index}][countInStock]`, 1);
+
+    // ✅ skip empty service
+    if (!service.name && !service.price) return;
+
+    formData.append(`services[${index}][name]`, service.name || '');
+    formData.append(`services[${index}][description]`, service.description || '');
+
+    // ✅ FIX: don't send empty price
+    if (service.price) {
+        formData.append(`services[${index}][price]`, service.price);
+    }
+
+    formData.append(`services[${index}][countInStock]`, 1);
             service.images.forEach((image, imgIndex) => {
                 formData.append(`services[${index}][images][${imgIndex}]`, image);
             });
@@ -371,7 +384,70 @@ const AddProductPage = () => {
                                         />
                                     </div>
                                 </div>
+                                {/* ── Social Links section ── */}
+<div className="ap-section-divider">
+    <span className="ap-section-label">🔗 Social Links</span>
+    <div className="ap-section-line"></div>
+</div>
 
+<div className="ap-form-group">
+    <label className="ap-label">Instagram URL</label>
+    <input
+        type="url"
+        name="instagram_url"
+        className="ap-input"
+        value={productData.instagram_url}
+        onChange={handleProductChange}
+        placeholder="https://instagram.com/yourbusiness"
+    />
+</div>
+
+<div className="ap-form-group">
+    <label className="ap-label">Facebook URL</label>
+    <input
+        type="url"
+        name="facebook_url"
+        className="ap-input"
+        value={productData.facebook_url}
+        onChange={handleProductChange}
+        placeholder="https://facebook.com/yourbusiness"
+    />
+</div>
+{/* ── Price Range section ── */}
+<div className="ap-section-divider">
+    <span className="ap-section-label">💰 Price Range</span>
+    <div className="ap-section-line"></div>
+</div>
+
+<div className="ap-time-row">
+    <div className="ap-time-group">
+        <label className="ap-time-label">Min Price (₹)</label>
+        <input
+            type="number"
+            name="min_price"
+            className="ap-time-input"
+            value={productData.min_price}
+            onChange={handleProductChange}
+            placeholder="e.g. 2000"
+            min="0"
+        />
+    </div>
+    <div className="ap-time-group">
+        <label className="ap-time-label">Max Price (₹)</label>
+        <input
+            type="number"
+            name="max_price"
+            className="ap-time-input"
+            value={productData.max_price}
+            onChange={handleProductChange}
+            placeholder="e.g. 50000"
+            min="0"
+        />
+    </div>
+</div>
+<div className="ap-hint" style={{ marginTop: '-8px', marginBottom: '16px' }}>
+    Set your overall price range so clients can filter by budget.
+</div>
                                 {/* ── Services section ── */}
                                 <div className="ap-services-heading">
                                     ✨ Your Services

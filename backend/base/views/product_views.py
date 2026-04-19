@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from django.db.models import Sum, Count, Avg
 from django.utils.dateformat import format as date_format
 from django.db import transaction
+
 from rest_framework import generics
 from rest_framework import status
 from base.models import  Service,ServiceImage,CartItem,ShippingAddress,Order,Profile,Wishlist
@@ -156,6 +157,10 @@ def update_product(request, user_id):
             'personal_phone': request.data.get('personal_phone', product.personal_phone),
             'opening_time': request.data.get('opening_time', product.opening_time),
             'closing_time': request.data.get('closing_time', product.closing_time),
+            'instagram_url': request.data.get('instagram_url'),
+            'facebook_url':  request.data.get('facebook_url'),
+            'min_price':     request.data.get('min_price') or None,
+            'max_price':     request.data.get('max_price') or None,
             'is_approved': request.data.get('isApproved', str(product.is_approved)) == 'true'
         }
 
@@ -408,6 +413,7 @@ def add_service_images(request, service_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def register_product(request):
+  
     print("Received request to register product")
     print("Request FILES keys:", request.FILES.keys())
     print("Request DATA keys:", request.data.keys())
@@ -428,14 +434,18 @@ def register_product(request):
         'personal_phone': request.data.get('personal_phone'),
         'opening_time': request.data.get('opening_time'),  # New field
         'closing_time': request.data.get('closing_time'),  # New field
-        'is_approved': request.data.get('is_approved') == 'true'
+        'is_approved': request.data.get('is_approved') == 'true',
+        'instagram_url': request.data.get('instagram_url'),   # ADD
+        'facebook_url': request.data.get('facebook_url'),     # ADD
+        'min_price': request.data.get('min_price') or None,   # ADD
+        'max_price': request.data.get('max_price') or None,   # ADD
     }
     print("Product data:", product_data)
 
     # Check if a product with the same name already exists
     existing_product = Product.objects.filter(name=product_data['name']).first()
     print("Existing product:", existing_product)
-
+    
     if existing_product:
         print("Product name already exists")
         return Response({'detail': 'Business name already exists. Please choose a different name.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -459,16 +469,29 @@ def register_product(request):
                 services_data[service_index][field_name] = request.data.get(key)
 
         for i, service_data in enumerate(services_data):
+
+            name = service_data.get('name')
+            price = service_data.get('price')
+
+            # ✅ Skip empty service
+            if not name and not price:
+                continue
+
+            # ✅ Fix decimal crash
+            if price in ['', None]:
+                price = None
+
             service = Service(
                 product=product,
-                name=service_data.get('name'),
+                name=name,
                 description=service_data.get('description'),
                 rating=service_data.get('rating', 1),
                 numReviews=service_data.get('numReviews', 1),
-                price=service_data.get('price'),
-                countInStock=service_data.get('countInStock')
+                price=price,
+                countInStock=service_data.get('countInStock') or 1
             )
             service.save()
+           
             print(f"Service created with ID: {service._id}")
 
             # Check if files for a particular service are in request.FILES
@@ -482,6 +505,7 @@ def register_product(request):
                     print(f"Image {key} added for service {i}")
 
         return Response({'productId': product_id, 'detail': 'Product and services registered successfully'}, status=status.HTTP_201_CREATED)
+    
 
     else:
         print("Product serializer errors:", product_serializer.errors)
@@ -617,6 +641,8 @@ def get_booked_dates(request, service_id):
 #########&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&****************************#############@&&&&&&&&&&&%%%%%%%%%%%%%%%%%%3
 @api_view(['GET'])
 
+
+
 def getTopProducts(request):
     # Get top services with rating >= 2
     top_services = Service.objects.filter(
@@ -634,6 +660,7 @@ def getTopProducts(request):
         if len(unique_product_ids) >= 12:
             break
 
+
     # Fetch products and preserve rating order
     products = Product.objects.filter(_id__in=unique_product_ids)
     
@@ -647,7 +674,6 @@ def getTopProducts(request):
 
     serializer = ProductSerializer(ordered_products, many=True)
     return Response(serializer.data)
-
 
 
 @api_view(['GET'])
@@ -1097,6 +1123,7 @@ def mark_order_as_done(request, pk):
     print("🔧 Marked updated")
     serializer = OrderSerializer(order, many=False)
     return Response(serializer.data)
+
 @api_view(['GET'])
 def getProducts(request):
     from django.db.models import Avg, Min, Q, Sum
@@ -1106,12 +1133,14 @@ def getProducts(request):
     keyword      = request.query_params.get('keyword', '')
     category     = request.query_params.get('category', '')
     city         = request.query_params.get('city', '')
+    area_name    = request.query_params.get('area_name', '')
     min_price    = request.query_params.get('min_price', '')
     max_price    = request.query_params.get('max_price', '')
     min_rating   = request.query_params.get('min_rating', '')
     sort         = request.query_params.get('sort', 'newest')
     available    = request.query_params.get('available', '')
     page         = request.query_params.get('page', 1)
+    print("Query params:", request.query_params)  # Debugging print statement
 
     # 🔥 Homepage flag
     is_home      = request.query_params.get('home', '') == 'true'
@@ -1144,6 +1173,8 @@ def getProducts(request):
 
     if city:
         qs = qs.filter(city__icontains=city)
+    if area_name:
+        qs = qs.filter(area_name__icontains=area_name)
 
     if available == 'true':
         qs = qs.filter(is_available_today=True)
@@ -1186,18 +1217,32 @@ def getProducts(request):
     if min_rating:
         qs = qs.filter(avg_rating__gte=float(min_rating))
 
+    # 📦 Prefetch services to avoid N+1 queries
+    from django.db.models import Prefetch
+    
     # 🔥 HOMEPAGE LOGIC (Trending + Random)
     if is_home and not keyword:
-        # ⭐ Trending: top 4 rated products
-        trending_qs = qs.order_by('-avg_rating')[:4]
-        trending_ids = list(trending_qs.values_list('id', flat=True))
+        # ⭐ Trending: top 4 by avg_rating, excluding nulls so unreviewed
+        #    vendors never bubble to the top
+        trending_qs = (
+            qs.filter(avg_rating__isnull=False)
+              .order_by('-avg_rating', '-createdAt')[:4]
+        )
+        trending_ids = list(trending_qs.values_list('_id', flat=True))
 
         # 🎲 Random: 5 products excluding trending ones
-        random_qs = qs.exclude(id__in=trending_ids).order_by(Random())[:5]
-        
-        # Combine: trending + random = 9 products total
-        final_qs = list(trending_qs) + list(random_qs)
-        products_page = final_qs
+        random_qs = (
+            qs.exclude(_id__in=trending_ids) 
+              .order_by(Random())[:5]
+        )
+
+        # Prefetch services on both sub-querysets to kill the N+1
+        from django.db.models import prefetch_related_objects
+        trending_list = list(trending_qs)
+        random_list   = list(random_qs)
+        prefetch_related_objects(trending_list + random_list, 'services')
+
+        products_page = trending_list + random_list
         paginator = None
 
     else:
@@ -1211,44 +1256,50 @@ def getProducts(request):
         else:
             qs = qs.order_by('-createdAt')
 
+        # Prefetch here too
+        qs = qs.prefetch_related('services')
+
         paginator = Paginator(qs, 9)
         products_page = paginator.get_page(page)
 
-    # 📦 Response building
+    # 📦 Response building — services already prefetched, no extra DB hits
     response_data = []
     for product in products_page:
-        services = product.services.all()
-        total_num_reviews = services.aggregate(total=Sum('numReviews'))['total'] or 0
-        average_rating    = services.aggregate(avg=Avg('rating'))['avg'] or 1.0
+        services = product.services.all()  # hits prefetch cache now, not DB
+        total_num_reviews = sum(s.numReviews for s in services)
+        average_rating    = (
+            sum(s.rating for s in services) / len(services)
+            if services else 1.0
+        )
 
         response_data.append({
-            '_id':              product._id,
-            'name':             product.name,
-            'image':            str(product.image),
-            'brand':            product.brand,
-            'category':         product.category,
-            'description':      product.description,
-            'createdAt':        product.createdAt,
-            'city':             product.city,
-            'area_name':        product.area_name,
-            'address':          product.address,
-            'business_phone':   product.business_phone,
-            'personal_phone':   product.personal_phone,
-            'opening_time':     product.opening_time,
-            'closing_time':     product.closing_time,
-            'is_approved':      product.is_approved,
-            'is_available_today': product.is_available_today,
-            'available_since':  product.available_since,
-            'is_claimed':       product.is_claimed,
-            'claimed_by_id':    product.claimed_by_id,
-            'attributes':       product.attributes or {},
+            '_id':               product._id,
+            'name':              product.name,
+            'image':             str(product.image),
+            'brand':             product.brand,
+            'category':          product.category,
+            'description':       product.description,
+            'createdAt':         product.createdAt,
+            'city':              product.city,
+            'area_name':         product.area_name,
+            'address':           product.address,
+            'business_phone':    product.business_phone,
+            'personal_phone':    product.personal_phone,
+            'opening_time':      product.opening_time,
+            'closing_time':      product.closing_time,
+            'is_approved':       product.is_approved,
+            'is_available_today':product.is_available_today,
+            'available_since':   product.available_since,
+            'is_claimed':        product.is_claimed,
+            'claimed_by_id':     product.claimed_by_id,
+            'attributes':        product.attributes or {},
             'total_num_reviews': total_num_reviews,
-            'average_rating':   float(average_rating),
+            'average_rating':    float(average_rating),
         })
 
     return Response({
         'products': response_data,
-        'page': 1 if is_home else int(page),
+        'page':  1 if is_home else int(page),
         'pages': 1 if is_home else (paginator.num_pages if paginator else 1),
     })
 # ── Toggle availability (vendor ON/OFF) ───────────────────────────────────────

@@ -92,42 +92,60 @@ class ServiceSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
 class ProductSerializer(serializers.ModelSerializer):
-    # Expose claim status to the frontend
     is_claimed = serializers.BooleanField(read_only=True)
     claimed_by_id = serializers.SerializerMethodField(read_only=True)
+    average_rating = serializers.SerializerMethodField(read_only=True)
+    total_num_reviews = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Product
         fields = [
-            '_id', 'user', 'name', 'image', 'brand', 'category', 'description', 'createdAt',
-            'city', 'area_name', 'address', 'business_phone', 'personal_phone',
-            'opening_time', 'closing_time', 'is_approved',
-            'is_claimed', 'claimed_by_id',  # ← claim fields
-        ]
+    '_id', 'user', 'name', 'image', 'brand', 'category', 'description', 'createdAt',
+    'city', 'area_name', 'address', 'business_phone', 'personal_phone',
+    'opening_time', 'closing_time', 'is_approved',
+    'is_available_today', 'available_since',
+    'is_claimed', 'claimed_by_id',
+    'attributes',
+    'average_rating', 'total_num_reviews',
+    'instagram_url', 'facebook_url',   
+    'min_price', 'max_price',          
+]
 
     def get_claimed_by_id(self, obj):
-        return obj.claimed_by_id  # just the user id, not full object
+        return obj.claimed_by_id
+
+    def get_average_rating(self, obj):
+        # Use annotated value if present (avoids extra query)
+        if hasattr(obj, 'avg_rating') and obj.avg_rating is not None:
+            return float(obj.avg_rating)
+        # Fallback: compute from prefetched services
+        services = obj.services.all()
+        if not services:
+            return 1.0
+        ratings = [s.rating for s in services if s.rating is not None]
+        return round(sum(ratings) / len(ratings), 2) if ratings else 1.0
+
+    def get_total_num_reviews(self, obj):
+        # Use annotated value if present
+        if hasattr(obj, 'num_reviews') and obj.num_reviews is not None:
+            return obj.num_reviews
+        # Fallback: sum from prefetched services
+        services = obj.services.all()
+        return sum(s.numReviews or 0 for s in services)
 
     def update(self, instance, validated_data):
-        instance.name = validated_data.get('name', instance.name)
-        instance.image = validated_data.get('image', instance.image)
-        instance.brand = validated_data.get('brand', instance.brand)
-        instance.category = validated_data.get('category', instance.category)
-        instance.description = validated_data.get('description', instance.description)
-        instance.city = validated_data.get('city', instance.city)
-        instance.area_name = validated_data.get('area_name', instance.area_name)
-        instance.address = validated_data.get('address', instance.address)
-        instance.business_phone = validated_data.get('business_phone', instance.business_phone)
-        instance.personal_phone = validated_data.get('personal_phone', instance.personal_phone)
-        instance.opening_time = validated_data.get('opening_time', instance.opening_time)
-        instance.closing_time = validated_data.get('closing_time', instance.closing_time)
-        instance.is_approved = validated_data.get('is_approved', instance.is_approved)
+        fields = [
+    'name', 'image', 'brand', 'category', 'description',
+    'city', 'area_name', 'address', 'business_phone', 'personal_phone',
+    'opening_time', 'closing_time', 'is_approved',
+    'instagram_url', 'facebook_url', 'min_price', 'max_price', 
+]
+        for field in fields:
+            setattr(instance, field, validated_data.get(field, getattr(instance, field)))
         instance.save()
         return instance
-
-
+    
 # ── Service Owner Claim Serializer ────────────────────────────────────────────
 class ServiceOwnerClaimSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
@@ -260,11 +278,13 @@ class DetailedProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            '_id', 'user', 'name', 'image', 'brand', 'category', 'description', 'createdAt',
-            'city', 'area_name', 'address', 'business_phone', 'personal_phone',
-            'opening_time', 'closing_time', 'is_approved', 'services',
-            'is_claimed', 'claimed_by_id',
-        ]
+    '_id', 'user', 'name', 'image', 'brand', 'category', 'description', 'createdAt',
+    'city', 'area_name', 'address', 'business_phone', 'personal_phone',
+    'opening_time', 'closing_time', 'is_approved', 'services',
+    'is_claimed', 'claimed_by_id',
+    'instagram_url', 'facebook_url',   # NEW
+    'min_price', 'max_price',          # NEW
+]
 
     def get_claimed_by_id(self, obj):
         return obj.claimed_by_id
@@ -290,6 +310,10 @@ class DetailedProductSerializer(serializers.ModelSerializer):
         instance.personal_phone = validated_data.get('personal_phone', instance.personal_phone)
         instance.opening_time = validated_data.get('opening_time', instance.opening_time)
         instance.closing_time = validated_data.get('closing_time', instance.closing_time)
+        instance.instagram_url = validated_data.get('instagram_url', instance.instagram_url)
+        instance.facebook_url  = validated_data.get('facebook_url',  instance.facebook_url)
+        instance.min_price     = validated_data.get('min_price',     instance.min_price)
+        instance.max_price     = validated_data.get('max_price',     instance.max_price)
         instance.is_approved = validated_data.get('is_approved', instance.is_approved)
         instance.save()
         existing_services = {service._id: service for service in instance.services.all()}
@@ -318,12 +342,13 @@ class ProductReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            '_id', 'user', 'name', 'image', 'brand', 'category', 'description',
-            'createdAt', 'city', 'area_name', 'address', 'business_phone',
-            'personal_phone', 'opening_time', 'closing_time', 'is_approved',
-            'services', 'is_claimed', 'claimed_by_id',
-        ]
-
+    '_id', 'user', 'name', 'image', 'brand', 'category', 'description',
+    'createdAt', 'city', 'area_name', 'address', 'business_phone',
+    'personal_phone', 'opening_time', 'closing_time', 'is_approved',
+    'services', 'is_claimed', 'claimed_by_id',
+    'instagram_url', 'facebook_url',   
+    'min_price', 'max_price',         
+]
     def get_claimed_by_id(self, obj):
         return obj.claimed_by_id
 

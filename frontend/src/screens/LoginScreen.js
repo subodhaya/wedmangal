@@ -13,7 +13,7 @@ import './LoginScreen.css';
 
 library.add(faEye, faEyeSlash);
 
-const GOOGLE_CLIENT_ID = "729274233685-h48vkscuohkqt32n8o72ifik06g2cv0d.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "280404144707-bmoon3dudmvgv3vuvihft0uem3elk32b.apps.googleusercontent.com";
 
 function LoginScreen() {
     const location = useLocation();

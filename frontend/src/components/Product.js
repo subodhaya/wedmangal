@@ -74,7 +74,53 @@ function Product({ product }) {
               {product.category.replace(/_/g, ' ')}
             </span>
           )}
+          {/* Location */}
+<ListGroup variant="flush" className="product-meta">
+    <ListGroup.Item className="product-meta-item">
+        <span className="meta-icon">📍</span>
+        <span className="meta-text">
+            {product.area_name
+                ? `${product.area_name}, ${product.city}`
+                : product.city}
+        </span>
+    </ListGroup.Item>
 
+    {/* ADD: Price Range */}
+    {(product.min_price || product.max_price) && (
+        <ListGroup.Item className="product-meta-item">
+            <span className="meta-icon">💰</span>
+            <span className="meta-text">
+                {product.min_price && product.max_price
+                    ? `₹${Number(product.min_price).toLocaleString('en-IN')} – ₹${Number(product.max_price).toLocaleString('en-IN')}`
+                    : product.min_price
+                        ? `From ₹${Number(product.min_price).toLocaleString('en-IN')}`
+                        : `Up to ₹${Number(product.max_price).toLocaleString('en-IN')}`
+                }
+            </span>
+        </ListGroup.Item>
+    )}
+
+    {/* ADD: Social Links */}
+    {(product.instagram_url || product.facebook_url) && (
+        <ListGroup.Item className="product-meta-item">
+            <span className="meta-icon">🔗</span>
+            <span className="meta-text" style={{ display: 'flex', gap: '12px' }}>
+                {product.instagram_url && (
+                    <a href={product.instagram_url} target="_blank" rel="noopener noreferrer"
+                        style={{ color: '#E1306C', fontWeight: 600, textDecoration: 'none' }}>
+                        Instagram
+                    </a>
+                )}
+                {product.facebook_url && (
+                    <a href={product.facebook_url} target="_blank" rel="noopener noreferrer"
+                        style={{ color: '#1877F2', fontWeight: 600, textDecoration: 'none' }}>
+                        Facebook
+                    </a>
+                )}
+            </span>
+        </ListGroup.Item>
+    )}
+</ListGroup>
           {/* Price chip */}
           <span className={`product-price-chip ${isPriceFree ? 'price-contact' : 'price-paid'}`}>
             {displayPrice()}

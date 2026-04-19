@@ -253,7 +253,7 @@ const ContactUs = () => {
               <div>
                 <p style={s.contactCardTitle}>WhatsApp</p>
                 <a
-                  href="https://wa.me/917200152906?text=Hi%20BookYourCelebrations%2C%20I%20need%20help"
+                  href="https://wa.me/917200152906?text=Hi%20WedMangal%2C%20I%20need%20help"
                   target="_blank"
                   rel="noreferrer"
                   style={{ ...s.contactCardLink, color: "#1a7a42" }}

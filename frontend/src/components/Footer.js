@@ -7,7 +7,7 @@ function Footer() {
             <Container>
                 <Row className="text-center">
                     <Col md={6} className="py-2">
-                        <p className="mb-0">&copy; {new Date().getFullYear()} BookYourCelebrations. All Rights Reserved.</p>
+                        <p className="mb-0">&copy; {new Date().getFullYear()} WedMangal. All Rights Reserved.</p>
                     </Col>
                     <Col md={6} className="py-2">
                         <a href="/TermsAndCondition" className="text-white mx-2">Terms & Conditions</a> |

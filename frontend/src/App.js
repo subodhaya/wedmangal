@@ -39,6 +39,7 @@ import GoogleLoginCallback from './screens/GoogleLoginCallback';
 import MyAppointmentScreen from './screens/MyAppointmentScreen';
 import AvailableTodayScreen from './screens/AvailableTodayScreen';
 import CategoryScreen from './screens/CategoryScreen';
+import { HelmetProvider } from 'react-helmet-async';
 
 // Only show splash when launched as installed PWA
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
@@ -51,6 +52,7 @@ function App() {
   }
 
   return (
+    <HelmetProvider>
     <Router>
       <Header />
       <main className="py-0">
@@ -95,6 +97,7 @@ function App() {
       </main>
       <Footer />
     </Router>
+    </HelmetProvider>
   );
 }
 

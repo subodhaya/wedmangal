@@ -22,6 +22,10 @@ function ManagePage() {
         personal_phone: '',
         opening_time: '',
         closing_time: '',
+        instagram_url: '',   // ADD
+        facebook_url: '',    // ADD
+        min_price: '',       // ADD
+        max_price: '',       // ADD
         isApproved: false,
     });
     const [services, setServices] = useState([]);
@@ -365,7 +369,71 @@ function ManagePage() {
                                     />
                                 </div>
                             </div>
+                            {/* ── Social Links ── */}
+<div className="mp-section-divider">
+    <span className="mp-section-label">🔗 Social Links</span>
+    <div className="mp-section-line"></div>
+</div>
 
+<div className="mp-form-group">
+    <label className="mp-label">Instagram URL</label>
+    <input
+        type="url"
+        name="instagram_url"
+        className="mp-input"
+        value={productData.instagram_url || ''}
+        onChange={handleProductChange}
+        placeholder="https://instagram.com/yourbusiness"
+    />
+</div>
+
+<div className="mp-form-group">
+    <label className="mp-label">Facebook URL</label>
+    <input
+        type="url"
+        name="facebook_url"
+        className="mp-input"
+        value={productData.facebook_url || ''}
+        onChange={handleProductChange}
+        placeholder="https://facebook.com/yourbusiness"
+    />
+</div>
+
+{/* ── Price Range ── */}
+<div className="mp-section-divider">
+    <span className="mp-section-label">💰 Price Range</span>
+    <div className="mp-section-line"></div>
+</div>
+
+<div className="mp-time-row">
+    <div className="mp-time-group">
+        <label className="mp-time-label">Min Price (₹)</label>
+        <input
+            type="number"
+            name="min_price"
+            className="mp-time-input"
+            value={productData.min_price || ''}
+            onChange={handleProductChange}
+            placeholder="e.g. 2000"
+            min="0"
+        />
+    </div>
+    <div className="mp-time-group">
+        <label className="mp-time-label">Max Price (₹)</label>
+        <input
+            type="number"
+            name="max_price"
+            className="mp-time-input"
+            value={productData.max_price || ''}
+            onChange={handleProductChange}
+            placeholder="e.g. 50000"
+            min="0"
+        />
+    </div>
+</div>
+<div className="mp-hint" style={{ marginTop: '-8px', marginBottom: '16px' }}>
+    Set your overall price range so clients can filter by budget.
+</div>
                             {/* ── Submit ── */}
                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
                                 <button

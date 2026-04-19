@@ -10,6 +10,7 @@ import api from '../utils/api';
 import { useLocation } from 'react-router-dom';
 import ClaimButton from '../components/ClaimButton';
 import SlotPicker from '../components/SlotPicker';
+import { Helmet } from 'react-helmet-async'; 
 
 const debounce = (func, delay) => {
   let t;
@@ -78,16 +79,14 @@ function ProductScreen() {
   const [selectedQuantities, setSelectedQuantities] = useState({});
   const [selectedDates, setSelectedDates]           = useState({});
   const [bookedDates, setBookedDates]               = useState({});
-
-  // ✅ FIX 1: per-service time + duration (NOT single shared state)
-  const [selectedStartTimes, setSelectedStartTimes] = useState({});  // { serviceId: "09:00" }
-  const [selectedDurations, setSelectedDurations]   = useState({});  // { serviceId: "3 Hours" }
-  const [selectedEndTimes, setSelectedEndTimes] = useState({});
-  const [reviewData, setReviewData]         = useState({});
-  const [reviewState, setReviewState]       = useState({});
-  const [reviewedServices, setReviewedServices] = useState({});
-  const [expandedCalendar, setExpandedCalendar] = useState(null);
-  const [errorMessage, setErrorMessage]     = useState('');
+  const [selectedStartTimes, setSelectedStartTimes] = useState({});
+  const [selectedDurations, setSelectedDurations]   = useState({});
+  const [selectedEndTimes, setSelectedEndTimes]     = useState({});
+  const [reviewData, setReviewData]                 = useState({});
+  const [reviewState, setReviewState]               = useState({});
+  const [reviewedServices, setReviewedServices]     = useState({});
+  const [expandedCalendar, setExpandedCalendar]     = useState(null);
+  const [errorMessage, setErrorMessage]             = useState('');
 
   const userInfo = (() => {
     try { return JSON.parse(localStorage.getItem('userInfo')) || null; }
@@ -132,7 +131,6 @@ function ProductScreen() {
       product.services.forEach(s => fetchBookedDates(s._id));
   }, [product]);
 
-  // ✅ FIX 2: clear ALL time state on route change (fixes back-button ghost block)
   useEffect(() => {
     setSelectedDates({});
     setSelectedStartTimes({});
@@ -161,39 +159,51 @@ function ProductScreen() {
       qty:         selectedQuantities[serviceId] || 1,
       bookingDate: selectedDates[serviceId].toLocaleDateString('en-CA'),
       startTime:   selectedStartTimes[serviceId] || '',
-      endTime:     selectedEndTimes[serviceId]   || '',   // ← add this
+      endTime:     selectedEndTimes[serviceId]   || '',
       duration:    selectedDurations[serviceId]  || '',
     };
   };
 
   const addToCartHandler = (serviceId) => {
-    if (!userInfo) return navigate('/login');
-    if (!selectedDates[serviceId])      return alert('Please select a booking date.');
-    if (!selectedStartTimes[serviceId]) return alert('Please select a start time.');
-    const item = buildItem(serviceId);
-    const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
-    const exists = cart.find(x => x.service === serviceId && x.userId === userInfo._id);
-    localStorage.setItem('cartItems', JSON.stringify(
-      exists ? cart.map(x => x.service === serviceId ? item : x) : [...cart, item]
-    ));
-    navigate('/cart');
-  };
+  if (!userInfo) return navigate('/login');
+  if (!selectedDates[serviceId])      return alert('Please select a booking date.');
+  if (!selectedStartTimes[serviceId]) return alert('Please select a start time.');
 
-  const handleDirectBooking = async (serviceId) => {
-    if (!userInfo) return navigate('/login');
-    if (!selectedDates[serviceId])      return alert('Please select a booking date.');
-    if (!selectedStartTimes[serviceId]) return alert('Please select a start time.');
-    const item = buildItem(serviceId);
-    try {
-      await api.post('/api/products/cart/', { items: [item] }, {
-        headers: { Authorization: `Bearer ${userInfo.token}` },
-      });
-      localStorage.setItem('directBookingItem', JSON.stringify(item));
-      navigate('/location');
-    } catch {
-      setErrorMessage('Error occurred while booking. Please try again.');
-    }
-  };
+  const item = buildItem(serviceId);
+  const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
+  const exists = cart.find(x => x.service === serviceId && x.userId === userInfo._id);
+  localStorage.setItem('cartItems', JSON.stringify(
+    exists ? cart.map(x => x.service === serviceId ? item : x) : [...cart, item]
+  ));
+
+  // ── Save provider contact for WhatsApp notification later ──
+  localStorage.setItem('bookingProviderPhone', product.business_phone || product.personal_phone || '');
+  localStorage.setItem('bookingProviderName',  product.name || '');
+
+  navigate('/cart');
+};
+
+const handleDirectBooking = async (serviceId) => {
+  if (!userInfo) return navigate('/login');
+  if (!selectedDates[serviceId])      return alert('Please select a booking date.');
+  if (!selectedStartTimes[serviceId]) return alert('Please select a start time.');
+
+  const item = buildItem(serviceId);
+  try {
+    await api.post('/api/products/cart/', { items: [item] }, {
+      headers: { Authorization: `Bearer ${userInfo.token}` },
+    });
+    localStorage.setItem('directBookingItem', JSON.stringify(item));
+
+    // ── Save provider contact for WhatsApp notification later ──
+    localStorage.setItem('bookingProviderPhone', product.business_phone || product.personal_phone || '');
+    localStorage.setItem('bookingProviderName',  product.name || '');
+
+    navigate('/location');
+  } catch {
+    setErrorMessage('Error occurred while booking. Please try again.');
+  }
+};
 
   const handleDateChange = (serviceId, date) => {
     const blocked = bookedDates[serviceId]?.some(
@@ -250,7 +260,15 @@ function ProductScreen() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
+    
     <div className="ps-page">
+      <Helmet>
+  <title>{product.name} | WedMangal</title>
+  <meta name="description" content={product.description?.slice(0, 155)} />
+  <meta property="og:title" content={product.name} />
+  <meta property="og:image" content={product.image} />
+  <link rel="canonical" href={`https://www.wedmangal.com/product/${product._id}`} />
+</Helmet>
 
       <Link to="/" className="ps-back-btn">
         <i className="fas fa-arrow-left"></i> Go Back
@@ -264,7 +282,7 @@ function ProductScreen() {
         <div className="ps-alert ps-alert-danger">{error}</div>
       ) : product ? (
         <>
-          {/* ── Hero ──────────────────────────────────────────────── */}
+          {/* ── Hero ─────────────────────────────────────────────── */}
           <div className="ps-hero">
             <div className="ps-hero-banner">
               <h1 className="ps-business-name">{product.name}</h1>
@@ -286,6 +304,8 @@ function ProductScreen() {
               </div>
 
               <div className="ps-info-grid">
+
+                {/* Area */}
                 {product.area_name && (
                   <div className="ps-info-item">
                     <span className="ps-info-icon">📍</span>
@@ -295,6 +315,8 @@ function ProductScreen() {
                     </div>
                   </div>
                 )}
+
+                {/* Address */}
                 {product.address && (
                   <div className="ps-info-item">
                     <span className="ps-info-icon">🏠</span>
@@ -304,6 +326,8 @@ function ProductScreen() {
                     </div>
                   </div>
                 )}
+
+                {/* Working Hours */}
                 <div className="ps-info-item">
                   <span className="ps-info-icon">⏰</span>
                   <div>
@@ -315,20 +339,85 @@ function ProductScreen() {
                     </div>
                   </div>
                 </div>
+
+                {/* Business Phone */}
                 {product.business_phone && (
-                  <PhoneBlock label="📞 Business Phone" phone={product.business_phone} businessName={product.name} />
+                  <PhoneBlock
+                    label="📞 Business Phone"
+                    phone={product.business_phone}
+                    businessName={product.name}
+                  />
                 )}
+
+                {/* Personal Phone */}
                 {product.personal_phone && product.personal_phone !== product.business_phone && (
-                  <PhoneBlock label="📱 Personal Phone" phone={product.personal_phone} businessName={product.name} />
+                  <PhoneBlock
+                    label="📱 Personal Phone"
+                    phone={product.personal_phone}
+                    businessName={product.name}
+                  />
                 )}
+
+                {/* Price Range */}
+                {(product.min_price || product.max_price) && (
+                  <div className="ps-info-item">
+                    <span className="ps-info-icon">💰</span>
+                    <div>
+                      <div className="ps-info-label">Price Range</div>
+                      <div className="ps-info-value">
+                        {product.min_price && product.max_price
+                          ? `₹${Number(product.min_price).toLocaleString('en-IN')} – ₹${Number(product.max_price).toLocaleString('en-IN')}`
+                          : product.min_price
+                            ? `From ₹${Number(product.min_price).toLocaleString('en-IN')}`
+                            : `Up to ₹${Number(product.max_price).toLocaleString('en-IN')}`
+                        }
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Social Links */}
+                {(product.instagram_url || product.facebook_url) && (
+                  <div className="ps-info-item">
+                    <span className="ps-info-icon">🔗</span>
+                    <div>
+                      <div className="ps-info-label">Social Media</div>
+                      <div className="ps-info-value" style={{ display: 'flex', gap: '16px', marginTop: '4px' }}>
+                        {product.instagram_url && (
+                          <a
+                            href={product.instagram_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: '#E1306C', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <i className="fab fa-instagram"></i> Instagram
+                          </a>
+                        )}
+                        {product.facebook_url && (
+                          <a
+                            href={product.facebook_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: '#1877F2', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <i className="fab fa-facebook"></i> Facebook
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Claim Button */}
                 <div className="ps-info-item ps-claim-row">
                   <ClaimButton product={product} />
                 </div>
+
               </div>
             </div>
           </div>
 
-          {/* ── Services ──────────────────────────────────────────── */}
+          {/* ── Services ─────────────────────────────────────────── */}
           <h2 className="ps-section-title">✨ Services Offered</h2>
 
           <Row>
@@ -337,15 +426,13 @@ function ProductScreen() {
               const isCalOpen      = expandedCalendar === service._id;
               const dateSelected   = selectedDates[service._id];
               const timeSelected   = selectedStartTimes[service._id];
+              const canBook        = !!dateSelected && !!timeSelected && !!selectedEndTimes[service._id];
 
-              // ✅ FIX 3: canBook = date + time both selected
-              //const canBook = !!dateSelected && !!timeSelected;
-              const canBook = !!dateSelected && !!timeSelected && !!selectedEndTimes[service._id];
               return (
                 <Col key={service._id} md={6}>
                   <div className="ps-service-card">
 
-                    {/* Service header */}
+                    {/* Service Header */}
                     <div className="ps-service-header">
                       <h3 className="ps-service-name">{service.name}</h3>
                       <div className="ps-service-rating">
@@ -375,10 +462,13 @@ function ProductScreen() {
                     </div>
 
                     <div className="ps-service-body">
+
+                      {/* Description */}
                       {service.description && (
                         <p className="ps-service-desc">{service.description}</p>
                       )}
 
+                      {/* Price */}
                       <div className="ps-price-row">
                         <span className="ps-price-label">Price</span>
                         {priceFormatted ? (
@@ -388,11 +478,10 @@ function ProductScreen() {
                         )}
                       </div>
 
-                      {/* ── Booking section ── */}
+                      {/* ── Booking ── */}
                       <div className="ps-booking-section">
                         <div className="ps-booking-title">📅 Select Date & Time</div>
 
-                        {/* ✅ FIX 4: toggle button shows selected date when picked */}
                         <button
                           className={`ps-cal-toggle ${isCalOpen ? 'active' : ''}`}
                           onClick={() => setExpandedCalendar(isCalOpen ? null : service._id)}
@@ -429,20 +518,16 @@ function ProductScreen() {
                           </>
                         )}
 
-                        {/* ✅ FIX 5: SlotPicker shown after date picked, per-service state */}
                         {dateSelected && (
                           <div className="ps-slot-wrap">
                             <SlotPicker
-  selectedTime={selectedStartTimes[service._id] || ''}
-  selectedEndTime={selectedEndTimes[service._id] || ''}
-  onTimeChange={(time) => setSelectedStartTimes(prev => ({ ...prev, [service._id]: time }))}
-  onEndTimeChange={(time) => setSelectedEndTimes(prev => ({ ...prev, [service._id]: time }))}
-/>
+                              selectedTime={selectedStartTimes[service._id] || ''}
+                              selectedEndTime={selectedEndTimes[service._id] || ''}
+                              onTimeChange={(time) => setSelectedStartTimes(prev => ({ ...prev, [service._id]: time }))}
+                              onEndTimeChange={(time) => setSelectedEndTimes(prev => ({ ...prev, [service._id]: time }))}
+                            />
                           </div>
                         )}
-
-                        {/* ✅ FIX 6: old <input type="time"> REMOVED */}
-
                       </div>
 
                       {/* ── Buttons ── */}
@@ -479,7 +564,9 @@ function ProductScreen() {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                   <Rating value={review.rating} color="#f8e825" />
                                   <span className="ps-review-date">
-                                    {review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-IN') : ''}
+                                    {review.createdAt
+                                      ? new Date(review.createdAt).toLocaleDateString('en-IN')
+                                      : ''}
                                   </span>
                                 </div>
                               </div>
@@ -490,6 +577,7 @@ function ProductScreen() {
                           ))
                         )}
 
+                        {/* Write a Review */}
                         <div className="ps-write-review">
                           <div className="ps-write-review-title">✍️ Write a Review</div>
 
@@ -527,7 +615,8 @@ function ProductScreen() {
                                   placeholder="Share your experience..."
                                   value={reviewData[service._id]?.comment || ''}
                                   onChange={e => setReviewData(prev => ({
-                                    ...prev, [service._id]: { ...prev[service._id], comment: e.target.value }
+                                    ...prev,
+                                    [service._id]: { ...prev[service._id], comment: e.target.value }
                                   }))}
                                 />
                               </div>

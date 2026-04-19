@@ -13,9 +13,10 @@ import AddProductPage from '../components/AddProductPage';
 import ManagePage from '../components/ManagePage';
 import EmergencySection from '../components/EmergencySection';
 import FilterBar from '../components/FilterBar';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 import './HomeScreen.css';
 import api from '../utils/api';
+import { useParams } from 'react-router-dom';
 
 const SITE_URL = process.env.REACT_APP_SITE_URL || 'https://wedmangal.com';
 const SITE_NAME = 'WedMangal';
@@ -200,6 +201,7 @@ function HomeScreen() {
   const [hasProduct, setHasProduct] = useState(false);
   const [checkingProduct, setCheckingProduct] = useState(false);
   const [showIosModal, setShowIosModal] = useState(false);
+  const { category: categoryParamFromURL } = useParams();
 
   // ── Filters ─────────────────────────
   const [filters, setFilters] = useState({ sort: 'newest' });
@@ -208,7 +210,7 @@ function HomeScreen() {
   const navigate = useNavigate();
 
   const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const keyword = queryParams.get('keyword') || '';
+  const keyword = categoryParamFromURL || queryParams.get('keyword') || '';
   const pageNumber = Number(queryParams.get('page') || 1);
   const categoryParam = queryParams.get('category') || '';
 
@@ -340,48 +342,51 @@ function HomeScreen() {
   useEffect(() => {
     let isMounted = true;
     const fetchProducts = async () => {
+      console.log('fetchProducts fired, filters:', filters);
       try {
         setLoading(true); 
         setError('');
-        const params = {
-          // Add home=true when no keyword (homepage)
-          ...((!keyword && !Object.values(filters).some(v => v)) && { home: 'true' }),
-          keyword,
-          page: pageNumber,
-          ...(filters.sort && { sort: filters.sort }),
-          ...(filters.city && { city: filters.city }),
-          ...(filters.min_price && { min_price: filters.min_price }),
-          ...(filters.max_price && { max_price: filters.max_price }),
-          ...(filters.min_rating && { min_rating: filters.min_rating }),
-          // category-specific filters
-          ...(filters.food_type && { food_type: filters.food_type }),
-          ...(filters.shoot_type && { shoot_type: filters.shoot_type }),
-          ...(filters.makeup_type && { makeup_type: filters.makeup_type }),
-          ...(filters.trial && { trial: filters.trial }),
-          ...(filters.hall_ac && { hall_ac: filters.hall_ac }),
-          ...(filters.hall_parking && { hall_parking: filters.hall_parking }),
-          ...(filters.hall_capacity && { hall_capacity: filters.hall_capacity }),
-          ...(filters.dj_venue && { dj_venue: filters.dj_venue }),
-          ...(filters.dj_equipment && { dj_equipment: filters.dj_equipment }),
-          ...(filters.mehandi_type && { mehandi_type: filters.mehandi_type }),
-          ...(filters.home_visit && { home_visit: filters.home_visit }),
-        };
-        const { data } = await api.get('/api/products/all', { params });
-        if (!isMounted) return;
-        setProducts(Array.isArray(data.products) ? data.products : []);
-        setPage(Number(data.page) || 1);
-        setPages(Number(data.pages) || 1);
+       const params = {
+    ...(!keyword && { home: 'true' }),
+    keyword,
+    page: pageNumber,
+    ...(filters.sort && { sort: filters.sort }),
+    ...(filters.city && { city: filters.city }),
+    ...(filters.area_name && { area_name: filters.area_name }),
+   
+    ...(filters.min_price && { min_price: filters.min_price }),
+    ...(filters.max_price && { max_price: filters.max_price }),
+    ...(filters.min_rating && { min_rating: filters.min_rating }),
+    ...(filters.food_type && { food_type: filters.food_type }),
+    ...(filters.shoot_type && { shoot_type: filters.shoot_type }),
+    ...(filters.makeup_type && { makeup_type: filters.makeup_type }),
+    ...(filters.trial && { trial: filters.trial }),
+    ...(filters.hall_ac && { hall_ac: filters.hall_ac }),
+    ...(filters.hall_parking && { hall_parking: filters.hall_parking }),
+    ...(filters.hall_capacity && { hall_capacity: filters.hall_capacity }),
+    ...(filters.dj_venue && { dj_venue: filters.dj_venue }),
+    ...(filters.dj_equipment && { dj_equipment: filters.dj_equipment }),
+    ...(filters.mehandi_type && { mehandi_type: filters.mehandi_type }),
+    ...(filters.home_visit && { home_visit: filters.home_visit }),
+};
+console.log('params built:', params);  // ← add this
+const { data } = await api.get('/api/products/all', { params });
+if (!isMounted) return;
+setProducts(Array.isArray(data.products) ? data.products : []);
+setPage(Number(data.page) || 1);
+setPages(Number(data.pages) || 1);
       } catch (err) {
-        if (!isMounted) return;
-        setError('Failed to fetch services. Please try again.');
-        console.error('Fetch error:', err);
+if (!isMounted) return;
+setError('Failed to fetch services. Please try again.');
+console.error('Fetch error:', err);
       } finally {
-        if (isMounted) setLoading(false);
+if (isMounted) setLoading(false);
       }
     };
-    fetchProducts();
-    return () => { isMounted = false; };
-  }, [keyword, pageNumber, filters]);
+fetchProducts();
+return () => { isMounted = false; };
+  }, [location.search, filters]);
+  console.log("ROUTE:", location.pathname, location.search);
 
   // ── Check if service-owner has product ─────────────────────────
   useEffect(() => {
@@ -544,16 +549,17 @@ function HomeScreen() {
       {/* ── Product listing with FilterBar ── */}
       {role !== 'service-owner' && (
         <section style={{ padding: '0 16px' }} aria-label="Search results">
-          {keyword && (
-            <FilterBar
-              category={keyword}
-              filters={filters}
-              onChange={(updater) => {
-                setFilters(updater);
-                navigate(`/?keyword=${encodeURIComponent(keyword)}&page=1`);
-              }}
-            />
-          )}
+          <FilterBar
+  category={keyword}
+  filters={filters}
+  onChange={(updater) => {
+    setFilters(prev =>
+      typeof updater === "function" ? updater(prev) : updater
+    );
+   
+  }}
+/>
+          
 
           {loading ? (
             <Loader />

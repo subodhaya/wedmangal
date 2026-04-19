@@ -4,6 +4,7 @@
 
 import React, { useState } from 'react';
 import './FilterBar.css';
+import AreaDropdown from './AreaDropdown';
 
 // ── Category-specific filter config ──────────────────────────────────────────
 const CATEGORY_FILTERS = {
@@ -31,7 +32,7 @@ const CATEGORY_FILTERS = {
     { key: 'home_visit', label: 'Home Visit', type: 'toggle' },
   ],
 };
-
+// DELETE THISconst CITIES = ['Chennai', 'Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Coimbatore', 'Madurai'];
 const SORT_OPTIONS = [
   { value: 'newest',     label: '🕐 Newest' },
   { value: 'rating',     label: '⭐ Top Rated' },
@@ -39,17 +40,19 @@ const SORT_OPTIONS = [
   { value: 'price_desc', label: '💰 Price: High to Low' },
 ];
 
-const CITIES = ['Chennai', 'Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Coimbatore', 'Madurai'];
 
-export default function FilterBar({ category, filters, onChange }) {
+
+export default function FilterBar({ category, filters = {}, onChange }) {
   const [open, setOpen] = useState(false);
 
   const catFilters = CATEGORY_FILTERS[category] || [];
 
-  const set = (key, val) => onChange(prev => ({ ...prev, [key]: val }));
+  const set = (key, val) => {
+    onChange(prev => ({ ...(prev || {}), [key]: val }));
+  };
   const clear = () => onChange({ sort: 'newest' });
 
-  const activeCount = Object.keys(filters).filter(k => k !== 'sort' && filters[k]).length;
+  const activeCount = Object.keys(filters || {}).filter(k => k !== 'sort' && filters[k]).length;
 
   return (
     <div className="fb-wrap">
@@ -66,7 +69,7 @@ export default function FilterBar({ category, filters, onChange }) {
           ))}
         </select>
 
-        {/* City */}
+        {/* City 
         <select
           className="fb-city-select"
           value={filters.city || ''}
@@ -74,8 +77,9 @@ export default function FilterBar({ category, filters, onChange }) {
         >
           <option value="">📍 All Cities</option>
           {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-
+        </select>*/}
+        {/* Area */}
+        <AreaDropdown value={filters.area_name || ''}  onChange={(area) => set('area_name', area)}/>
         {/* Filter toggle button */}
         <button className={`fb-filter-btn ${open ? 'active' : ''}`} onClick={() => setOpen(p => !p)}>
           ⚙️ Filters {activeCount > 0 && <span className="fb-badge">{activeCount}</span>}

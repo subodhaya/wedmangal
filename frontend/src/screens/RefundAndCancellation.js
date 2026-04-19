@@ -205,7 +205,7 @@ const RefundAndCancellation = () => {
           {/* Intro */}
           <div style={styles.introStrip}>
             <p style={styles.introText}>
-              "At BookYourCelebrations, we believe in helping our customers as much as possible
+              "At WedMangal, we believe in helping our customers as much as possible
               and have designed a fair, transparent cancellation policy for all bookings."
             </p>
           </div>
