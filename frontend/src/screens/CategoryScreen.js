@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';  // ✅ one import at top
 import Product from '../components/Product';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
@@ -25,12 +26,16 @@ const CATEGORY_LABELS = {
 };
 
 function CategoryScreen() {
-  const { category }   = useParams();
-  const navigate       = useNavigate();
-  const location       = useLocation();
+  const { category } = useParams();   // ✅ inside the component
+  const navigate     = useNavigate();
+  const location     = useLocation();
 
-  const queryParams  = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const pageNumber   = Number(queryParams.get('page') || 1);
+  // ✅ Helmet inside the component, using category from useParams
+  const label = CATEGORY_LABELS[category] || category.replace(/_/g, ' ');
+  const title = label;
+
+  const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const pageNumber  = Number(queryParams.get('page') || 1);
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading]   = useState(false);
@@ -40,7 +45,7 @@ function CategoryScreen() {
   const [filters, setFilters]   = useState({ sort: 'newest' });
 
   useEffect(() => {
-    setFilters({ sort: 'newest' }); // reset filters when category changes
+    setFilters({ sort: 'newest' });
   }, [category]);
 
   useEffect(() => {
@@ -51,22 +56,23 @@ function CategoryScreen() {
         const params = {
           keyword: category,
           page: pageNumber,
-          ...(filters.sort        && { sort: filters.sort }),
-          ...(filters.city        && { city: filters.city }),
-          ...(filters.min_price   && { min_price: filters.min_price }),
-          ...(filters.max_price   && { max_price: filters.max_price }),
-          ...(filters.min_rating  && { min_rating: filters.min_rating }),
-          ...(filters.food_type   && { food_type: filters.food_type }),
-          ...(filters.shoot_type  && { shoot_type: filters.shoot_type }),
-          ...(filters.makeup_type && { makeup_type: filters.makeup_type }),
-          ...(filters.trial       && { trial: filters.trial }),
-          ...(filters.hall_ac     && { hall_ac: filters.hall_ac }),
-          ...(filters.hall_parking   && { hall_parking: filters.hall_parking }),
-          ...(filters.hall_capacity  && { hall_capacity: filters.hall_capacity }),
-          ...(filters.dj_venue       && { dj_venue: filters.dj_venue }),
-          ...(filters.dj_equipment   && { dj_equipment: filters.dj_equipment }),
-          ...(filters.mehandi_type   && { mehandi_type: filters.mehandi_type }),
-          ...(filters.home_visit     && { home_visit: filters.home_visit }),
+          ...(filters.sort         && { sort: filters.sort }),
+          ...(filters.city         && { city: filters.city }),
+          ...(filters.area_name    && { area_name: filters.area_name }),
+          ...(filters.min_price    && { min_price: filters.min_price }),
+          ...(filters.max_price    && { max_price: filters.max_price }),
+          ...(filters.min_rating   && { min_rating: filters.min_rating }),
+          ...(filters.food_type    && { food_type: filters.food_type }),
+          ...(filters.shoot_type   && { shoot_type: filters.shoot_type }),
+          ...(filters.makeup_type  && { makeup_type: filters.makeup_type }),
+          ...(filters.trial        && { trial: filters.trial }),
+          ...(filters.hall_ac      && { hall_ac: filters.hall_ac }),
+          ...(filters.hall_parking    && { hall_parking: filters.hall_parking }),
+          ...(filters.hall_capacity   && { hall_capacity: filters.hall_capacity }),
+          ...(filters.dj_venue        && { dj_venue: filters.dj_venue }),
+          ...(filters.dj_equipment    && { dj_equipment: filters.dj_equipment }),
+          ...(filters.mehandi_type    && { mehandi_type: filters.mehandi_type }),
+          ...(filters.home_visit      && { home_visit: filters.home_visit }),
         };
         const { data } = await api.get('/api/products/all', { params });
         if (!isMounted) return;
@@ -89,16 +95,21 @@ function CategoryScreen() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const label = CATEGORY_LABELS[category] || category.replace(/_/g, ' ');
-
   return (
     <div className="cs-page">
 
+      {/* ✅ Helmet inside return, using dynamic values */}
+      <Helmet>
+        <title>{title} for Weddings in Tamil Nadu | WedMangal</title>
+        <meta name="description" content={`Book trusted ${title.toLowerCase()} for your wedding in Tamil Nadu. Verified vendors on WedMangal.`} />
+        <meta property="og:title" content={`${title} | WedMangal`} />
+        <meta property="og:image" content="https://www.wedmangal.com/og-cover.jpg" />
+        <link rel="canonical" href={`https://www.wedmangal.com/category/${category}`} />
+      </Helmet>
+
       {/* Header */}
       <div className="cs-header">
-        <button className="cs-back" onClick={() => navigate('/')}>
-          ← Back
-        </button>
+        <button className="cs-back" onClick={() => navigate('/')}>← Back</button>
         <div className="cs-header-text">
           <h1 className="cs-title">{label}</h1>
           <p className="cs-subtitle">

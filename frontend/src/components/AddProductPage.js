@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import './AddProductPage.css';
 
 const AddProductPage = () => {
     const [userInfo, setUserInfo] = useState(JSON.parse(localStorage.getItem('userInfo')));
-    const [productData, setProductData] = useState({
+    const navigate = useNavigate();
+
+    const emptyProduct = {
         name: '',
         image: '',
         brand: '',
@@ -19,19 +21,23 @@ const AddProductPage = () => {
         personal_phone: '',
         opening_time: '',
         closing_time: '',
-        instagram_url: '',   // NEW
-        facebook_url: '',    // NEW
-        min_price: '',       // NEW
-        max_price: '',       // NEW
-    });
+        instagram_url: '',
+        facebook_url: '',
+        min_price: '',
+        max_price: '',
+    };
+
+    const [productData, setProductData] = useState(emptyProduct);
+
+    const [rawPhones, setRawPhones] = useState({ business_phone: '', personal_phone: '' });
 
     const [services, setServices] = useState([
         { name: '', description: '', price: '', countInStock: '', images: [] }
     ]);
-
-    const [isFormVisible, setIsFormVisible] = useState(true);
     const [responseMessage, setResponseMessage] = useState('');
+    const [isFormVisible, setIsFormVisible] = useState(true);
     const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleProductChange = (e) => {
         const { name, value, files } = e.target;
@@ -66,6 +72,9 @@ const AddProductPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
+        setError('');
+
         const finalProductData = {
             ...productData,
             personal_phone: productData.personal_phone || productData.business_phone
@@ -75,19 +84,17 @@ const AddProductPage = () => {
         Object.keys(finalProductData).forEach(key => formData.append(key, finalProductData[key]));
 
         services.forEach((service, index) => {
+            if (!service.name && !service.price) return;
 
-    // ✅ skip empty service
-    if (!service.name && !service.price) return;
+            formData.append(`services[${index}][name]`, service.name || '');
+            formData.append(`services[${index}][description]`, service.description || '');
 
-    formData.append(`services[${index}][name]`, service.name || '');
-    formData.append(`services[${index}][description]`, service.description || '');
+            if (service.price) {
+                formData.append(`services[${index}][price]`, service.price);
+            }
 
-    // ✅ FIX: don't send empty price
-    if (service.price) {
-        formData.append(`services[${index}][price]`, service.price);
-    }
+            formData.append(`services[${index}][countInStock]`, 1);
 
-    formData.append(`services[${index}][countInStock]`, 1);
             service.images.forEach((image, imgIndex) => {
                 formData.append(`services[${index}][images][${imgIndex}]`, image);
             });
@@ -101,40 +108,38 @@ const AddProductPage = () => {
                 },
             });
 
-            // ✅ Success — axios throws on 4xx/5xx so reaching here = success
             console.log('✅ Register success:', response.data);
 
-            setProductData({
-                name: '', image: '', brand: '', category: '', description: '',
-                city: '', area_name: '', address: '', business_phone: '',
-                personal_phone: '', opening_time: '', closing_time: '',
-            });
+            setProductData(emptyProduct);
+            setRawPhones({ business_phone: '', personal_phone: '' });
             setServices([{ name: '', description: '', price: '', countInStock: '', images: [] }]);
             setResponseMessage('Business registered successfully! Our team will review and approve your listing shortly.');
             setError('');
+            
+            setTimeout(() => {
+             window.location.href = '/manage-my-page';
+             }, 2000);
 
         } catch (err) {
-            // 🔍 Log the real error so we can debug
             console.error('❌ Register error:', err);
             console.error('❌ Response data:', err.response?.data);
             console.error('❌ Status:', err.response?.status);
 
-            // Show the actual backend error message if available
             const backendMsg = err.response?.data?.detail
                 || err.response?.data?.message
                 || err.response?.data?.error
-                || Object.values(err.response?.data || {})[0]?.[0]  // Django field error
+                || Object.values(err.response?.data || {})[0]?.[0]
                 || null;
 
             if (err.response?.status === 400 && backendMsg?.toLowerCase().includes('already')) {
-                // Likely "already registered" error
                 setError('You already have a registered business. Go to Manage My Page to edit or add services.');
             } else if (backendMsg) {
                 setError(backendMsg);
             } else {
                 setError('Something went wrong. Please check your details and try again.');
             }
-            setResponseMessage('');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -154,7 +159,7 @@ const AddProductPage = () => {
                                     Grow your wedding business in a way that's easy and empowering — with the most trusted brand in the industry behind you.
                                 </p>
                                 <p className="ap-welcome-text">
-                                    BookYourCelebrations is the only wedding-advertising solution that combines the power of App and realtime clients to bring you better leads and more bookings.
+                                    WedMangal is the only wedding-advertising solution that combines the power of App and realtime clients to bring you better leads and more bookings.
                                 </p>
                                 <p className="ap-welcome-text">
                                     Customize your business card beautifully here. First impressions matter — make the best one and build trust while showing off your work, background, and passion.
@@ -187,6 +192,13 @@ const AddProductPage = () => {
                     </div>
 
                     <div className="ap-form-body">
+
+                        {error && (
+                            <div className="ap-alert ap-alert-danger" style={{ marginBottom: '16px' }}>
+                                ⚠️ {error}
+                            </div>
+                        )}
+
                         {isFormVisible && (
                             <form onSubmit={handleSubmit}>
 
@@ -327,11 +339,15 @@ const AddProductPage = () => {
                                             type="tel"
                                             name="business_phone"
                                             className="ap-input"
-                                            value={productData.business_phone}
-                                            onChange={(e) => setProductData({
-                                                ...productData,
-                                                business_phone: normalizePhone(e.target.value),
-                                            })}
+                                            value={rawPhones.business_phone}
+                                            onChange={(e) =>
+                                                setRawPhones(p => ({ ...p, business_phone: e.target.value }))
+                                            }
+                                            onBlur={(e) => {
+                                                const normalized = normalizePhone(e.target.value);
+                                                setRawPhones(p => ({ ...p, business_phone: normalized }));
+                                                setProductData(p => ({ ...p, business_phone: normalized }));
+                                            }}
                                             placeholder="e.g. 9876543210"
                                         />
                                         <div className="ap-hint">Enter 10-digit number. Country code +91 added automatically.</div>
@@ -345,11 +361,15 @@ const AddProductPage = () => {
                                             type="tel"
                                             name="personal_phone"
                                             className="ap-input"
-                                            value={productData.personal_phone}
-                                            onChange={(e) => setProductData({
-                                                ...productData,
-                                                personal_phone: normalizePhone(e.target.value),
-                                            })}
+                                            value={rawPhones.personal_phone}
+                                            onChange={(e) =>
+                                                setRawPhones(p => ({ ...p, personal_phone: e.target.value }))
+                                            }
+                                            onBlur={(e) => {
+                                                const normalized = normalizePhone(e.target.value);
+                                                setRawPhones(p => ({ ...p, personal_phone: normalized }));
+                                                setProductData(p => ({ ...p, personal_phone: normalized }));
+                                            }}
                                             placeholder="Optional alternative number"
                                         />
                                         <div className="ap-hint">Leave blank to use business phone.</div>
@@ -384,70 +404,73 @@ const AddProductPage = () => {
                                         />
                                     </div>
                                 </div>
+
                                 {/* ── Social Links section ── */}
-<div className="ap-section-divider">
-    <span className="ap-section-label">🔗 Social Links</span>
-    <div className="ap-section-line"></div>
-</div>
+                                <div className="ap-section-divider">
+                                    <span className="ap-section-label">🔗 Social Links</span>
+                                    <div className="ap-section-line"></div>
+                                </div>
 
-<div className="ap-form-group">
-    <label className="ap-label">Instagram URL</label>
-    <input
-        type="url"
-        name="instagram_url"
-        className="ap-input"
-        value={productData.instagram_url}
-        onChange={handleProductChange}
-        placeholder="https://instagram.com/yourbusiness"
-    />
-</div>
+                                <div className="ap-form-group">
+                                    <label className="ap-label">Instagram URL</label>
+                                    <input
+                                        type="url"
+                                        name="instagram_url"
+                                        className="ap-input"
+                                        value={productData.instagram_url}
+                                        onChange={handleProductChange}
+                                        placeholder="https://instagram.com/yourbusiness"
+                                    />
+                                </div>
 
-<div className="ap-form-group">
-    <label className="ap-label">Facebook URL</label>
-    <input
-        type="url"
-        name="facebook_url"
-        className="ap-input"
-        value={productData.facebook_url}
-        onChange={handleProductChange}
-        placeholder="https://facebook.com/yourbusiness"
-    />
-</div>
-{/* ── Price Range section ── */}
-<div className="ap-section-divider">
-    <span className="ap-section-label">💰 Price Range</span>
-    <div className="ap-section-line"></div>
-</div>
+                                <div className="ap-form-group">
+                                    <label className="ap-label">Facebook URL</label>
+                                    <input
+                                        type="url"
+                                        name="facebook_url"
+                                        className="ap-input"
+                                        value={productData.facebook_url}
+                                        onChange={handleProductChange}
+                                        placeholder="https://facebook.com/yourbusiness"
+                                    />
+                                </div>
 
-<div className="ap-time-row">
-    <div className="ap-time-group">
-        <label className="ap-time-label">Min Price (₹)</label>
-        <input
-            type="number"
-            name="min_price"
-            className="ap-time-input"
-            value={productData.min_price}
-            onChange={handleProductChange}
-            placeholder="e.g. 2000"
-            min="0"
-        />
-    </div>
-    <div className="ap-time-group">
-        <label className="ap-time-label">Max Price (₹)</label>
-        <input
-            type="number"
-            name="max_price"
-            className="ap-time-input"
-            value={productData.max_price}
-            onChange={handleProductChange}
-            placeholder="e.g. 50000"
-            min="0"
-        />
-    </div>
-</div>
-<div className="ap-hint" style={{ marginTop: '-8px', marginBottom: '16px' }}>
-    Set your overall price range so clients can filter by budget.
-</div>
+                                {/* ── Price Range section ── */}
+                                <div className="ap-section-divider">
+                                    <span className="ap-section-label">💰 Price Range</span>
+                                    <div className="ap-section-line"></div>
+                                </div>
+
+                                <div className="ap-time-row">
+                                    <div className="ap-time-group">
+                                        <label className="ap-time-label">Min Price (₹)</label>
+                                        <input
+                                            type="number"
+                                            name="min_price"
+                                            className="ap-time-input"
+                                            value={productData.min_price}
+                                            onChange={handleProductChange}
+                                            placeholder="e.g. 2000"
+                                            min="0"
+                                        />
+                                    </div>
+                                    <div className="ap-time-group">
+                                        <label className="ap-time-label">Max Price (₹)</label>
+                                        <input
+                                            type="number"
+                                            name="max_price"
+                                            className="ap-time-input"
+                                            value={productData.max_price}
+                                            onChange={handleProductChange}
+                                            placeholder="e.g. 50000"
+                                            min="0"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="ap-hint" style={{ marginTop: '-8px', marginBottom: '16px' }}>
+                                    Set your overall price range so clients can filter by budget.
+                                </div>
+
                                 {/* ── Services section ── */}
                                 <div className="ap-services-heading">
                                     ✨ Your Services
@@ -503,7 +526,6 @@ const AddProductPage = () => {
                                             />
                                         </div>
 
-                                        {/* countInStock hidden — same as original */}
                                         <input type="hidden" name="countInStock" value={service.countInStock || 5} />
 
                                         <div className="ap-form-group">
@@ -527,9 +549,14 @@ const AddProductPage = () => {
                                     + Add Another Service
                                 </button>
 
-                                <button type="submit" className="ap-submit-btn">
-                                    🎊 Submit Business Registration
+                                <button
+                                    type="submit"
+                                    className="ap-submit-btn"
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? '⏳ Submitting...' : '🎊 Submit Business Registration'}
                                 </button>
+
                             </form>
                         )}
 

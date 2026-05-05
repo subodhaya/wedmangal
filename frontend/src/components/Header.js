@@ -150,7 +150,10 @@ function NotificationBell({ userInfo }) {
 
   const handleItemClick = async (orderId) => {
     setOpen(false);
-    try { await axios.post('/api/orders/mark-read/', {}, config); setCount(0); } catch { /* silent */ }
+    try { 
+      await axios.post('/api/orders/mark-read/', {}, config); 
+      setCount(0); 
+    } catch { /* silent */ }
     navigate(`/order/${orderId}`);
   };
 
@@ -190,7 +193,15 @@ function NotificationBell({ userInfo }) {
               <>
                 {unreadItems.length > 0 && (
                   <>
-                    <div style={{ padding: '7px 14px 4px', fontSize: '0.7rem', fontWeight: 700, color: '#9a7a85', textTransform: 'uppercase', letterSpacing: '0.5px', background: '#fdf8f0' }}>
+                    <div style={{ 
+                      padding: '7px 14px 4px', 
+                      fontSize: '0.7rem', 
+                      fontWeight: 700, 
+                      color: '#9a7a85', 
+                      textTransform: 'uppercase', 
+                      letterSpacing: '0.5px', 
+                      background: '#fdf8f0' 
+                    }}>
                       New
                     </div>
                     {unreadItems.map(item => (
@@ -219,7 +230,15 @@ function NotificationBell({ userInfo }) {
 
                 {readItems.length > 0 && (
                   <>
-                    <div style={{ padding: '7px 14px 4px', fontSize: '0.7rem', fontWeight: 700, color: '#9a7a85', textTransform: 'uppercase', letterSpacing: '0.5px', background: '#fdf8f0' }}>
+                    <div style={{ 
+                      padding: '7px 14px 4px', 
+                      fontSize: '0.7rem', 
+                      fontWeight: 700, 
+                      color: '#9a7a85', 
+                      textTransform: 'uppercase', 
+                      letterSpacing: '0.5px', 
+                      background: '#fdf8f0' 
+                    }}>
                       Earlier
                     </div>
                     {readItems.map(item => (
@@ -261,8 +280,11 @@ const Header = () => {
   const navigate = useNavigate();
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage]     = useState('');
+  const [navExpanded, setNavExpanded]       = useState(false);
 
   const isServiceOwner = userInfo?.role === 'service-owner';
+
+  const collapseNav = () => setNavExpanded(false);
 
   const redirectToLogin = (targetPath) => {
     if (userInfo) return targetPath;
@@ -270,12 +292,19 @@ const Header = () => {
   };
 
   const logoutHandler = async () => {
+    collapseNav();
     try {
       if (userInfo) {
         const cartItems     = JSON.parse(localStorage.getItem('cartItems'))  || [];
         const wishlistItems = JSON.parse(localStorage.getItem('wishlists')) || [];
-        await axios.post('/api/products/cart/',     { items: cartItems,     userId: userInfo._id }, { headers: { Authorization: `Bearer ${userInfo.token}` } });
-        await axios.post('/api/products/wishlist/', { items: wishlistItems, user: userInfo._id },   { headers: { Authorization: `Bearer ${userInfo.token}` } });
+        await axios.post('/api/products/cart/',     
+          { items: cartItems, userId: userInfo._id }, 
+          { headers: { Authorization: `Bearer ${userInfo.token}` } }
+        );
+        await axios.post('/api/products/wishlist/', 
+          { items: wishlistItems, user: userInfo._id },   
+          { headers: { Authorization: `Bearer ${userInfo.token}` } }
+        );
       }
     } catch (error) {
       console.error('Error syncing data on logout:', error.message);
@@ -287,7 +316,10 @@ const Header = () => {
 
   useEffect(() => {
     if (successMessage || errorMessage) {
-      const timer = setTimeout(() => { setSuccessMessage(''); setErrorMessage(''); }, 4000);
+      const timer = setTimeout(() => { 
+        setSuccessMessage(''); 
+        setErrorMessage(''); 
+      }, 4000);
       return () => clearTimeout(timer);
     }
   }, [successMessage, errorMessage]);
@@ -298,117 +330,163 @@ const Header = () => {
       {errorMessage   && <div className="alert alert-danger">{errorMessage}</div>}
 
       <header>
-        <Navbar className="header-navbar" expand="lg">
+        <Navbar
+          className="header-navbar"
+          expand="lg"
+          expanded={navExpanded}
+          onToggle={(val) => setNavExpanded(val)}
+        >
           <Container fluid="lg">
 
             {/* ── Brand / Logo ── */}
-            <LinkContainer to="/">
+            <LinkContainer to="/" onClick={collapseNav}>
               <Navbar.Brand className="brand-logo">
                 <svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg" aria-label="WedMangal">
                   {/* Octagon badge */}
                   <polygon points="25,3 37,8 42,20 37,32 25,37 13,32 8,20 13,8" fill="#f9e79f"/>
                   <polygon points="25,6 35,10 39,20 35,30 25,34 15,30 11,20 15,10" fill="none" stroke="#5e143f" strokeWidth="1" opacity="0.4"/>
+                  
                   {/* Flames */}
                   <ellipse cx="20" cy="4.5" rx="2"   ry="3"   fill="#5e143f" opacity="0.55"/>
                   <ellipse cx="25" cy="2.5" rx="2.8" ry="4"   fill="#5e143f"/>
                   <ellipse cx="30" cy="4.5" rx="2"   ry="3"   fill="#5e143f" opacity="0.55"/>
+                  
                   {/* W */}
                   <text x="25" y="21" textAnchor="middle" dominantBaseline="central"
-                    style={{fontFamily:'Georgia,serif', fontSize:'18px', fontWeight:700, fill:'#5e143f'}}>W</text>
+                    style={{fontFamily:'Georgia,serif', fontSize:'18px', fontWeight:700, fill:'#5e143f'}}>
+                    W
+                  </text>
+                  
                   {/* WED */}
                   <text x="52" y="17"
-                    style={{fontFamily:'Georgia,serif', fontSize:'13px', fontWeight:700, fill:'#f9e79f', letterSpacing:'3px'}}>WED</text>
+                    style={{fontFamily:'Georgia,serif', fontSize:'13px', fontWeight:700, fill:'#f9e79f', letterSpacing:'3px'}}>
+                    WED
+                  </text>
+                  
                   {/* Yellow bar */}
                   <rect x="50" y="22" width="145" height="18" rx="3" fill="#f9e79f"/>
+                  
                   {/* MANGAL */}
                   <text x="53" y="34"
-                    style={{fontFamily:'Georgia,serif', fontSize:'14px', fontWeight:700, fill:'#5e143f', letterSpacing:'2px'}}>MANGAL</text>
+                    style={{fontFamily:'Georgia,serif', fontSize:'14px', fontWeight:700, fill:'#5e143f', letterSpacing:'2px'}}>
+                    MANGAL
+                  </text>
                 </svg>
               </Navbar.Brand>
             </LinkContainer>
 
             <Navbar.Toggle aria-controls="basic-navbar-nav" className="custom-toggler" />
+
             <Navbar.Collapse id="basic-navbar-nav">
+              {/* ✅ Single wrapper — any link click closes navbar on mobile */}
+              <div onClick={collapseNav} style={{ display: 'contents' }}>
 
-              {/* ── SmartSearch — hidden for service owners ── */}
-              {!isServiceOwner && (
-                <div className="header-search-wrap">
-                  <SmartSearch variant="compact" />
-                </div>
-              )}
-
-              {/* ── Left nav ── */}
-              <Nav className="me-auto align-items-center">
-                <LinkContainer to="/">
-                  <Nav.Link><i className="fas fa-home" aria-hidden="true" /> Home</Nav.Link>
-                </LinkContainer>
-
+                {/* ── SmartSearch — hidden for service owners ── */}
                 {!isServiceOwner && (
-                  <>
-                    <LinkContainer to="/budget">
-                      <Nav.Link><i className="fas fa-chart-pie" aria-hidden="true" /> Budget</Nav.Link>
-                    </LinkContainer>
-                    <LinkContainer to={redirectToLogin('/wishlist')}>
-                      <Nav.Link><i className="fas fa-heart" aria-hidden="true" /> Wishlist</Nav.Link>
-                    </LinkContainer>
-                    <LinkContainer to={redirectToLogin('/cart')}>
-                      <Nav.Link><i className="fas fa-shopping-cart" aria-hidden="true" /> Cart</Nav.Link>
-                    </LinkContainer>
-                  </>
+                  <div className="header-search-wrap" onClick={e => e.stopPropagation()}>
+                    <SmartSearch variant="compact" />
+                  </div>
                 )}
-              </Nav>
 
-              {/* ── Right nav ── */}
-              <Nav className="ms-auto align-items-center">
+                {/* ── Left nav ── */}
+                <Nav className="me-auto align-items-center">
+                  <LinkContainer to="/">
+                    <Nav.Link>
+                      <i className="fas fa-home" aria-hidden="true" /> Home
+                    </Nav.Link>
+                  </LinkContainer>
 
-                {isServiceOwner && (
-                  <>
-                    <NavDropdown title="Owner Menu" id="owner-nav-dropdown" align="end">
-                      <LinkContainer to="/orderlist/">
-                        <NavDropdown.Item>Booking List</NavDropdown.Item>
+                  {!isServiceOwner && (
+                    <>
+                      <LinkContainer to="/budget">
+                        <Nav.Link>
+                          <i className="fas fa-chart-pie" aria-hidden="true" /> Budget
+                        </Nav.Link>
                       </LinkContainer>
-                      <LinkContainer to="/my-appointment/">
-                        <NavDropdown.Item>My Appointments</NavDropdown.Item>
+                      <LinkContainer to={redirectToLogin('/wishlist')}>
+                        <Nav.Link>
+                          <i className="fas fa-heart" aria-hidden="true" /> Wishlist
+                        </Nav.Link>
+                      </LinkContainer>
+                      <LinkContainer to={redirectToLogin('/cart')}>
+                        <Nav.Link>
+                          <i className="fas fa-shopping-cart" aria-hidden="true" /> Cart
+                        </Nav.Link>
+                      </LinkContainer>
+                    </>
+                  )}
+                </Nav>
+
+                {/* ── Right nav ── */}
+                <Nav className="ms-auto align-items-center">
+
+                  {isServiceOwner && (
+                    <>
+                      <NavDropdown 
+                        title="Owner Menu" 
+                        id="owner-nav-dropdown" 
+                        align="end"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <LinkContainer to="/orderlist/">
+                          <NavDropdown.Item onClick={collapseNav}>Booking List</NavDropdown.Item>
+                        </LinkContainer>
+                        <LinkContainer to="/my-appointment/">
+                          <NavDropdown.Item onClick={collapseNav}>My Appointments</NavDropdown.Item>
+                        </LinkContainer>
+                      </NavDropdown>
+                      <NotificationBell userInfo={userInfo} />
+                    </>
+                  )}
+
+                  {userInfo?.isAdmin && (
+                    <NavDropdown 
+                      title="Admin Menu" 
+                      id="admin-nav-dropdown" 
+                      align="end"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <LinkContainer to="/admin/productlist">
+                        <NavDropdown.Item onClick={collapseNav}>Services List</NavDropdown.Item>
+                      </LinkContainer>
+                      <LinkContainer to="/admin/userlist">
+                        <NavDropdown.Item onClick={collapseNav}>User List</NavDropdown.Item>
+                      </LinkContainer>
+                      <NavDropdown.Divider />
+                      <LinkContainer to="/admin/orderlist">
+                        <NavDropdown.Item onClick={collapseNav}>Booking List</NavDropdown.Item>
                       </LinkContainer>
                     </NavDropdown>
-                    <NotificationBell userInfo={userInfo} />
-                  </>
-                )}
+                  )}
 
-                {userInfo?.isAdmin && (
-                  <NavDropdown title="Admin Menu" id="admin-nav-dropdown" align="end">
-                    <LinkContainer to="/admin/productlist">
-                      <NavDropdown.Item>Services List</NavDropdown.Item>
+                  {userInfo ? (
+                    <NavDropdown
+                      title={
+                        <>
+                          <i className="fas fa-user" aria-hidden="true" /> {userInfo.name}
+                        </>
+                      }
+                      id="username"
+                      align="end"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <LinkContainer to="/profile">
+                        <NavDropdown.Item onClick={collapseNav}>Profile / Bookings</NavDropdown.Item>
+                      </LinkContainer>
+                      <NavDropdown.Item onClick={logoutHandler}>
+                        Logout
+                      </NavDropdown.Item>
+                    </NavDropdown>
+                  ) : (
+                    <LinkContainer to="/login">
+                      <Nav.Link>Login</Nav.Link>
                     </LinkContainer>
-                    <LinkContainer to="/admin/userlist">
-                      <NavDropdown.Item>User List</NavDropdown.Item>
-                    </LinkContainer>
-                    <NavDropdown.Divider />
-                    <LinkContainer to="/admin/orderlist">
-                      <NavDropdown.Item>Booking List</NavDropdown.Item>
-                    </LinkContainer>
-                  </NavDropdown>
-                )}
+                  )}
 
-                {userInfo ? (
-                  <NavDropdown
-                    title={<><i className="fas fa-user" aria-hidden="true" /> {userInfo.name}</>}
-                    id="username"
-                    align="end"
-                  >
-                    <LinkContainer to="/profile">
-                      <NavDropdown.Item>Profile / Bookings</NavDropdown.Item>
-                    </LinkContainer>
-                    <NavDropdown.Item onClick={logoutHandler}>Logout</NavDropdown.Item>
-                  </NavDropdown>
-                ) : (
-                  <LinkContainer to="/login">
-                    <Nav.Link>Login</Nav.Link>
-                  </LinkContainer>
-                )}
-
-              </Nav>
+                </Nav>
+              </div>
             </Navbar.Collapse>
+
           </Container>
         </Navbar>
       </header>

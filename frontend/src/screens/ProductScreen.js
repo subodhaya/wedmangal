@@ -261,14 +261,16 @@ const handleDirectBooking = async (serviceId) => {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     
-    <div className="ps-page">
-      <Helmet>
-  <title>{product.name} | WedMangal</title>
-  <meta name="description" content={product.description?.slice(0, 155)} />
-  <meta property="og:title" content={product.name} />
-  <meta property="og:image" content={product.image} />
-  <link rel="canonical" href={`https://www.wedmangal.com/product/${product._id}`} />
-</Helmet>
+   <div className="ps-page">
+      {product && (
+        <Helmet>
+          <title>{product.name} | WedMangal</title>
+          <meta name="description" content={product.description?.slice(0, 155)} />
+          <meta property="og:title" content={product.name} />
+          <meta property="og:image" content={product.image} />
+          <link rel="canonical" href={`https://www.wedmangal.com/product/${product._id}`} />
+        </Helmet>
+      )}
 
       <Link to="/" className="ps-back-btn">
         <i className="fas fa-arrow-left"></i> Go Back

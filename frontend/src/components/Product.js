@@ -56,7 +56,7 @@ function Product({ product }) {
         <div className="product-img-box">
           {!imgError ? (
             <Card.Img
-              src={`/images/${product.image}`}
+              src={`/static/images/${product.image}`}
               className="product-img"
               onError={() => setImgError(true)}
             />

@@ -22,10 +22,10 @@ function ManagePage() {
         personal_phone: '',
         opening_time: '',
         closing_time: '',
-        instagram_url: '',   // ADD
-        facebook_url: '',    // ADD
-        min_price: '',       // ADD
-        max_price: '',       // ADD
+        instagram_url: '',
+        facebook_url: '',
+        min_price: '',
+        max_price: '',
         isApproved: false,
     });
     const [services, setServices] = useState([]);
@@ -69,28 +69,64 @@ function ManagePage() {
 
     /* ── Submit ─────────────────────────────────────────────── */
     const handleProductSubmit = async () => {
+        setIsSubmitDisabled(true);
         try {
             const formData = new FormData();
+
+            // Fields to skip entirely (not meant for the update endpoint)
+            const skipKeys = ['imageFile', 'image', 'isApproved', 'is_approved', 'services', 'is_claimed', 'claimed_by_id'];
+
             for (const [key, value] of Object.entries(productData)) {
-                if (key === 'imageFile') formData.append('image', value);
-                else formData.append(key, value);
+                if (skipKeys.includes(key)) continue;
+
+                // ✅ Only append if value is not null/undefined/empty string
+                // Send empty string for optional text fields, skip null/undefined
+                if (value === null || value === undefined) {
+                    formData.append(key, ''); // send empty string instead of "null"
+                } else {
+                    formData.append(key, value);
+                }
             }
+
+            // ✅ Only append image if a new file was selected
+            if (productData.imageFile) {
+                formData.append('image', productData.imageFile);
+            }
+
+            // ✅ Fallback: if personal_phone is empty, use business_phone
             if (!productData.personal_phone) {
-                formData.set('personal_phone', productData.business_phone);
+                formData.set('personal_phone', productData.business_phone || '');
             }
+
+            // ✅ Debug: log what's being sent (remove after fixing)
+            console.log('Submitting FormData:');
+            for (let [k, v] of formData.entries()) {
+                console.log(`  ${k}:`, v);
+            }
+
             const response = await fetch(`/api/products/update_product/${userInfo.id}/`, {
                 method: 'POST',
                 body: formData,
                 headers: { Authorization: `Bearer ${userInfo.token}` },
             });
-            if (!response.ok) throw new Error('Product update failed');
+
+            // ✅ Log the error response body so you can see what Django rejected
+            if (!response.ok) {
+                const errData = await response.json();
+                console.error('Update failed with:', errData);
+                throw new Error(JSON.stringify(errData));
+            }
+
             await response.json();
             setSuccessMessage('Business updated successfully!');
             setErrorMessage('');
             navigate('/services');
         } catch (error) {
-            setErrorMessage('Failed to update. Please try again.');
+            console.error('Submit error:', error.message);
+            setErrorMessage(`Failed to update: ${error.message}`);
             setSuccessMessage('');
+        } finally {
+            setIsSubmitDisabled(false);
         }
     };
 
@@ -369,71 +405,73 @@ function ManagePage() {
                                     />
                                 </div>
                             </div>
+
                             {/* ── Social Links ── */}
-<div className="mp-section-divider">
-    <span className="mp-section-label">🔗 Social Links</span>
-    <div className="mp-section-line"></div>
-</div>
+                            <div className="mp-section-divider">
+                                <span className="mp-section-label">🔗 Social Links</span>
+                                <div className="mp-section-line"></div>
+                            </div>
 
-<div className="mp-form-group">
-    <label className="mp-label">Instagram URL</label>
-    <input
-        type="url"
-        name="instagram_url"
-        className="mp-input"
-        value={productData.instagram_url || ''}
-        onChange={handleProductChange}
-        placeholder="https://instagram.com/yourbusiness"
-    />
-</div>
+                            <div className="mp-form-group">
+                                <label className="mp-label">Instagram URL</label>
+                                <input
+                                    type="url"
+                                    name="instagram_url"
+                                    className="mp-input"
+                                    value={productData.instagram_url || ''}
+                                    onChange={handleProductChange}
+                                    placeholder="https://instagram.com/yourbusiness"
+                                />
+                            </div>
 
-<div className="mp-form-group">
-    <label className="mp-label">Facebook URL</label>
-    <input
-        type="url"
-        name="facebook_url"
-        className="mp-input"
-        value={productData.facebook_url || ''}
-        onChange={handleProductChange}
-        placeholder="https://facebook.com/yourbusiness"
-    />
-</div>
+                            <div className="mp-form-group">
+                                <label className="mp-label">Facebook URL</label>
+                                <input
+                                    type="url"
+                                    name="facebook_url"
+                                    className="mp-input"
+                                    value={productData.facebook_url || ''}
+                                    onChange={handleProductChange}
+                                    placeholder="https://facebook.com/yourbusiness"
+                                />
+                            </div>
 
-{/* ── Price Range ── */}
-<div className="mp-section-divider">
-    <span className="mp-section-label">💰 Price Range</span>
-    <div className="mp-section-line"></div>
-</div>
+                            {/* ── Price Range ── */}
+                            <div className="mp-section-divider">
+                                <span className="mp-section-label">💰 Price Range</span>
+                                <div className="mp-section-line"></div>
+                            </div>
 
-<div className="mp-time-row">
-    <div className="mp-time-group">
-        <label className="mp-time-label">Min Price (₹)</label>
-        <input
-            type="number"
-            name="min_price"
-            className="mp-time-input"
-            value={productData.min_price || ''}
-            onChange={handleProductChange}
-            placeholder="e.g. 2000"
-            min="0"
-        />
-    </div>
-    <div className="mp-time-group">
-        <label className="mp-time-label">Max Price (₹)</label>
-        <input
-            type="number"
-            name="max_price"
-            className="mp-time-input"
-            value={productData.max_price || ''}
-            onChange={handleProductChange}
-            placeholder="e.g. 50000"
-            min="0"
-        />
-    </div>
-</div>
-<div className="mp-hint" style={{ marginTop: '-8px', marginBottom: '16px' }}>
-    Set your overall price range so clients can filter by budget.
-</div>
+                            <div className="mp-time-row">
+                                <div className="mp-time-group">
+                                    <label className="mp-time-label">Min Price (₹)</label>
+                                    <input
+                                        type="number"
+                                        name="min_price"
+                                        className="mp-time-input"
+                                        value={productData.min_price || ''}
+                                        onChange={handleProductChange}
+                                        placeholder="e.g. 2000"
+                                        min="0"
+                                    />
+                                </div>
+                                <div className="mp-time-group">
+                                    <label className="mp-time-label">Max Price (₹)</label>
+                                    <input
+                                        type="number"
+                                        name="max_price"
+                                        className="mp-time-input"
+                                        value={productData.max_price || ''}
+                                        onChange={handleProductChange}
+                                        placeholder="e.g. 50000"
+                                        min="0"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mp-hint" style={{ marginTop: '-8px', marginBottom: '16px' }}>
+                                Set your overall price range so clients can filter by budget.
+                            </div>
+
                             {/* ── Submit ── */}
                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
                                 <button
@@ -442,7 +480,7 @@ function ManagePage() {
                                     onClick={handleProductSubmit}
                                     disabled={isSubmitDisabled}
                                 >
-                                    💾 Save & Continue →
+                                    {isSubmitDisabled ? '⏳ Saving...' : '💾 Save & Continue →'}
                                 </button>
                             </div>
 
