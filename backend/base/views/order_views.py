@@ -6,6 +6,10 @@ from rest_framework.response import Response
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 import json
+import hmac
+import hashlib
+import base64
+import time
 from django.utils.dateparse import parse_date, parse_time
 
 import requests
@@ -70,13 +74,12 @@ def create_cashfree_payment(request, pk):
             },
             # "order_splits": order_splits,
             "order_meta": {
-                "return_url": f"https://www.bookyourcelebration.com/payment-success?order_id={order._id}"
+                "return_url": f"https://www.wedmangal.com/payment-success?order_id={order._id}"
             }
         }
 
         response = requests.post(API_URL, json=data, headers=headers)
         response_data = response.json()
-        print("Cashfree API Response:", json.dumps(response_data, indent=4))
 
         if response.status_code == 200 and "payment_session_id" in response_data:
             return JsonResponse({
@@ -93,24 +96,66 @@ def create_cashfree_payment(request, pk):
         return JsonResponse({"error": str(e)}, status=500)
 
 
+def _verify_cashfree_signature(request):
+    timestamp = request.headers.get('x-webhook-timestamp', '')
+    provided_sig = request.headers.get('x-webhook-signature', '')
+
+    if not timestamp or not provided_sig:
+        return False
+
+    try:
+        if abs(time.time() - int(timestamp)) > 30:
+            return False
+    except (ValueError, TypeError):
+        return False
+
+    raw_body = request.body.decode('utf-8')
+    message = f"{timestamp}{raw_body}"
+    secret = settings.CASHFREE_SECRET_KEY.encode('utf-8')
+    computed = base64.b64encode(
+        hmac.new(secret, message.encode('utf-8'), hashlib.sha256).digest()
+    ).decode('utf-8')
+
+    return hmac.compare_digest(computed, provided_sig)
+
+
 @csrf_exempt
 def cashfree_webhook(request):
-    try:
-        data = request.POST
-        order_id = data.get("order_id").replace("order_", "")
-        payment_status = data.get("order_status")
+    if request.method != 'POST':
+        return JsonResponse({"error": "Method not allowed"}, status=405)
 
-        if payment_status == "PAID":
-            order = Order.objects.get(id=order_id)
+    if not _verify_cashfree_signature(request):
+        return JsonResponse({"error": "Invalid signature"}, status=400)
+
+    try:
+        payload = json.loads(request.body)
+
+        order_data = payload.get("data", {}).get("order", {})
+        payment_data = payload.get("data", {}).get("payment", {})
+
+        raw_order_id = order_data.get("order_id", '')
+        payment_status = payment_data.get("payment_status", '')
+
+        if not raw_order_id:
+            return JsonResponse({"error": "Missing order_id"}, status=400)
+
+        order_id = raw_order_id.replace("order_", "")
+
+        if payment_status == "SUCCESS":
+            order = Order.objects.get(_id=order_id)
             order.isPaid = True
             order.paidAt = timezone.now()
             order.save()
             return JsonResponse({"message": "Payment updated successfully"})
 
-        return JsonResponse({"error": "Payment failed"}, status=400)
+        return JsonResponse({"message": "Webhook received"})
 
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    except Order.DoesNotExist:
+        return JsonResponse({"error": "Order not found"}, status=404)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({"error": "Invalid request"}, status=400)
+    except Exception:
+        return JsonResponse({"error": "Internal error"}, status=500)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -25,7 +25,8 @@ const BudgetScreen = () => {
   };
 
   const fetchBudget = () => {
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    let userInfo = null;
+    try { userInfo = JSON.parse(localStorage.getItem('userInfo')); } catch {}
     const pk = userInfo?.id;
     if (!pk) { setErrorMessage('User not found.'); return; }
     const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
@@ -43,7 +44,8 @@ const BudgetScreen = () => {
   };
 
   const handleSave = () => {
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    let userInfo = null;
+    try { userInfo = JSON.parse(localStorage.getItem('userInfo')); } catch {}
     const pk = userInfo?.id;
     if (!pk) { setErrorMessage('User not found.'); return; }
     const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };

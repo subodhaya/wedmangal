@@ -26,7 +26,7 @@ function LoginScreen() {
     const [error, setError]               = useState('');
     const [loading, setLoading]           = useState(false);
 
-    const redirect = location.search ? location.search.split('=')[1] : '/';
+    const redirect = new URLSearchParams(location.search).get('redirect') || '/';
 
     useEffect(() => {
         const userInfo = getUserInfo();
@@ -54,7 +54,6 @@ function LoginScreen() {
             const { data } = await api.post('/api/auth/google-login/', { token: response.credential });
             setUserInfo(data);
             navigate('/');
-            window.location.reload();
         } catch {
             setError('Google login failed');
         } finally {
@@ -69,7 +68,6 @@ function LoginScreen() {
             const { data } = await api.post('/api/users/login/', { username, password });
             setUserInfo(data);
             navigate('/');
-            window.location.reload();
         } catch (err) {
             setError(err.response?.data?.detail || err.message);
         }
@@ -82,7 +80,6 @@ function LoginScreen() {
             const { data } = await api.post('/api/auth/google-login/', { token: credentialResponse.credential });
             setUserInfo(data);
             navigate('/');
-            window.location.reload();
         } catch {
             setError('Error during Google login');
         }
@@ -160,7 +157,7 @@ function LoginScreen() {
                                     onClick={() => setShowPassword(!showPassword)}
                                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 >
-                                    <FontAwesomeIcon icon={showPassword ? 'eye-slash' : 'eye'} />
+                                    <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
                                 </button>
                             </div>
                         </div>

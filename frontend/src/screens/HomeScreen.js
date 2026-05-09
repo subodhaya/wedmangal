@@ -342,7 +342,6 @@ function HomeScreen() {
   useEffect(() => {
     let isMounted = true;
     const fetchProducts = async () => {
-      console.log('fetchProducts fired, filters:', filters);
       try {
         setLoading(true); 
         setError('');
@@ -369,7 +368,6 @@ function HomeScreen() {
     ...(filters.mehandi_type && { mehandi_type: filters.mehandi_type }),
     ...(filters.home_visit && { home_visit: filters.home_visit }),
 };
-console.log('params built:', params);  // ← add this
 const { data } = await api.get('/api/products/all', { params });
 if (!isMounted) return;
 setProducts(Array.isArray(data.products) ? data.products : []);
@@ -385,8 +383,7 @@ if (isMounted) setLoading(false);
     };
 fetchProducts();
 return () => { isMounted = false; };
-  }, [location.search, filters]);
-  console.log("ROUTE:", location.pathname, location.search);
+ }, [location.search, filters, keyword]);
 
   // ── Check if service-owner has product ─────────────────────────
   useEffect(() => {

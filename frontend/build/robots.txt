@@ -1,7 +1,114 @@
+# ──────────────────────────────────────────────
+# WedMangal — robots.txt
+# ──────────────────────────────────────────────
+
+# Default: all crawlers
 User-agent: *
 Disallow: /admin/
 Disallow: /api/
 Allow: /
 
-Sitemap: https://www.bookyourcelebration.com/sitemap.xml
+# ── Google (Search + AI / Gemini) ──────────────
+User-agent: Googlebot
+Allow: /
 
+User-agent: Google-Extended
+Allow: /
+
+# ── OpenAI / ChatGPT ───────────────────────────
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# ── Anthropic / Claude ─────────────────────────
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+# ── Perplexity AI ──────────────────────────────
+User-agent: PerplexityBot
+Allow: /
+
+# ── Meta AI ────────────────────────────────────
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: meta-externalfetcher
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+# ── Apple AI ───────────────────────────────────
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# ── Microsoft / Bing AI ────────────────────────
+User-agent: bingbot
+Allow: /
+
+User-agent: BingPreview
+Allow: /
+
+# ── You.com ────────────────────────────────────
+User-agent: YouBot
+Allow: /
+
+# ── Cohere AI ──────────────────────────────────
+User-agent: cohere-ai
+Allow: /
+
+# ── Common Crawl (AI training datasets) ────────
+User-agent: CCBot
+Allow: /
+
+# ── Diffbot ────────────────────────────────────
+User-agent: Diffbot
+Allow: /
+
+# ── ByteDance / TikTok AI ──────────────────────
+User-agent: Bytespider
+Allow: /
+
+# ── Amazon Alexa / AI ──────────────────────────
+User-agent: Amazonbot
+Allow: /
+
+# ── Allen Institute AI ─────────────────────────
+User-agent: AI2Bot
+Allow: /
+
+# ── Timpi ──────────────────────────────────────
+User-agent: Timpibot
+Allow: /
+
+# ── Omgili / Webz.io ───────────────────────────
+User-agent: omgili
+Allow: /
+
+User-agent: omgilibot
+Allow: /
+
+# ── ImagesiftBot ───────────────────────────────
+User-agent: ImagesiftBot
+Allow: /
+
+# ── Magpie Crawler ─────────────────────────────
+User-agent: magpie-crawler
+Allow: /
+
+# ──────────────────────────────────────────────
+Sitemap: https://www.wedmangal.com/sitemap.xml

@@ -485,10 +485,7 @@ backdropFilter: "blur(1px)",
                   <span style={s.summaryLabel}>Services</span>
                   <span style={s.summaryValue}>₹{itemsPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div style={s.summaryRow}>
-                  <span style={s.summaryLabel}>Conveyance</span>
-                  <span style={s.summaryValue}>₹{Number(order.shippingPrice || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                </div>
+
                 <div style={s.summaryRow}>
                   <span style={s.summaryLabel}>Tax</span>
                   <span style={s.summaryValue}>₹{Number(order.taxPrice || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
@@ -498,20 +495,22 @@ backdropFilter: "blur(1px)",
                   <span style={s.summaryTotalValue}>₹{Number(order.totalPrice || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
 
-                <div style={{
-                  marginTop: "16px", padding: "12px 14px", borderRadius: "12px",
-                  background: order.isPaid ? "rgba(46,125,82,0.08)" : "rgba(192,57,43,0.06)",
-                  border: `1px solid ${order.isPaid ? "rgba(46,125,82,0.2)" : "rgba(192,57,43,0.18)"}`,
-                }}>
-                  <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#9a7a85", textTransform: "uppercase", letterSpacing: "0.4px", margin: "0 0 4px" }}>Payment</p>
-                  {order.isPaid ? (
-                    <p style={{ fontSize: "0.88rem", fontWeight: 600, color: "#1a7a42", margin: 0 }}>
-                      ✅ Paid on {new Date(order.paidAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </p>
-                  ) : (
-                    <p style={{ fontSize: "0.88rem", fontWeight: 600, color: "#c0392b", margin: 0 }}>✕ Not yet paid</p>
-                  )}
-                </div>
+                {isAdmin && (
+                  <div style={{
+                    marginTop: "16px", padding: "12px 14px", borderRadius: "12px",
+                    background: order.isPaid ? "rgba(46,125,82,0.08)" : "rgba(192,57,43,0.06)",
+                    border: `1px solid ${order.isPaid ? "rgba(46,125,82,0.2)" : "rgba(192,57,43,0.18)"}`,
+                  }}>
+                    <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#9a7a85", textTransform: "uppercase", letterSpacing: "0.4px", margin: "0 0 4px" }}>Payment</p>
+                    {order.isPaid ? (
+                      <p style={{ fontSize: "0.88rem", fontWeight: 600, color: "#1a7a42", margin: 0 }}>
+                        ✅ Paid on {new Date(order.paidAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    ) : (
+                      <p style={{ fontSize: "0.88rem", fontWeight: 600, color: "#c0392b", margin: 0 }}>✕ Not yet paid</p>
+                    )}
+                  </div>
+                )}
 
                 {(isAdmin || isOwner) && (
                   <button

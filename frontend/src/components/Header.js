@@ -439,7 +439,7 @@ const Header = () => {
                     </>
                   )}
 
-                  {userInfo?.isAdmin && (
+                  {userInfo?.role === 'admin' && (
                     <NavDropdown 
                       title="Admin Menu" 
                       id="admin-nav-dropdown" 

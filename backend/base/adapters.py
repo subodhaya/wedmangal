@@ -11,7 +11,7 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         if user.is_authenticated:
             tokens = get_tokens_for_user(user)
             #redirect_url = f'http://localhost:3000/accounts/google/login/callback?access={tokens["access"]}&refresh={tokens["refresh"]}&id={user.id}&username={user.username}&email={user.email}'
-            redirect_url = f'https://www.bookyourcelebration.com/accounts/google/login/callback?access={tokens["access"]}&refresh={tokens["refresh"]}&id={user.id}&username={user.username}&email={user.email}'
+            redirect_url = f'https://www.wedmangal.com/accounts/google/login/callback?access={tokens["access"]}&refresh={tokens["refresh"]}&id={user.id}&username={user.username}&email={user.email}'
 
             return redirect(redirect_url)
 
@@ -34,8 +34,7 @@ class MySocialAccountAdapter(DefaultSocialAccountAdapter):
         user = request.user
         if user.is_authenticated:
             tokens = get_tokens_for_user(user)
-            #redirect_url = f'http://localhost:3000/accounts/google/login/callback?access={tokens["access"]}&refresh={tokens["refresh"]}&id={user.id}&username={user.username}&email={user.email}'
-            redirect_url = f'https://www.bookyourcelebration.com/accounts/google/login/callback?access={tokens["access"]}&refresh={tokens["refresh"]}&id={user.id}&username={user.username}&email={user.email}'
+            redirect_url = f'https://www.wedmangal.com/accounts/google/login/callback?access={tokens["access"]}&refresh={tokens["refresh"]}&id={user.id}&username={user.username}&email={user.email}'
 
            
 

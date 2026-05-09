@@ -35,7 +35,10 @@ function ManagePage() {
     const [isSubmitDisabled, setIsSubmitDisabled] = useState(false);
 
     const navigate = useNavigate();
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    const userInfo = (() => {
+        try { return JSON.parse(localStorage.getItem('userInfo')); }
+        catch { return null; }
+    })();
 
     /* ── Fetch data ─────────────────────────────────────────── */
     const fetchData = async () => {
@@ -98,32 +101,17 @@ function ManagePage() {
                 formData.set('personal_phone', productData.business_phone || '');
             }
 
-            // ✅ Debug: log what's being sent (remove after fixing)
-            console.log('Submitting FormData:');
-            for (let [k, v] of formData.entries()) {
-                console.log(`  ${k}:`, v);
-            }
-
-            const response = await fetch(`/api/products/update_product/${userInfo.id}/`, {
-                method: 'POST',
-                body: formData,
+            await api.post(`/api/products/update_product/${userInfo.id}/`, formData, {
                 headers: { Authorization: `Bearer ${userInfo.token}` },
             });
-
-            // ✅ Log the error response body so you can see what Django rejected
-            if (!response.ok) {
-                const errData = await response.json();
-                console.error('Update failed with:', errData);
-                throw new Error(JSON.stringify(errData));
-            }
-
-            await response.json();
             setSuccessMessage('Business updated successfully!');
             setErrorMessage('');
             navigate('/services');
         } catch (error) {
-            console.error('Submit error:', error.message);
-            setErrorMessage(`Failed to update: ${error.message}`);
+            const msg = error.response?.data
+                ? JSON.stringify(error.response.data)
+                : error.message;
+            setErrorMessage(`Failed to update: ${msg}`);
             setSuccessMessage('');
         } finally {
             setIsSubmitDisabled(false);

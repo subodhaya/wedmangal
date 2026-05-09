@@ -28,7 +28,7 @@ function PlaceOrderScreen() {
             const items = parseFloat(
                 cartItems.reduce((acc, item) => acc + item.price * item.qty, 0).toFixed(2)
             );
-            const shipping = 100;
+            const shipping = 0;
             const tax = parseFloat((0.082 * items).toFixed(2));
             const total = parseFloat((items + shipping + tax).toFixed(2));
             setItemsPrice(items);
@@ -161,12 +161,7 @@ function PlaceOrderScreen() {
                                     <Col>₹{itemsPrice.toFixed(2)}</Col>
                                 </Row>
                             </ListGroup.Item>
-                            <ListGroup.Item>
-                                <Row>
-                                    <Col>Conveyance:</Col>
-                                    <Col>₹{shippingPrice.toFixed(2)}</Col>
-                                </Row>
-                            </ListGroup.Item>
+
                             <ListGroup.Item>
                                 <Row>
                                     <Col>Tax:</Col>

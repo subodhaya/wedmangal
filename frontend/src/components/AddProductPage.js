@@ -5,7 +5,10 @@ import api from '../utils/api';
 import './AddProductPage.css';
 
 const AddProductPage = () => {
-    const [userInfo, setUserInfo] = useState(JSON.parse(localStorage.getItem('userInfo')));
+    const [userInfo, setUserInfo] = useState(() => {
+        try { return JSON.parse(localStorage.getItem('userInfo')); }
+        catch { return null; }
+    });
     const navigate = useNavigate();
 
     const emptyProduct = {
@@ -108,23 +111,15 @@ const AddProductPage = () => {
                 },
             });
 
-            console.log('✅ Register success:', response.data);
-
             setProductData(emptyProduct);
             setRawPhones({ business_phone: '', personal_phone: '' });
             setServices([{ name: '', description: '', price: '', countInStock: '', images: [] }]);
             setResponseMessage('Business registered successfully! Our team will review and approve your listing shortly.');
             setError('');
-            
-            setTimeout(() => {
-             window.location.href = '/manage-my-page';
-             }, 2000);
+
+            setTimeout(() => navigate('/manage-my-page'), 2000);
 
         } catch (err) {
-            console.error('❌ Register error:', err);
-            console.error('❌ Response data:', err.response?.data);
-            console.error('❌ Status:', err.response?.status);
-
             const backendMsg = err.response?.data?.detail
                 || err.response?.data?.message
                 || err.response?.data?.error

@@ -43,7 +43,7 @@ const PhoneBlock = ({ label, phone, businessName }) => {
   const clean = normalizePhone(phone);
   if (!clean) return null;
   const msg = encodeURIComponent(
-    `Hi, I found you on BookYourCelebration! I'm interested in your ${businessName || ''} services. Can you please share more details?`
+    `Hi, I found you on WedMangal! I'm interested in your ${businessName || ''} services. Can you please share more details?`
   );
   return (
     <div className="ps-phone-row">
@@ -97,9 +97,7 @@ function ProductScreen() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`/api/products/${id}/`);
-        if (!res.ok) throw new Error('Product not found');
-        const data = await res.json();
+        const { data } = await api.get(`/api/products/${id}/`);
         const normalized = {
           ...data,
           services: (data.services || []).map(s => ({ ...s, reviews: s.reviews || [] })),
@@ -139,10 +137,8 @@ function ProductScreen() {
 
   const fetchBookedDates = async (serviceId) => {
     try {
-      const res = await fetch(`/api/products/bookings/${serviceId}/dates`);
-      if (!res.ok) return;
-      const { booked_dates } = await res.json();
-      const formatted = booked_dates.map(d => new Date(d).toISOString().split('T')[0]);
+      const { data } = await api.get(`/api/products/bookings/${serviceId}/dates`);
+      const formatted = (data.booked_dates || []).map(d => new Date(d).toISOString().split('T')[0]);
       setBookedDates(prev => ({ ...prev, [serviceId]: formatted }));
     } catch {}
   };
@@ -166,8 +162,8 @@ function ProductScreen() {
 
   const addToCartHandler = (serviceId) => {
   if (!userInfo) return navigate('/login');
-  if (!selectedDates[serviceId])      return alert('Please select a booking date.');
-  if (!selectedStartTimes[serviceId]) return alert('Please select a start time.');
+  if (!selectedDates[serviceId])      { setErrorMessage('Please select a booking date.'); return; }
+  if (!selectedStartTimes[serviceId]) { setErrorMessage('Please select a start time.'); return; }
 
   const item = buildItem(serviceId);
   const cart = JSON.parse(localStorage.getItem('cartItems')) || [];
@@ -185,8 +181,8 @@ function ProductScreen() {
 
 const handleDirectBooking = async (serviceId) => {
   if (!userInfo) return navigate('/login');
-  if (!selectedDates[serviceId])      return alert('Please select a booking date.');
-  if (!selectedStartTimes[serviceId]) return alert('Please select a start time.');
+  if (!selectedDates[serviceId])      { setErrorMessage('Please select a booking date.'); return; }
+  if (!selectedStartTimes[serviceId]) { setErrorMessage('Please select a start time.'); return; }
 
   const item = buildItem(serviceId);
   try {
@@ -209,7 +205,7 @@ const handleDirectBooking = async (serviceId) => {
     const blocked = bookedDates[serviceId]?.some(
       d => new Date(d).toDateString() === date.toDateString()
     );
-    if (blocked) { alert('This date is not available.'); return; }
+    if (blocked) { setErrorMessage('This date is not available.'); return; }
     setSelectedDates(prev => ({ ...prev, [serviceId]: date }));
   };
 
@@ -230,13 +226,10 @@ const handleDirectBooking = async (serviceId) => {
     }
     setReviewState(prev => ({ ...prev, [serviceId]: { loading: true, success: false, error: '' } }));
     try {
-      const res = await fetch(`/api/products/${serviceId}/reviews/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userInfo.token}` },
-        body: JSON.stringify({ rating, comment: comment?.trim() || '' }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.detail || 'Review submission failed');
+      const { data: json } = await api.post(`/api/products/${serviceId}/reviews/`,
+        { rating, comment: comment?.trim() || '' },
+        { headers: { Authorization: `Bearer ${userInfo.token}` } }
+      );
       setProduct(prev => ({
         ...prev,
         services: prev.services.map(s =>
