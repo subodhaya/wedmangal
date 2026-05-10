@@ -1,7 +1,13 @@
 backend/backend/settings.py
+backend/backend/settingsL.py
+backend/backend/settingsS.py
+backend/backend/settings.Spy
 backend/settings.py
+backend/settingsL.py
+backend/settingsS.py
 backend/static/images/
 backend/venv/
+backend/db.sqlite3
 frontend/node_modules/
 __pycache__/
 *.pyc
