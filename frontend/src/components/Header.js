@@ -281,10 +281,29 @@ const Header = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage]     = useState('');
   const [navExpanded, setNavExpanded]       = useState(false);
+  const headerRef                           = useRef(null);
 
   const isServiceOwner = userInfo?.role === 'service-owner';
 
   const collapseNav = () => setNavExpanded(false);
+
+  useEffect(() => {
+    const handleOutside = (e) => {
+      if (navExpanded && headerRef.current && !headerRef.current.contains(e.target)) {
+        collapseNav();
+      }
+    };
+    const handleScroll = () => { if (navExpanded) collapseNav(); };
+
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('touchstart', handleOutside);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('touchstart', handleOutside);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [navExpanded]);
 
   const redirectToLogin = (targetPath) => {
     if (userInfo) return targetPath;
@@ -325,7 +344,7 @@ const Header = () => {
   }, [successMessage, errorMessage]);
 
   return (
-    <div>
+    <div ref={headerRef}>
       {successMessage && <div className="alert alert-success">{successMessage}</div>}
       {errorMessage   && <div className="alert alert-danger">{errorMessage}</div>}
 
