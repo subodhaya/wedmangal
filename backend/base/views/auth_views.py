@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 def get_or_create_user_from_google(token):
     try:
         # Verify the token using Google's ID token verification endpoint
-        #GOOGLE_CLIENT_ID = "729274233685-h48vkscuohkqt32n8o72ifik06g2cv0d.apps.googleusercontent.com"
-        GOOGLE_CLIENT_ID = "280404144707-bmoon3dudmvgv3vuvihft0uem3elk32b.apps.googleusercontent.com"
+        GOOGLE_CLIENT_ID = "729274233685-h48vkscuohkqt32n8o72ifik06g2cv0d.apps.googleusercontent.com"
+       # GOOGLE_CLIENT_ID = "280404144707-bmoon3dudmvgv3vuvihft0uem3elk32b.apps.googleusercontent.com"
         idinfo = id_token.verify_oauth2_token(token, Request(), GOOGLE_CLIENT_ID)
 
         logger.debug(f"Decoded Google ID token: {idinfo}")
