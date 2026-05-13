@@ -1,7 +1,7 @@
 # base/admin.py
 from django.contrib import admin
 from django.contrib.auth.models import User
-from .models import Profile, Product, Service, Review, Order, OrderItem, Budget,ShippingAddress,ServiceImage,CartItem,Wishlist
+from .models import Profile, Product, Service, Review, Order, OrderItem, Budget, ShippingAddress, ServiceImage, CartItem, Wishlist, BlogPost
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 class ProfileInline(admin.StackedInline):
@@ -38,3 +38,22 @@ admin.site.register(ServiceImage)
 admin.site.register(CartItem)
 admin.site.register(Wishlist)
 admin.site.register(Budget)
+
+
+@admin.register(BlogPost)
+class BlogPostAdmin(admin.ModelAdmin):
+    list_display  = ('title', 'category', 'author', 'published', 'created_at', 'read_time')
+    list_filter   = ('published', 'category')
+    search_fields = ('title', 'excerpt', 'content', 'tags')
+    prepopulated_fields = {'slug': ('title',)}
+    list_editable = ('published',)
+    ordering      = ('-created_at',)
+    fieldsets = (
+        ('Post Info', {
+            'fields': ('title', 'slug', 'author', 'category', 'tags', 'published')
+        }),
+        ('Content', {
+            'fields': ('excerpt', 'cover_image', 'content'),
+            'description': 'Write the full post content in HTML. Use &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;strong&gt; etc.',
+        }),
+    )

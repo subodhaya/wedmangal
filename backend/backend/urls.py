@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from django.http import FileResponse, Http404
 from dj_rest_auth.views import LoginView
+from base.views.sitemap_view import sitemap_xml
 import os
 
 def serve_public_file(filename):
@@ -48,6 +49,8 @@ urlpatterns = [
     path('api/auth/google/', include('allauth.socialaccount.urls')),
     path('robots.txt', serve_public_file('robots.txt')),
     path('llms.txt', serve_public_file('llms.txt')),
+    path('sitemap.xml', sitemap_xml),
+    path('api/blog/', include('base.urls.blog_urls')),
 ]
 
 # Add static and media file serving

@@ -1,5 +1,5 @@
 from django.contrib.sitemaps import Sitemap
-from base.models import Product
+from base.models import Product, BlogPost
 
 
 class VendorSitemap(Sitemap):
@@ -48,3 +48,17 @@ class StaticSitemap(Sitemap):
             'available-today': '/available-today',
             'faq':            '/faq',
         }[item]
+
+
+class BlogSitemap(Sitemap):
+    changefreq = 'monthly'
+    priority = 0.7
+
+    def items(self):
+        return BlogPost.objects.filter(published=True)
+
+    def location(self, obj):
+        return f'/blog/{obj.slug}'
+
+    def lastmod(self, obj):
+        return obj.updated_at

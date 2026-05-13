@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.utils.text import slugify
+from django.utils import timezone
 
 
 class Profile(models.Model):
@@ -215,3 +217,47 @@ class ServiceOwnerClaim(models.Model):
 
     def __str__(self):
         return f"{self.user.email} claimed {self.product.name} [{self.status}]"
+
+class BlogPost(models.Model):
+    CATEGORY_CHOICES = [
+        ('tamil-weddings',    'Tamil Weddings'),
+        ('wedding-rituals',   'Wedding Rituals'),
+        ('wedding-tips',      'Wedding Tips'),
+        ('vendor-tips',       'Vendor Tips'),
+        ('real-weddings',     'Real Weddings'),
+    ]
+
+    title        = models.CharField(max_length=255)
+    slug         = models.SlugField(max_length=255, unique=True, blank=True)
+    excerpt      = models.TextField(max_length=300, help_text='Short summary shown on blog listing (max 300 chars)')
+    content      = models.TextField(help_text='Full HTML content of the post')
+    cover_image  = models.ImageField(upload_to='blog/', blank=True, null=True)
+    author       = models.CharField(max_length=100, default='WedMangal Team')
+    category     = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='tamil-weddings')
+    tags         = models.CharField(max_length=300, blank=True, help_text='Comma-separated tags e.g. Tamil, Brahmin, Rituals')
+    published    = models.BooleanField(default=False, help_text='Only published posts appear on the website')
+    created_at   = models.DateTimeField(default=timezone.now)
+    updated_at   = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(self.title)
+            slug = base
+            n = 1
+            while BlogPost.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f'{base}-{n}'
+                n += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    @property
+    def read_time(self):
+        words = len(self.content.split())
+        minutes = max(1, round(words / 200))
+        return minutes
+
+    def __str__(self):
+        return self.title

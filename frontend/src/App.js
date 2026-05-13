@@ -40,6 +40,8 @@ import MyAppointmentScreen from './screens/MyAppointmentScreen';
 import AvailableTodayScreen from './screens/AvailableTodayScreen';
 import CategoryScreen from './screens/CategoryScreen';
 import FAQScreen from './screens/FAQScreen';
+import BlogListScreen from './screens/BlogListScreen';
+import BlogPostScreen from './screens/BlogPostScreen';
 import { HelmetProvider } from 'react-helmet-async';
 
 // Only show splash when launched as installed PWA
@@ -92,6 +94,8 @@ function App() {
             <Route path="/RefundAndCancellation" element={<RefundAndCancellation />} />
             <Route path="/ContactUs" element={<ContactUs />} />
             <Route path="/faq" element={<FAQScreen />} />
+            <Route path="/blog" element={<BlogListScreen />} />
+            <Route path="/blog/:slug" element={<BlogPostScreen />} />
             <Route path="/my-appointment/" element={<MyAppointmentScreen />} />
             <Route path="*" element={<NotFoundScreen />} />
           </Routes>

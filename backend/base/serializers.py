@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import (
     Product, Order, OrderItem, ShippingAddress, Review,
-    Service, ServiceImage, CartItem, Budget, Wishlist, ServiceOwnerClaim
+    Service, ServiceImage, CartItem, Budget, Wishlist, ServiceOwnerClaim, BlogPost
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.exceptions import ValidationError
@@ -455,3 +455,45 @@ class BudgetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Budget
         fields = ['user', 'total_budget', 'expenses']
+
+
+class BlogPostSerializer(serializers.ModelSerializer):
+    read_time = serializers.ReadOnlyField()
+    cover_image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BlogPost
+        fields = [
+            'id', 'title', 'slug', 'excerpt', 'content',
+            'cover_image_url', 'author', 'category', 'tags',
+            'published', 'created_at', 'updated_at', 'read_time',
+        ]
+
+    def get_cover_image_url(self, obj):
+        if obj.cover_image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.cover_image.url)
+            return obj.cover_image.url
+        return None
+
+
+class BlogPostListSerializer(serializers.ModelSerializer):
+    read_time = serializers.ReadOnlyField()
+    cover_image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BlogPost
+        fields = [
+            'id', 'title', 'slug', 'excerpt',
+            'cover_image_url', 'author', 'category', 'tags',
+            'created_at', 'read_time',
+        ]
+
+    def get_cover_image_url(self, obj):
+        if obj.cover_image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.cover_image.url)
+            return obj.cover_image.url
+        return None
