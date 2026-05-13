@@ -39,6 +39,7 @@ import GoogleLoginCallback from './screens/GoogleLoginCallback';
 import MyAppointmentScreen from './screens/MyAppointmentScreen';
 import AvailableTodayScreen from './screens/AvailableTodayScreen';
 import CategoryScreen from './screens/CategoryScreen';
+import FAQScreen from './screens/FAQScreen';
 import { HelmetProvider } from 'react-helmet-async';
 
 // Only show splash when launched as installed PWA
@@ -90,6 +91,7 @@ function App() {
             <Route path="/TermsAndCondition" element={<TermsAndCondition />} />
             <Route path="/RefundAndCancellation" element={<RefundAndCancellation />} />
             <Route path="/ContactUs" element={<ContactUs />} />
+            <Route path="/faq" element={<FAQScreen />} />
             <Route path="/my-appointment/" element={<MyAppointmentScreen />} />
             <Route path="*" element={<NotFoundScreen />} />
           </Routes>

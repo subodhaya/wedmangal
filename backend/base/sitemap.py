@@ -25,7 +25,7 @@ class StaticSitemap(Sitemap):
             'home', 'photographers', 'makeup', 'mehandi', 'dj',
             'catering', 'decoration', 'halls', 'planners',
             'jewellery', 'invitation', 'pandit', 'travel', 'music',
-            'plan', 'available-today',
+            'plan', 'available-today', 'faq',
         ]
 
     def location(self, item):
@@ -46,4 +46,5 @@ class StaticSitemap(Sitemap):
             'music':          '/category/Entertainment',
             'plan':           '/plan',
             'available-today': '/available-today',
+            'faq':            '/faq',
         }[item]
