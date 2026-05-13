@@ -100,11 +100,44 @@ function CategoryScreen() {
 
       {/* ✅ Helmet inside return, using dynamic values */}
       <Helmet>
-        <title>{title} for Weddings in Tamil Nadu | WedMangal</title>
-        <meta name="description" content={`Book trusted ${title.toLowerCase()} for your wedding in Tamil Nadu. Verified vendors on WedMangal.`} />
-        <meta property="og:title" content={`${title} | WedMangal`} />
-        <meta property="og:image" content="https://www.wedmangal.com/og-cover.jpg" />
+        <title>Book {title} for Weddings in Tamil Nadu | WedMangal</title>
+        <meta name="description" content={`Find and book trusted ${title.toLowerCase()} for your wedding in Tamil Nadu. ${products.length > 0 ? `${products.length}+ verified vendors` : 'Verified vendors'} with real reviews and instant WhatsApp booking on WedMangal.`} />
+        <meta name="keywords" content={`${title.toLowerCase()} Tamil Nadu, book ${title.toLowerCase()} Chennai, wedding ${title.toLowerCase()}, ${title.toLowerCase()} near me, WedMangal`} />
         <link rel="canonical" href={`https://www.wedmangal.com/category/${category}`} />
+        <meta property="og:type"        content="website" />
+        <meta property="og:title"       content={`Book ${title} for Your Wedding | WedMangal`} />
+        <meta property="og:description" content={`Find trusted ${title.toLowerCase()} for weddings in Tamil Nadu. Verified vendors, real reviews, instant booking.`} />
+        <meta property="og:image"       content="https://www.wedmangal.com/og-image-1200x630.jpg" />
+        <meta property="og:url"         content={`https://www.wedmangal.com/category/${category}`} />
+        <script type="application/ld+json">{JSON.stringify([
+          {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.wedmangal.com/' },
+              { '@type': 'ListItem', position: 2, name: title, item: `https://www.wedmangal.com/category/${category}` },
+            ],
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: `${title} for Weddings in Tamil Nadu`,
+            description: `Find and book trusted ${title.toLowerCase()} for your wedding in Tamil Nadu on WedMangal.`,
+            url: `https://www.wedmangal.com/category/${category}`,
+            ...(products.length > 0 && {
+              mainEntity: {
+                '@type': 'ItemList',
+                numberOfItems: products.length,
+                itemListElement: products.slice(0, 10).map((p, i) => ({
+                  '@type': 'ListItem',
+                  position: i + 1,
+                  url: `https://www.wedmangal.com/product/${p._id}/`,
+                  name: p.name,
+                })),
+              },
+            }),
+          },
+        ])}</script>
       </Helmet>
 
       {/* Header */}

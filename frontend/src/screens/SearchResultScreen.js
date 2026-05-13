@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import api from '../utils/api';  
+import api from '../utils/api';
 import { useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Row, Col } from 'react-bootstrap';
 import Product from '../components/Product';
 import Loader from '../components/Loader';
@@ -68,8 +69,19 @@ function SearchResultScreen() {
     setPage(newPage);
   };
 
+  const searchQuery = vendor || city || 'wedding vendors';
+  const searchTitle = vendor && city
+    ? `${vendor} in ${city}`
+    : vendor || (city ? `Wedding Vendors in ${city}` : 'Wedding Vendors');
+
   return (
     <div className="container highlight-section">
+      <Helmet>
+        <title>{searchTitle} | WedMangal — Wedding Vendor Search</title>
+        <meta name="description" content={`Search results for ${searchQuery} on WedMangal. Find and book trusted wedding vendors in Tamil Nadu — photographers, caterers, makeup artists and more.`} />
+        <meta name="robots" content="noindex, follow" />
+        <link rel="canonical" href="https://www.wedmangal.com/search/" />
+      </Helmet>
       <h1>Search Results</h1>
       {loading ? (
         <Loader />
