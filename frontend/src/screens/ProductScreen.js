@@ -116,7 +116,12 @@ function ProductScreen() {
           setReviewedServices(reviewed);
         }
       } catch (err) {
-        setError(err.message);
+        const status = err.response?.status;
+        if (status === 404 || status === 500) {
+          setError('This vendor could not be found. They may have been removed or the link is incorrect.');
+        } else {
+          setError('Failed to load vendor. Please check your connection and try again.');
+        }
       } finally {
         setLoading(false);
       }

@@ -128,12 +128,12 @@ function LoginScreen() {
                             <input
                                 id="ls-email"
                                 className="ls-input"
-                                type="text"
+                                type="email"
                                 placeholder="you@example.com"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 required
-                                autoComplete="username"
+                                autoComplete="email"
                             />
                         </div>
 

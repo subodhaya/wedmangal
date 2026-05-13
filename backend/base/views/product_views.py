@@ -678,11 +678,11 @@ def getTopProducts(request):
 
 @api_view(['GET'])
 def getProduct(request, pk):
-    product = Product.objects.get(_id=pk)
-    print("product view")
-    
+    try:
+        product = Product.objects.get(_id=pk)
+    except (Product.DoesNotExist, ValueError, TypeError):
+        return Response({'detail': 'Vendor not found'}, status=status.HTTP_404_NOT_FOUND)
     serializer = ProductReviewSerializer(product, many=False)
-    print("review data:",serializer.data)
     return Response(serializer.data)
 
 @api_view(['POST'])

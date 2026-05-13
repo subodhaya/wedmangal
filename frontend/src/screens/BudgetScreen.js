@@ -147,7 +147,9 @@ const BudgetScreen = () => {
                 type="number"
                 className="budget-total-input"
                 value={totalBudget}
-                onChange={(e) => setTotalBudget(parseFloat(e.target.value) || 0)}
+                min="0"
+                max="100000000"
+                onChange={(e) => setTotalBudget(Math.max(0, Math.min(100000000, parseFloat(e.target.value) || 0)))}
                 placeholder="Enter your total budget"
               />
             </div>
@@ -171,7 +173,9 @@ const BudgetScreen = () => {
                       type="number"
                       className="expense-input"
                       value={expenses[key]}
-                      onChange={(e) => setExpenses({ ...expenses, [key]: parseFloat(e.target.value) || 0 })}
+                      min="0"
+                      max="100000000"
+                      onChange={(e) => setExpenses({ ...expenses, [key]: Math.max(0, Math.min(100000000, parseFloat(e.target.value) || 0)) })}
                     />
                   </div>
                 </div>
@@ -198,7 +202,9 @@ const BudgetScreen = () => {
                   className="expense-input"
                   placeholder="Amount"
                   value={newExpenseAmount}
-                  onChange={(e) => setNewExpenseAmount(parseFloat(e.target.value) || 0)}
+                  min="0"
+                  max="100000000"
+                  onChange={(e) => setNewExpenseAmount(Math.max(0, Math.min(100000000, parseFloat(e.target.value) || 0)))}
                 />
               </div>
               <button
