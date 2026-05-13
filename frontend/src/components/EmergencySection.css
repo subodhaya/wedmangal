@@ -219,3 +219,17 @@
   opacity: 0.9;
   transform: translateY(-1px);
 }
+.es-empty {
+  text-align: center;
+  padding: 32px 20px;
+  color: #9a5070;
+}
+.es-empty-icon {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 10px;
+}
+.es-empty p {
+  font-size: 14px;
+  margin: 0;
+}

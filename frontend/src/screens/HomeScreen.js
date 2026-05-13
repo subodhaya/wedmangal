@@ -307,35 +307,64 @@ function HomeScreen() {
 
   // ── SEO: JSON-LD Structured Data ─────────────────────────
   const getStructuredData = () => {
-    const cleanKeyword = keyword ? keyword.replace('_', ' ') : 'wedding vendors';
-    
-    return {
+    const cleanKeyword = keyword ? keyword.replace(/_/g, ' ') : '';
+
+    const organization = {
       '@context': 'https://schema.org',
-      '@type': keyword ? 'LocalBusiness' : 'WebSite',
-      name: keyword ? `${cleanKeyword} - ${SITE_NAME}` : SITE_NAME,
-      url: getCanonicalUrl(),
-      description: getPageDescription(),
-      ...(keyword && {
-        '@type': 'LocalBusiness',
-        areaServed: 'India',
-        makesOffer: {
-          '@type': 'Offer',
-          itemOffered: {
-            '@type': 'Service',
-            name: `${cleanKeyword} Services`,
-            description: `Professional ${cleanKeyword} services for weddings`
-          }
-        }
-      }),
-      publisher: {
-        '@type': 'Organization',
-        name: SITE_NAME,
-        logo: {
-          '@type': 'ImageObject',
-          url: `${SITE_URL}/logo.png`
-        }
-      }
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.png` },
+      sameAs: [`https://www.wedmangal.com`],
+      contactPoint: {
+        '@type': 'ContactPoint',
+        contactType: 'customer support',
+        areaServed: 'IN',
+        availableLanguage: ['English', 'Tamil'],
+      },
     };
+
+    if (keyword) {
+      return {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: `${cleanKeyword} for Weddings in Tamil Nadu`,
+        description: getPageDescription(),
+        url: getCanonicalUrl(),
+        itemListElement: products.slice(0, 10).map((p, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: p.name,
+          url: `${SITE_URL}/product/${p._id}`,
+        })),
+      };
+    }
+
+    return [
+      organization,
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: SITE_NAME,
+        url: SITE_URL,
+        description: 'Find and book trusted wedding vendors in Tamil Nadu — photographers, makeup artists, caterers, decorators and more.',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/?keyword={search_term_string}` },
+          'query-input': 'required name=search_term_string',
+        },
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          { '@type': 'Question', name: 'How do I book a wedding vendor on WedMangal?', acceptedAnswer: { '@type': 'Answer', text: 'Browse vendors by category, view their profile, select a service and date, then confirm your booking directly on WedMangal.' } },
+          { '@type': 'Question', name: 'Is WedMangal free to use for customers?', acceptedAnswer: { '@type': 'Answer', text: 'Yes, browsing and booking wedding vendors on WedMangal is completely free for customers.' } },
+          { '@type': 'Question', name: 'What wedding vendors are available on WedMangal?', acceptedAnswer: { '@type': 'Answer', text: 'WedMangal lists photographers, makeup artists, caterers, decorators, mehandi artists, DJ artists, wedding halls, event planners, jewellery, pandits, and more across Tamil Nadu.' } },
+          { '@type': 'Question', name: 'How do I register as a vendor on WedMangal?', acceptedAnswer: { '@type': 'Answer', text: 'Click "Register as Vendor" on the login page or visit wedmangal.com/owner-register to create your vendor profile.' } },
+        ],
+      },
+    ];
   };
 
   // ── Fetch products with filters ─────────────────────────

@@ -15,11 +15,21 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include, re_path  # Import `re_path`
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
+from django.http import FileResponse, Http404
 from dj_rest_auth.views import LoginView
+import os
+
+def serve_public_file(filename):
+    def view(request):
+        filepath = os.path.join(settings.BASE_DIR, 'frontend', 'build', filename)
+        if os.path.exists(filepath):
+            return FileResponse(open(filepath, 'rb'))
+        raise Http404
+    return view
 
 
 
@@ -28,16 +38,16 @@ from dj_rest_auth.views import LoginView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    #path('', TemplateView.as_view(template_name='index.html')),
     path('api/products/', include('base.urls.product_urls')),
     path('api/users/', include('base.urls.user_urls')),
     path('api/orders/', include('base.urls.order_urls')),
     path('api/token/', include('base.urls.token_urls')),
     path('api/auth/', include('base.urls.auth_urls')),
     path('api/auth/', include('dj_rest_auth.urls')),
-    path('accounts/', include('allauth.urls')),     
+    path('accounts/', include('allauth.urls')),
     path('api/auth/google/', include('allauth.socialaccount.urls')),
-
+    path('robots.txt', serve_public_file('robots.txt')),
+    path('llms.txt', serve_public_file('llms.txt')),
 ]
 
 # Add static and media file serving

@@ -4,9 +4,19 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './SmartSearch.css';
 
 const SUGGESTIONS = [
-  'Photographers', 'Makeup Artist', 'Mehandi Artist', 'DJ Artist',
-  'Wedding Halls', 'Caterers', 'Decorators', 'Event Planners',
-  'Jewellery', 'Invitation', 'Pandit', 'Travel & Transport', 'Music',
+  { name: 'Photographers',    label: 'Photographers' },
+  { name: 'Makeup_Artist',    label: 'Makeup Artist' },
+  { name: 'Mehandi_Artist',   label: 'Mehandi Artist' },
+  { name: 'DJ_Artist',        label: 'DJ Artist' },
+  { name: 'Halls',            label: 'Wedding Halls' },
+  { name: 'Caterers',         label: 'Caterers' },
+  { name: 'Decorators',       label: 'Decorators' },
+  { name: 'Planners',         label: 'Event Planners' },
+  { name: 'Jewellery',        label: 'Jewellery' },
+  { name: 'Invitation',       label: 'Invitation' },
+  { name: 'Pandit',           label: 'Pandit' },
+  { name: 'Travel_Transport', label: 'Travel & Transport' },
+  { name: 'Entertainment',    label: 'Music' },
 ];
 
 function SmartSearch({ variant = 'compact' }) {
@@ -38,7 +48,7 @@ function SmartSearch({ variant = 'compact' }) {
   }, []);
 
   const filteredSuggestions = keyword.length > 0
-    ? SUGGESTIONS.filter(s => s.toLowerCase().includes(keyword.toLowerCase()))
+    ? SUGGESTIONS.filter(s => s.label.toLowerCase().includes(keyword.toLowerCase()))
     : SUGGESTIONS;
 
   const doSearch = (kw = keyword) => {
@@ -101,16 +111,16 @@ function SmartSearch({ variant = 'compact' }) {
           ) : (
             filteredSuggestions.map(s => (
               <button
-                key={s}
+                key={s.name}
                 type="button"
                 className="smart-search__suggestion"
-                onMouseDown={() => { setKeyword(s); doSearch(s); }}
+                onMouseDown={() => { setKeyword(s.label); doSearch(s.name); }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.4">
                   <circle cx="11" cy="11" r="8"/>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
-                {s}
+                {s.label}
               </button>
             ))
           )}

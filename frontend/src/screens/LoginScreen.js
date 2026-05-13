@@ -192,9 +192,9 @@ function LoginScreen() {
                             </Link>
                         </p>
                         <p className="ls-link-row">
-                            Are you a service provider?{' '}
+                            Are you a vendor?{' '}
                             <Link to={redirect !== '/' ? `/owner-register?redirect=${redirect}` : '/owner-register'}>
-                                Register here
+                                Register as Vendor
                             </Link>
                         </p>
                     </div>

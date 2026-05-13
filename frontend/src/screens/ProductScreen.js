@@ -257,11 +257,50 @@ const handleDirectBooking = async (serviceId) => {
    <div className="ps-page">
       {product && (
         <Helmet>
-          <title>{product.name} | WedMangal</title>
-          <meta name="description" content={product.description?.slice(0, 155)} />
-          <meta property="og:title" content={product.name} />
-          <meta property="og:image" content={product.image} />
+          <title>{product.name} | {product.category?.replace(/_/g, ' ')} in {product.city} | WedMangal</title>
+          <meta name="description" content={product.description?.slice(0, 155) || `Book ${product.name}, a trusted ${product.category?.replace(/_/g, ' ')} in ${product.city}. View services, pricing and reviews on WedMangal.`} />
           <link rel="canonical" href={`https://www.wedmangal.com/product/${product._id}`} />
+
+          <meta property="og:type" content="business.business" />
+          <meta property="og:title" content={`${product.name} | WedMangal`} />
+          <meta property="og:description" content={product.description?.slice(0, 155)} />
+          <meta property="og:image" content={`https://www.wedmangal.com/static/images/${product.image}`} />
+          <meta property="og:url" content={`https://www.wedmangal.com/product/${product._id}`} />
+          <meta property="og:site_name" content="WedMangal" />
+
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={`${product.name} | WedMangal`} />
+          <meta name="twitter:description" content={product.description?.slice(0, 155)} />
+          <meta name="twitter:image" content={`https://www.wedmangal.com/static/images/${product.image}`} />
+
+          <script type="application/ld+json">{JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'LocalBusiness',
+            name: product.name,
+            description: product.description,
+            url: `https://www.wedmangal.com/product/${product._id}`,
+            image: `https://www.wedmangal.com/static/images/${product.image}`,
+            telephone: product.business_phone || product.personal_phone,
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: product.address || product.area_name || '',
+              addressLocality: product.city || 'Chennai',
+              addressRegion: 'Tamil Nadu',
+              addressCountry: 'IN',
+            },
+            areaServed: product.city || 'Chennai',
+            priceRange: product.min_price ? `₹${product.min_price}${product.max_price ? ` – ₹${product.max_price}` : '+'}` : undefined,
+            ...(product.services?.some(s => s.numReviews > 0) && {
+              aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: product.services.reduce((sum, s) => sum + (s.average_rating || 0), 0) / product.services.filter(s => s.numReviews > 0).length || undefined,
+                reviewCount: product.services.reduce((sum, s) => sum + (s.numReviews || 0), 0),
+                bestRating: 5,
+                worstRating: 1,
+              }
+            }),
+            sameAs: [`https://www.wedmangal.com/product/${product._id}`],
+          })}</script>
         </Helmet>
       )}
 

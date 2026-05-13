@@ -26,7 +26,7 @@ export function VendorCard({ v, onClick }) {
   const [imgError, setImgError] = useState(false);
   const imgSrc = imgError || !v.image || v.image.includes('placeholder')
     ? null
-    : `/images/${v.image}`;
+    : `/static/images/${v.image}`;
 
   return (
     <div className="es-card" onClick={onClick}>
@@ -85,9 +85,6 @@ export default function EmergencySection() {
     fetch();
   }, []);
 
-  // Don't render section at all if nobody is available
-  if (!loading && vendors.length === 0) return null;
-
   const preview = vendors.slice(0, 5);
 
   return (
@@ -101,12 +98,19 @@ export default function EmergencySection() {
             <p className="es-subtitle">Book instantly — these vendors are free right now</p>
           </div>
         </div>
-        <span className="es-count">{vendors.length} vendor{vendors.length !== 1 ? 's' : ''}</span>
+        {!loading && vendors.length > 0 && (
+          <span className="es-count">{vendors.length} vendor{vendors.length !== 1 ? 's' : ''}</span>
+        )}
       </div>
 
       {/* Cards — max 5 */}
       {loading ? (
         <div className="es-loading">Finding available vendors...</div>
+      ) : vendors.length === 0 ? (
+        <div className="es-empty">
+          <span className="es-empty-icon">🕐</span>
+          <p>No vendors available right now — check back soon!</p>
+        </div>
       ) : (
         <>
           <div className="es-grid">

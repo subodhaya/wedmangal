@@ -1,11 +1,13 @@
 // src/screens/BudgetScreen.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Pie } from 'react-chartjs-2';
 import { Row, Col, Form, Button } from 'react-bootstrap';
 import api from '../utils/api';
 import './BudgetScreen.css';
 
 const BudgetScreen = () => {
+  const navigate = useNavigate();
   const [totalBudget, setTotalBudget] = useState(0);
   const [expenses, setExpenses] = useState({
     venue: 0,
@@ -28,7 +30,7 @@ const BudgetScreen = () => {
     let userInfo = null;
     try { userInfo = JSON.parse(localStorage.getItem('userInfo')); } catch {}
     const pk = userInfo?.id;
-    if (!pk) { setErrorMessage('User not found.'); return; }
+    if (!pk) { navigate('/login?redirect=/budget/'); return; }
     const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
     setLoading(true);
     api.get(`/api/orders/get-budget/${pk}/`, config)
@@ -47,7 +49,7 @@ const BudgetScreen = () => {
     let userInfo = null;
     try { userInfo = JSON.parse(localStorage.getItem('userInfo')); } catch {}
     const pk = userInfo?.id;
-    if (!pk) { setErrorMessage('User not found.'); return; }
+    if (!pk) { navigate('/login?redirect=/budget/'); return; }
     const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
     api.post(`/api/orders/update-budget/${pk}/`, { total_budget: totalBudget, expenses }, config)
       .then(() => { setSuccessMessage('Budget saved successfully!'); setErrorMessage(''); })
