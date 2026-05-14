@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python manage.py makemigrations base --name blog_post)",
+      "Bash(python manage.py migrate)",
+      "Bash(python manage.py shell -c \"from base.models import Product; p = Product.objects.filter\\(is_available_today=True\\).first\\(\\); print\\(repr\\(p.image\\)\\) if p else print\\('none'\\)\")",
+      "Bash(python3 manage.py shell -c \"from base.models import Product; p = Product.objects.filter\\(is_available_today=True\\).first\\(\\); print\\(repr\\(p.image\\)\\) if p else print\\('none'\\)\")",
+      "Bash(python manage.py shell -c ' *)"
+    ]
+  }
+}
