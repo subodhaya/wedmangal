@@ -1,7 +1,7 @@
 // src/components/Product.jsx
 import React, { useState, useEffect } from 'react';
 import { Card, ListGroup } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Rating from './Rating';
 import './Product.css';
 
@@ -9,6 +9,7 @@ function Product({ product }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imgError, setImgError] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
@@ -23,7 +24,7 @@ function Product({ product }) {
 
   const handleWishlistToggle = () => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    if (!userInfo) { navigate('/login'); return; }
+    if (!userInfo) { navigate('/login?redirect=' + location.pathname); return; }
     let wishlists = JSON.parse(localStorage.getItem('wishlists')) || {};
     let userWishlist = wishlists[userInfo._id] || [];
     if (isWishlisted) {

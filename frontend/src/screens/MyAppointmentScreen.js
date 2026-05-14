@@ -405,7 +405,7 @@ function MyAppointmentsScreen() {
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!userInfo) { navigate('/login'); return; }
+      if (!userInfo) { navigate('/login?redirect=/my-appointment/'); return; }
       try {
         const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
         const { data } = await api.get('/api/orders/myorders/', config);

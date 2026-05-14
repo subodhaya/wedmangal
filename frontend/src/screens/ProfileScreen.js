@@ -89,7 +89,7 @@ function ProfileScreen() {
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    if (!userInfo || !userInfo.token) { navigate('/login'); return; }
+    if (!userInfo || !userInfo.token) { navigate('/login?redirect=/profile'); return; }
 
     const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
 

@@ -53,7 +53,7 @@ function LoginScreen() {
         try {
             const { data } = await api.post('/api/auth/google-login/', { token: response.credential });
             setUserInfo(data);
-            navigate('/');
+            navigate(redirect);
         } catch {
             setError('Google login failed');
         } finally {
@@ -67,7 +67,7 @@ function LoginScreen() {
         try {
             const { data } = await api.post('/api/users/login/', { username, password });
             setUserInfo(data);
-            navigate('/');
+            navigate(redirect);
         } catch (err) {
             setError(err.response?.data?.detail || err.message);
         }
@@ -79,7 +79,7 @@ function LoginScreen() {
         try {
             const { data } = await api.post('/api/auth/google-login/', { token: credentialResponse.credential });
             setUserInfo(data);
-            navigate('/');
+            navigate(redirect);
         } catch {
             setError('Error during Google login');
         }
