@@ -1,6 +1,6 @@
 // src/screens/WishlistScreen.jsx
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Message from '../components/Message';
 import api from '../utils/api';
 import './WishlistScreen.css';
@@ -9,6 +9,7 @@ function WishlistScreen() {
   const [wishlistItems, setWishlistItems] = useState([]);
   const [removing, setRemoving] = useState(null); // id of item being removed
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
@@ -17,9 +18,9 @@ function WishlistScreen() {
       const userWishlist = wishlists[userInfo._id] || [];
       setWishlistItems(userWishlist);
     } else {
-      navigate('/login');
+      navigate('/login?redirect=' + location.pathname);
     }
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const removeFromWishlistHandler = (id) => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));

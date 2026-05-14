@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Row, Col, Image, ListGroup, Button, Card, Form, Carousel } from 'react-bootstrap';
 import Rating from '../components/Rating';
 import Loader from '../components/Loader';
@@ -16,6 +16,7 @@ function ServiceScreen() {
   const [error, setError] = useState('');
   const [bookedDates, setBookedDates] = useState([]);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -65,7 +66,7 @@ function ServiceScreen() {
   const addToCartHandler = (serviceId) => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     if (!userInfo) {
-      navigate('/login');
+      navigate('/login?redirect=' + location.pathname);
       return;
     }
 

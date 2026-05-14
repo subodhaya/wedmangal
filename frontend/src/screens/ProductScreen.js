@@ -166,7 +166,7 @@ function ProductScreen() {
   };
 
   const addToCartHandler = (serviceId) => {
-  if (!userInfo) return navigate('/login');
+  if (!userInfo) return navigate('/login?redirect=' + location.pathname);
   if (!selectedDates[serviceId])      { setErrorMessage('Please select a booking date.'); return; }
   if (!selectedStartTimes[serviceId]) { setErrorMessage('Please select a start time.'); return; }
 
@@ -185,7 +185,7 @@ function ProductScreen() {
 };
 
 const handleDirectBooking = async (serviceId) => {
-  if (!userInfo) return navigate('/login');
+  if (!userInfo) return navigate('/login?redirect=' + location.pathname);
   if (!selectedDates[serviceId])      { setErrorMessage('Please select a booking date.'); return; }
   if (!selectedStartTimes[serviceId]) { setErrorMessage('Please select a start time.'); return; }
 
@@ -223,7 +223,7 @@ const handleDirectBooking = async (serviceId) => {
 
   const submitReviewHandler = async (e, serviceId) => {
     e.preventDefault();
-    if (!userInfo) return navigate('/login');
+    if (!userInfo) return navigate('/login?redirect=' + location.pathname);
     const { rating, comment } = reviewData[serviceId] || {};
     if (!rating) {
       setReviewState(prev => ({ ...prev, [serviceId]: { loading: false, success: false, error: 'Rating is required' } }));
