@@ -7,55 +7,43 @@ import './WishlistScreen.css';
 
 function WishlistScreen() {
   const [wishlistItems, setWishlistItems] = useState([]);
-  const [removing, setRemoving] = useState(null); // id of item being removed
+  const [loading, setLoading] = useState(true);
+  const [removing, setRemoving] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    if (userInfo) {
-      const wishlists = JSON.parse(localStorage.getItem('wishlists')) || {};
-      const userWishlist = wishlists[userInfo._id] || [];
-      setWishlistItems(userWishlist);
-    } else {
-      navigate('/login?redirect=' + location.pathname);
-    }
+    if (!userInfo) { navigate('/login?redirect=' + location.pathname); return; }
+
+    api.get('/api/products/wishlist/')
+      .then(res => {
+        const items = res.data.products ?? res.data ?? [];
+        setWishlistItems(items);
+        // Sync local cache so Product cards reflect current state
+        localStorage.setItem('wishlistIds', JSON.stringify(items.map(i => i._id)));
+      })
+      .catch(err => console.error('Error loading wishlist:', err))
+      .finally(() => setLoading(false));
   }, [navigate, location.pathname]);
 
-  const removeFromWishlistHandler = (id) => {
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+  const removeFromWishlistHandler = async (id) => {
     setRemoving(id);
-    setTimeout(() => {
-      const updatedWishlist = wishlistItems.filter((item) => item._id !== id);
-      setWishlistItems(updatedWishlist);
-      const allWishlists = JSON.parse(localStorage.getItem('wishlists')) || {};
-      allWishlists[userInfo._id] = updatedWishlist;
-      localStorage.setItem('wishlists', JSON.stringify(allWishlists));
-      syncWishlist(updatedWishlist, userInfo.token);
-      setRemoving(null);
-    }, 300);
-  };
-
-  const syncWishlist = async (updatedWishlist, token) => {
     try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      await api.post(
-        '/api/products/wishlist/',
-        { items: { [userInfo._id]: updatedWishlist } },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } catch (error) {
-      console.error('Error syncing wishlist:', error);
+      await api.delete(`/api/products/wishlist/${id}/`);
+      setTimeout(() => {
+        setWishlistItems(prev => {
+          const updated = prev.filter(item => item._id !== id);
+          localStorage.setItem('wishlistIds', JSON.stringify(updated.map(i => i._id)));
+          return updated;
+        });
+        setRemoving(null);
+      }, 300);
+    } catch (err) {
+      console.error('Error removing from wishlist:', err);
+      setRemoving(null);
     }
   };
-
-  useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    const wishlists = JSON.parse(localStorage.getItem('wishlists')) || {};
-    if (userInfo && wishlists[userInfo._id]?.length > 0) {
-      syncWishlist(wishlists[userInfo._id], userInfo.token);
-    }
-  }, [wishlistItems]);
 
   // Price display helper
   const displayPrice = (price) => {
@@ -77,7 +65,12 @@ function WishlistScreen() {
         </p>
       </div>
 
-      {wishlistItems.length === 0 ? (
+      {loading ? (
+        <div className="wl-empty">
+          <div className="wl-empty-icon" style={{ opacity: 1 }}>⏳</div>
+          <p className="wl-empty-sub">Loading your wishlist…</p>
+        </div>
+      ) : wishlistItems.length === 0 ? (
         <div className="wl-empty">
           <div className="wl-empty-icon">🤍</div>
           <h3 className="wl-empty-title">Nothing saved yet</h3>
@@ -95,12 +88,11 @@ function WishlistScreen() {
               <Link to={`/product/${item._id}`} className="wl-img-link">
                 <div className="wl-img-box">
                   <img
-                    src={`/images/${item.image}`}
+                    src={item.image?.startsWith('http') ? item.image : `/static/images/${item.image}`}
                     alt={item.name}
                     className="wl-img"
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = '/images/placeholder.png';
                       e.target.style.objectFit = 'contain';
                       e.target.style.padding = '1rem';
                       e.target.style.background = '#f7f0f4';

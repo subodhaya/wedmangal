@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, ListGroup } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Rating from './Rating';
+import api from '../utils/api';
 import './Product.css';
 
 function Product({ product }) {
@@ -11,30 +12,43 @@ function Product({ product }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Check wishlist state from localStorage cache on mount (fast, no API call per card)
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    if (userInfo) {
-      const wishlists = JSON.parse(localStorage.getItem('wishlists')) || {};
-      const userWishlist = wishlists[userInfo._id] || [];
-      if (userWishlist.some(item => item._id === product._id)) {
-        setIsWishlisted(true);
-      }
-    }
+    if (!userInfo) return;
+    const cache = JSON.parse(localStorage.getItem('wishlistIds')) || [];
+    setIsWishlisted(cache.includes(product._id));
   }, [product._id]);
 
-  const handleWishlistToggle = () => {
+  const handleWishlistToggle = async () => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     if (!userInfo) { navigate('/login?redirect=' + location.pathname); return; }
-    let wishlists = JSON.parse(localStorage.getItem('wishlists')) || {};
-    let userWishlist = wishlists[userInfo._id] || [];
-    if (isWishlisted) {
-      userWishlist = userWishlist.filter(item => item._id !== product._id);
-    } else {
-      userWishlist.push(product);
+
+    const next = !isWishlisted;
+    setIsWishlisted(next);
+
+    // Update local cache optimistically
+    const cache = JSON.parse(localStorage.getItem('wishlistIds')) || [];
+    const updated = next
+      ? [...new Set([...cache, product._id])]
+      : cache.filter(id => id !== product._id);
+    localStorage.setItem('wishlistIds', JSON.stringify(updated));
+
+    try {
+      if (next) {
+        await api.post('/api/products/wishlist/', { product_id: product._id });
+      } else {
+        await api.delete(`/api/products/wishlist/${product._id}/`);
+      }
+    } catch (err) {
+      // Revert on failure
+      setIsWishlisted(!next);
+      const reverted = next
+        ? cache.filter(id => id !== product._id)
+        : [...new Set([...cache, product._id])];
+      localStorage.setItem('wishlistIds', JSON.stringify(reverted));
+      console.error('Wishlist error:', err);
     }
-    wishlists[userInfo._id] = userWishlist;
-    localStorage.setItem('wishlists', JSON.stringify(wishlists));
-    setIsWishlisted(!isWishlisted);
   };
 
   const truncateText = (text, length) => {
