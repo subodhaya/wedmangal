@@ -9,7 +9,9 @@
       "Bash(cp /home/subo/Desktop/cs50/cs50/lecturetry/Ecart/bestdayevents/frontend/public/llms.txt /home/subo/Desktop/cs50/cs50/lecturetry/Ecart/bestdayevents/frontend/build/llms.txt)",
       "Bash(git -C /home/subo/Desktop/cs50/cs50/lecturetry/Ecart/bestdayevents status)",
       "Bash(git -C /home/subo/Desktop/cs50/cs50/lecturetry/Ecart/bestdayevents log --oneline -5)",
-      "WebFetch(domain:www.wedmangal.com)"
+      "WebFetch(domain:www.wedmangal.com)",
+      "Bash(git -C /home/subo/Desktop/cs50/cs50/lecturetry/Ecart/bestdayevents diff backend/base/views/product_views.py backend/base/urls/product_urls.py)",
+      "Bash(git -C /home/subo/Desktop/cs50/cs50/lecturetry/Ecart/bestdayevents log --oneline -8)"
     ],
     "additionalDirectories": [
       "/home/subo/Desktop/cs50/cs50/lecturetry/Ecart/bestdayevents/frontend/public"

@@ -137,6 +137,7 @@ class ProductDetailView(generics.RetrieveAPIView):
 
 
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_product(request, user_id):

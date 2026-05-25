@@ -108,10 +108,13 @@ function ManagePage() {
             setErrorMessage('');
             navigate('/services');
         } catch (error) {
-            const msg = error.response?.data
-                ? JSON.stringify(error.response.data)
-                : error.message;
-            setErrorMessage(`Failed to update: ${msg}`);
+            const data = error.response?.data;
+            const msg = data?.detail
+                || data?.message
+                || (typeof data === 'object' ? Object.values(data).flat().join(', ') : null)
+                || error.message
+                || 'Something went wrong. Please try again.';
+            setErrorMessage(msg);
             setSuccessMessage('');
         } finally {
             setIsSubmitDisabled(false);
@@ -120,11 +123,11 @@ function ManagePage() {
 
     /* ── Auto-clear messages ────────────────────────────────── */
     useEffect(() => {
-        if (successMessage || errorMessage) {
-            const t = setTimeout(() => { setSuccessMessage(''); setErrorMessage(''); }, 4000);
+        if (successMessage) {
+            const t = setTimeout(() => setSuccessMessage(''), 4000);
             return () => clearTimeout(t);
         }
-    }, [successMessage, errorMessage]);
+    }, [successMessage]);
 
     /* ── Approval badge ─────────────────────────────────────── */
     const ApprovalBadge = () => (
