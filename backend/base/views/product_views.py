@@ -232,9 +232,39 @@ def get_my_product(request):
         return Response({"detail": str(e)}, status=500)
 
 
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def wishlist_view(request):
+    if request.method == 'GET':
+        items = Wishlist.objects.filter(user=request.user).select_related('product')
+        products = [item.product for item in items]
+        serializer = ProductSerializer(products, many=True)
+        return Response({'products': serializer.data})
+
+    # POST — single item add: { product_id: X }
+    product_id = request.data.get('product_id')
+    if not product_id:
+        return Response({'error': 'product_id required'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        product = Product.objects.get(_id=int(product_id))
+    except Product.DoesNotExist:
+        return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+    _, created = Wishlist.objects.get_or_create(user=request.user, product=product)
+    return Response({'success': 'Added to wishlist'}, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def wishlist_remove(request, pk):
+    deleted, _ = Wishlist.objects.filter(user=request.user, product___id=pk).delete()
+    if deleted:
+        return Response({'success': 'Removed from wishlist'})
+    return Response({'error': 'Item not found in wishlist'}, status=status.HTTP_404_NOT_FOUND)
+
+
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])        
+@permission_classes([IsAuthenticated])
 def wishlist_sync(request):
     items = request.data.get('items', {})
     
