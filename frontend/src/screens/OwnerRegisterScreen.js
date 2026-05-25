@@ -24,7 +24,6 @@ function OwnerRegisterScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -51,7 +50,6 @@ function OwnerRegisterScreen() {
 
     setLoading(true);
     setMessage('');
-    setError('');
 
     try {
       const { data } = await api.post('/api/users/owner-register/', {
@@ -70,9 +68,8 @@ function OwnerRegisterScreen() {
       }, 2000);
 
     } catch (error) {
-      setMessage('Username already exists. Try with a different name');
-      setError(
-        error.response?.data?.detail || error.message
+      setMessage(
+        error.response?.data?.detail || error.message || 'Registration failed. Please try again.'
       );
       setLoading(false);
     }
@@ -84,7 +81,6 @@ function OwnerRegisterScreen() {
         <h2 className="login-header">Service Provider Sign Up</h2>
 
         {message && <Message variant="danger">{message}</Message>}
-        {error && <Message variant="danger">{error}</Message>}
         {loading && <Loader />}
         {success && (
           <Message variant="success">

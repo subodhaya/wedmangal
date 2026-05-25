@@ -6,7 +6,10 @@
       "Bash(python manage.py shell -c \"from base.models import Product; p = Product.objects.filter\\(is_available_today=True\\).first\\(\\); print\\(repr\\(p.image\\)\\) if p else print\\('none'\\)\")",
       "Bash(python3 manage.py shell -c \"from base.models import Product; p = Product.objects.filter\\(is_available_today=True\\).first\\(\\); print\\(repr\\(p.image\\)\\) if p else print\\('none'\\)\")",
       "Bash(python manage.py shell -c ' *)",
-      "Bash(cp /home/subo/Desktop/cs50/cs50/lecturetry/Ecart/bestdayevents/frontend/public/llms.txt /home/subo/Desktop/cs50/cs50/lecturetry/Ecart/bestdayevents/frontend/build/llms.txt)"
+      "Bash(cp /home/subo/Desktop/cs50/cs50/lecturetry/Ecart/bestdayevents/frontend/public/llms.txt /home/subo/Desktop/cs50/cs50/lecturetry/Ecart/bestdayevents/frontend/build/llms.txt)",
+      "Bash(git -C /home/subo/Desktop/cs50/cs50/lecturetry/Ecart/bestdayevents status)",
+      "Bash(git -C /home/subo/Desktop/cs50/cs50/lecturetry/Ecart/bestdayevents log --oneline -5)",
+      "WebFetch(domain:www.wedmangal.com)"
     ],
     "additionalDirectories": [
       "/home/subo/Desktop/cs50/cs50/lecturetry/Ecart/bestdayevents/frontend/public"
