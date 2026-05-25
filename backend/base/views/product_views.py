@@ -439,7 +439,8 @@ def add_service_images(request, service_id):
     except Service.DoesNotExist:
         return Response({"error": "Service not found"}, status=status.HTTP_404_NOT_FOUND)
 
-################################################################################################################################################   
+################################################################################################################################################
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def register_product(request):
