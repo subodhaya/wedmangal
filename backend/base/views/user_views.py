@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.core.cache import cache          # uses Django's cache (Redis in prod / LocMemCache in dev)
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -135,6 +136,7 @@ def wedding_date(request, user_id=None):
         return Response({'weddingDate': profile.wedding_date})
 
 
+@csrf_exempt
 @api_view(['POST'])
 def registerUser(request):
     data = request.data
@@ -154,6 +156,7 @@ def registerUser(request):
         return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def registerOwner(request):
