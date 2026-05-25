@@ -113,3 +113,4 @@ Allow: /
 # ──────────────────────────────────────────────
 Sitemap: https://www.wedmangal.com/sitemap.xml
 LLMs: https://www.wedmangal.com/llms.txt
+LLMs: https://www.wedmangal.com/llms.txt
