@@ -116,7 +116,7 @@ function Product({ product }) {
     )}
 
     {/* ADD: Social Links */}
-    {(product.instagram_url || product.facebook_url) && (
+    {(product.instagram_url || product.website_url) && (
         <ListGroup.Item className="product-meta-item">
             <span className="meta-icon">🔗</span>
             <span className="meta-text" style={{ display: 'flex', gap: '12px' }}>
@@ -126,10 +126,10 @@ function Product({ product }) {
                         Instagram
                     </a>
                 )}
-                {product.facebook_url && (
-                    <a href={product.facebook_url} target="_blank" rel="noopener noreferrer"
-                        style={{ color: '#1877F2', fontWeight: 600, textDecoration: 'none' }}>
-                        Facebook
+                {product.website_url && (
+                    <a href={product.website_url} target="_blank" rel="noopener noreferrer"
+                        style={{ color: '#5e143f', fontWeight: 600, textDecoration: 'none' }}>
+                        Website
                     </a>
                 )}
             </span>
