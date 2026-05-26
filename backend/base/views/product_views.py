@@ -165,7 +165,7 @@ def update_product(request, user_id):
             'website_url':  request.data.get('website_url'),
             'min_price':     request.data.get('min_price') or None,
             'max_price':     request.data.get('max_price') or None,
-            'is_approved': request.data.get('isApproved', str(product.is_approved)) == 'true'
+            'is_approved': product.is_approved  # never changed by vendor — admin-only
         }
 
         # Check if there's a new image to upload
@@ -1411,14 +1411,40 @@ def get_available_today(request):
             'attributes':       p.attributes or {},
         })
 
+    return Response(data)
+
 
 # ── Video upload ───────────────────────────────────────────────────────────────
 
 import tempfile
 from django.utils import timezone as tz
-from utils.video_processor import process_video
+from utils.video_processor import process_video, VIDEO_DIR, THUMB_DIR
+from base.models import ProductVideo
 
-MAX_RAW_BYTES = 100 * 1024 * 1024   # 100 MB raw upload limit
+MAX_RAW_BYTES  = 100 * 1024 * 1024   # 100 MB raw upload limit
+MAX_VIDEOS     = 4
+
+
+def _delete_video_files(video_url, video_thumb):
+    """Delete a single processed video + thumbnail from disk."""
+    for url, base_dir in [(video_url, VIDEO_DIR), (video_thumb, THUMB_DIR)]:
+        if url:
+            path = os.path.join(base_dir, os.path.basename(url))
+            if os.path.exists(path):
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+
+
+def _sync_product_primary_video(product):
+    """Keep Product.video_url synced to the first ProductVideo (for reels API)."""
+    first = product.videos.first()
+    product.video_url         = first.video_url      if first else None
+    product.video_thumb       = first.video_thumb    if first else None
+    product.video_duration    = first.video_duration if first else None
+    product.video_uploaded_at = first.video_uploaded_at if first else None
+    product.save(update_fields=['video_url', 'video_thumb', 'video_duration', 'video_uploaded_at'])
 
 
 @csrf_exempt
@@ -1435,7 +1461,7 @@ def upload_product_video(request, product_id):
         return Response({'error': 'No video file provided.'}, status=status.HTTP_400_BAD_REQUEST)
 
     if video_file.size > MAX_RAW_BYTES:
-        return Response({'error': f'File too large. Maximum allowed is 100 MB.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'File too large. Maximum allowed is 100 MB.'}, status=status.HTTP_400_BAD_REQUEST)
 
     tmp_path = None
     try:
@@ -1447,23 +1473,30 @@ def upload_product_video(request, product_id):
 
         result = process_video(tmp_path)
 
-        # Delete old video file if exists
-        if product.video_url:
-            old_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                product.video_url.lstrip('/')
-            )
-            if os.path.exists(old_path):
-                os.remove(old_path)
+        # Lock the product row so concurrent uploads queue up here
+        # and the count check is always accurate.
+        from django.db import transaction
+        with transaction.atomic():
+            product = Product.objects.select_for_update().get(_id=product_id)
+            if product.videos.count() >= MAX_VIDEOS:
+                # Clean up the file we just processed before rejecting
+                from utils.video_processor import VIDEO_DIR, THUMB_DIR
+                _delete_video_files(result['video_url'], result['thumb_url'])
+                return Response({'error': f'Maximum {MAX_VIDEOS} videos allowed per listing.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        product.video_url         = result['video_url']
-        product.video_thumb       = result['thumb_url']
-        product.video_duration    = result['duration']
-        product.video_uploaded_at = tz.now()
-        product.save(update_fields=['video_url', 'video_thumb', 'video_duration', 'video_uploaded_at'])
+            vid = ProductVideo.objects.create(
+                product        = product,
+                video_url      = result['video_url'],
+                video_thumb    = result['thumb_url'],
+                video_duration = result['duration'],
+                order          = product.videos.count(),
+            )
+
+        _sync_product_primary_video(product)
 
         return Response({
             'success':   True,
+            'id':        vid._id,
             'video_url': result['video_url'],
             'thumb_url': result['thumb_url'],
             'duration':  result['duration'],
@@ -1472,7 +1505,7 @@ def upload_product_video(request, product_id):
 
     except RuntimeError as e:
         return Response({'error': str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-    except Exception as e:
+    except Exception:
         logger.exception("Unexpected error during video upload")
         return Response({'error': 'Video processing failed. Please try again.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     finally:
@@ -1483,27 +1516,16 @@ def upload_product_video(request, product_id):
 @csrf_exempt
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def delete_product_video(request, product_id):
+def delete_product_video(request, product_id, video_id):
     try:
         product = Product.objects.get(_id=product_id, user=request.user)
     except Product.DoesNotExist:
         return Response({'error': 'Product not found or access denied.'}, status=status.HTTP_404_NOT_FOUND)
 
-    for field_url in [product.video_url, product.video_thumb]:
-        if field_url:
-            path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                field_url.lstrip('/')
-            )
-            if os.path.exists(path):
-                os.remove(path)
+    vid = get_object_or_404(ProductVideo, _id=video_id, product=product)
+    _delete_video_files(vid.video_url, vid.video_thumb)
+    vid.delete()
 
-    product.video_url         = None
-    product.video_thumb       = None
-    product.video_duration    = None
-    product.video_uploaded_at = None
-    product.save(update_fields=['video_url', 'video_thumb', 'video_duration', 'video_uploaded_at'])
+    _sync_product_primary_video(product)
 
     return Response({'success': True}, status=status.HTTP_200_OK)
-
-    return Response(data)

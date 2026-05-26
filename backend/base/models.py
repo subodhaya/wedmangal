@@ -76,6 +76,22 @@ class Product(models.Model):
         return self.name if self.name else 'Unnamed business'
 
 
+class ProductVideo(models.Model):
+    _id     = models.AutoField(primary_key=True, editable=False)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='videos')
+    video_url         = models.CharField(max_length=500)
+    video_thumb       = models.CharField(max_length=500, null=True, blank=True)
+    video_duration    = models.FloatField(null=True, blank=True)
+    video_uploaded_at = models.DateTimeField(auto_now_add=True)
+    order             = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'video_uploaded_at']
+
+    def __str__(self):
+        return f"Video {self._id} — {self.product.name}"
+
+
 class Service(models.Model):
     product = models.ForeignKey(Product, related_name='services', on_delete=models.CASCADE)
     name = models.CharField(max_length=200, null=True, blank=True)

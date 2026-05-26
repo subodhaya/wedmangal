@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import (
-    Product, Order, OrderItem, ShippingAddress, Review,
+    Product, ProductVideo, Order, OrderItem, ShippingAddress, Review,
     Service, ServiceImage, CartItem, Budget, Wishlist, ServiceOwnerClaim, BlogPost
 )
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -270,8 +270,15 @@ class DetailedServiceSerializer(serializers.ModelSerializer):
         return instance
 
 
+class ProductVideoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = ProductVideo
+        fields = ['_id', 'video_url', 'video_thumb', 'video_duration', 'video_uploaded_at', 'order']
+
+
 class DetailedProductSerializer(serializers.ModelSerializer):
     services = DetailedServiceSerializer(many=True, required=False)
+    videos   = ProductVideoSerializer(many=True, read_only=True)
     is_claimed = serializers.BooleanField(read_only=True)
     claimed_by_id = serializers.SerializerMethodField(read_only=True)
 
@@ -282,8 +289,9 @@ class DetailedProductSerializer(serializers.ModelSerializer):
     'city', 'area_name', 'address', 'business_phone', 'personal_phone',
     'opening_time', 'closing_time', 'is_approved', 'services',
     'is_claimed', 'claimed_by_id',
-    'instagram_url', 'website_url', 'video_url', 'video_thumb', 'video_duration',   # NEW
-    'min_price', 'max_price',          # NEW
+    'instagram_url', 'website_url', 'video_url', 'video_thumb', 'video_duration',
+    'videos',
+    'min_price', 'max_price',
 ]
 
     def get_claimed_by_id(self, obj):
@@ -335,7 +343,8 @@ class DetailedProductSerializer(serializers.ModelSerializer):
 
 
 class ProductReviewSerializer(serializers.ModelSerializer):
-    services = serializers.SerializerMethodField()
+    services  = serializers.SerializerMethodField()
+    videos    = ProductVideoSerializer(many=True, read_only=True)
     is_claimed = serializers.BooleanField(read_only=True)
     claimed_by_id = serializers.SerializerMethodField(read_only=True)
 
@@ -346,8 +355,10 @@ class ProductReviewSerializer(serializers.ModelSerializer):
     'createdAt', 'city', 'area_name', 'address', 'business_phone',
     'personal_phone', 'opening_time', 'closing_time', 'is_approved',
     'services', 'is_claimed', 'claimed_by_id',
-    'instagram_url', 'website_url',   
-    'min_price', 'max_price',         
+    'instagram_url', 'website_url',
+    'video_url', 'video_thumb', 'video_duration',
+    'videos',
+    'min_price', 'max_price',
 ]
     def get_claimed_by_id(self, obj):
         return obj.claimed_by_id
