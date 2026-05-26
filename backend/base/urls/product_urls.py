@@ -36,5 +36,7 @@ urlpatterns = [
     path('by-product/<str:product_id>/', views.get_services_by_product, name='get-services-by-product'),
     path('appointments/<str:product_id>/', views.get_appointments_by_product, name='get-appointments-by-product'),
     path('appointments/<str:pk>/update/', views.mark_order_as_done, name='mark-order-as-done'),
+    path('<int:product_id>/upload-video/', views.upload_product_video, name='upload-product-video'),
+    path('<int:product_id>/delete-video/', views.delete_product_video, name='delete-product-video'),
     path('<str:pk>/', views.getProduct, name="product"),
 ]

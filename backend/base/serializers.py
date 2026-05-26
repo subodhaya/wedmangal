@@ -108,7 +108,7 @@ class ProductSerializer(serializers.ModelSerializer):
     'is_claimed', 'claimed_by_id',
     'attributes',
     'average_rating', 'total_num_reviews',
-    'instagram_url', 'facebook_url',   
+    'instagram_url', 'website_url',   
     'min_price', 'max_price',          
 ]
 
@@ -139,7 +139,7 @@ class ProductSerializer(serializers.ModelSerializer):
     'name', 'image', 'brand', 'category', 'description',
     'city', 'area_name', 'address', 'business_phone', 'personal_phone',
     'opening_time', 'closing_time', 'is_approved',
-    'instagram_url', 'facebook_url', 'min_price', 'max_price', 
+    'instagram_url', 'website_url', 'video_url', 'video_thumb', 'video_duration', 'min_price', 'max_price', 
 ]
         for field in fields:
             setattr(instance, field, validated_data.get(field, getattr(instance, field)))
@@ -282,7 +282,7 @@ class DetailedProductSerializer(serializers.ModelSerializer):
     'city', 'area_name', 'address', 'business_phone', 'personal_phone',
     'opening_time', 'closing_time', 'is_approved', 'services',
     'is_claimed', 'claimed_by_id',
-    'instagram_url', 'facebook_url',   # NEW
+    'instagram_url', 'website_url', 'video_url', 'video_thumb', 'video_duration',   # NEW
     'min_price', 'max_price',          # NEW
 ]
 
@@ -311,7 +311,7 @@ class DetailedProductSerializer(serializers.ModelSerializer):
         instance.opening_time = validated_data.get('opening_time', instance.opening_time)
         instance.closing_time = validated_data.get('closing_time', instance.closing_time)
         instance.instagram_url = validated_data.get('instagram_url', instance.instagram_url)
-        instance.facebook_url  = validated_data.get('facebook_url',  instance.facebook_url)
+        instance.website_url  = validated_data.get('website_url',  instance.website_url)
         instance.min_price     = validated_data.get('min_price',     instance.min_price)
         instance.max_price     = validated_data.get('max_price',     instance.max_price)
         instance.is_approved = validated_data.get('is_approved', instance.is_approved)
@@ -346,7 +346,7 @@ class ProductReviewSerializer(serializers.ModelSerializer):
     'createdAt', 'city', 'area_name', 'address', 'business_phone',
     'personal_phone', 'opening_time', 'closing_time', 'is_approved',
     'services', 'is_claimed', 'claimed_by_id',
-    'instagram_url', 'facebook_url',   
+    'instagram_url', 'website_url',   
     'min_price', 'max_price',         
 ]
     def get_claimed_by_id(self, obj):

@@ -1,4 +1,7 @@
+import logging
 from django.shortcuts import render
+
+logger = logging.getLogger(__name__)
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -159,7 +162,7 @@ def update_product(request, user_id):
             'opening_time': request.data.get('opening_time', product.opening_time),
             'closing_time': request.data.get('closing_time', product.closing_time),
             'instagram_url': request.data.get('instagram_url'),
-            'facebook_url':  request.data.get('facebook_url'),
+            'website_url':  request.data.get('website_url'),
             'min_price':     request.data.get('min_price') or None,
             'max_price':     request.data.get('max_price') or None,
             'is_approved': request.data.get('isApproved', str(product.is_approved)) == 'true'
@@ -468,7 +471,7 @@ def register_product(request):
         'closing_time': request.data.get('closing_time'),  # New field
         'is_approved': request.data.get('is_approved') == 'true',
         'instagram_url': request.data.get('instagram_url'),   # ADD
-        'facebook_url': request.data.get('facebook_url'),     # ADD
+        'website_url': request.data.get('website_url'),     # ADD
         'min_price': request.data.get('min_price') or None,   # ADD
         'max_price': request.data.get('max_price') or None,   # ADD
     }
@@ -1407,5 +1410,100 @@ def get_available_today(request):
             'min_price':        float(min_price) if min_price else None,
             'attributes':       p.attributes or {},
         })
+
+
+# ── Video upload ───────────────────────────────────────────────────────────────
+
+import tempfile
+from django.utils import timezone as tz
+from utils.video_processor import process_video
+
+MAX_RAW_BYTES = 100 * 1024 * 1024   # 100 MB raw upload limit
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_product_video(request, product_id):
+    try:
+        product = Product.objects.get(_id=product_id, user=request.user)
+    except Product.DoesNotExist:
+        return Response({'error': 'Product not found or access denied.'}, status=status.HTTP_404_NOT_FOUND)
+
+    video_file = request.FILES.get('video')
+    if not video_file:
+        return Response({'error': 'No video file provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if video_file.size > MAX_RAW_BYTES:
+        return Response({'error': f'File too large. Maximum allowed is 100 MB.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    tmp_path = None
+    try:
+        suffix = os.path.splitext(video_file.name)[-1] or '.mp4'
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            for chunk in video_file.chunks():
+                tmp.write(chunk)
+            tmp_path = tmp.name
+
+        result = process_video(tmp_path)
+
+        # Delete old video file if exists
+        if product.video_url:
+            old_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                product.video_url.lstrip('/')
+            )
+            if os.path.exists(old_path):
+                os.remove(old_path)
+
+        product.video_url         = result['video_url']
+        product.video_thumb       = result['thumb_url']
+        product.video_duration    = result['duration']
+        product.video_uploaded_at = tz.now()
+        product.save(update_fields=['video_url', 'video_thumb', 'video_duration', 'video_uploaded_at'])
+
+        return Response({
+            'success':   True,
+            'video_url': result['video_url'],
+            'thumb_url': result['thumb_url'],
+            'duration':  result['duration'],
+            'size_mb':   result['size_mb'],
+        }, status=status.HTTP_200_OK)
+
+    except RuntimeError as e:
+        return Response({'error': str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+    except Exception as e:
+        logger.exception("Unexpected error during video upload")
+        return Response({'error': 'Video processing failed. Please try again.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+
+@csrf_exempt
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_product_video(request, product_id):
+    try:
+        product = Product.objects.get(_id=product_id, user=request.user)
+    except Product.DoesNotExist:
+        return Response({'error': 'Product not found or access denied.'}, status=status.HTTP_404_NOT_FOUND)
+
+    for field_url in [product.video_url, product.video_thumb]:
+        if field_url:
+            path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                field_url.lstrip('/')
+            )
+            if os.path.exists(path):
+                os.remove(path)
+
+    product.video_url         = None
+    product.video_thumb       = None
+    product.video_duration    = None
+    product.video_uploaded_at = None
+    product.save(update_fields=['video_url', 'video_thumb', 'video_duration', 'video_uploaded_at'])
+
+    return Response({'success': True}, status=status.HTTP_200_OK)
 
     return Response(data)

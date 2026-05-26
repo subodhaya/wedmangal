@@ -37,7 +37,7 @@ class Product(models.Model):
     closing_time = models.TimeField(null=True, blank=True)
     # ── Social links ───────────────────────────────────────
     instagram_url = models.URLField(max_length=300, null=True, blank=True)
-    facebook_url  = models.URLField(max_length=300, null=True, blank=True)
+    website_url   = models.URLField(max_length=300, null=True, blank=True)
 
 # ── Price range ────────────────────────────────────────
     min_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -55,6 +55,12 @@ class Product(models.Model):
     # ── Emergency availability ────────────────────────────
     is_available_today = models.BooleanField(default=False)
     available_since    = models.DateTimeField(null=True, blank=True)
+
+    # ── Video ─────────────────────────────────────────────
+    video_url         = models.CharField(max_length=500, null=True, blank=True, db_index=True)
+    video_thumb       = models.CharField(max_length=500, null=True, blank=True, db_index=True)
+    video_duration    = models.FloatField(null=True, blank=True)
+    video_uploaded_at = models.DateTimeField(null=True, blank=True)
 
     # ── Category-specific filter attributes ───────────────
     # Stored as flat JSON dict. Examples:

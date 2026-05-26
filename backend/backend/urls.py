@@ -51,6 +51,7 @@ urlpatterns = [
     path('llms.txt', serve_public_file('llms.txt')),
     path('sitemap.xml', sitemap_xml),
     path('api/blog/', include('base.urls.blog_urls')),
+    path('api/reels/', include('base.urls.reels_urls')),
 ]
 
 # Add static and media file serving
