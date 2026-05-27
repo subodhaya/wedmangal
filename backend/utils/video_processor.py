@@ -141,7 +141,7 @@ def _encode(input_path, output_path, vf, duration, crf=None, vbr=None):
                     audio_bitrate='128k',
                     r=30,
                     movflags='faststart',
-                    preset='fast',
+                    preset='ultrafast',
                     **({'crf': crf} if crf else {'b:v': vbr}),
                 )
                 .overwrite_output()
@@ -160,7 +160,7 @@ def _encode(input_path, output_path, vf, duration, crf=None, vbr=None):
                     audio_bitrate='128k',
                     r=30,
                     movflags='faststart',
-                    preset='fast',
+                    preset='ultrafast',
                     **({'crf': crf} if crf else {'b:v': vbr}),
                 )
                 .overwrite_output()

@@ -553,9 +553,10 @@ function ManagePage() {
 
                                         {/* Uploading slots — one spinner per in-flight upload */}
                                         {Array.from({ length: uploadingCount }).map((_, i) => (
-                                            <div key={`uploading-${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #c9a96e', borderRadius: '8px', aspectRatio: '9/16', background: '#fdf8f0' }}>
-                                                <span style={{ fontSize: '20px' }}>⏳</span>
-                                                <span style={{ fontSize: '10px', color: '#5e143f', fontWeight: 600, marginTop: '6px', textAlign: 'center' }}>Processing…</span>
+                                            <div key={`uploading-${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #c9a96e', borderRadius: '8px', aspectRatio: '9/16', background: '#fdf8f0', padding: '12px', gap: '6px' }}>
+                                                <span style={{ fontSize: '22px' }}>🎬</span>
+                                                <span style={{ fontSize: '11px', color: '#5e143f', fontWeight: 700, textAlign: 'center' }}>Processing video…</span>
+                                                <span style={{ fontSize: '10px', color: '#888', textAlign: 'center', lineHeight: 1.4 }}>This can take up to a minute. Please don't close this page.</span>
                                             </div>
                                         ))}
 
