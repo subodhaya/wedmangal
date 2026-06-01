@@ -247,6 +247,7 @@ def deleteUser(request, pk):
 
 # ── Service Owner Claim — OTP ──────────────────────────────────────────────────
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def claim_send_otp(request):
@@ -304,6 +305,7 @@ def claim_send_otp(request):
     }, status=status.HTTP_200_OK)
 
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def claim_verify_otp(request):
