@@ -47,7 +47,10 @@ export default function ClaimButton({ product }) {
     <>
       <div className="claim-cta-wrap">
         <p className="claim-cta-label">Is this your business?</p>
-        <button className="claim-cta-btn" onClick={() => setShowModal(true)}>
+        <button className="claim-cta-btn" onClick={() => {
+          if (!userInfo) { window.location.href = '/login'; return; }
+          setShowModal(true);
+        }}>
           🏷️ Claim This Listing
         </button>
       </div>
