@@ -62,7 +62,7 @@ def _send_otp_fast2sms(phone, otp):
     params = {
         "authorization": FAST2SMS_API_KEY,
         "route":         "q",                        # q = Quick Transactional, no website verify needed
-        "message":       f"{otp} is your BookYourCelebration verification code. Valid for 5 minutes.",
+        "message":       f"{otp} is your WedMangal verification code. Valid for 5 minutes.",
         "language":      "english",
         "numbers":       phone,
     }

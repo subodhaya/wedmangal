@@ -8,8 +8,13 @@ const BASE_URL = window.location.origin.includes("localhost")
 
 const api = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true, // needed for cookies if using JWT in cookies
+  withCredentials: true,
 });
+
+function getCsrfToken() {
+  const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+  return match ? match[1] : null;
+}
 
 // Function to check if the token is expired
 const isTokenExpired = () => {
@@ -55,7 +60,7 @@ const refreshAccessToken = async () => {
   }
 };
 
-// Axios request interceptor: Handles expired tokens
+// Axios request interceptor: Handles expired tokens + CSRF
 api.interceptors.request.use(
   async (config) => {
     let userInfo = JSON.parse(localStorage.getItem("userInfo"));
@@ -68,6 +73,12 @@ api.interceptors.request.use(
       }
     } else if (userInfo?.token) {
       config.headers.Authorization = `Bearer ${userInfo.token}`;
+    }
+
+    // Attach Django CSRF token for mutating requests
+    const csrfToken = getCsrfToken();
+    if (csrfToken && ['post', 'put', 'patch', 'delete'].includes(config.method)) {
+      config.headers['X-CSRFToken'] = csrfToken;
     }
 
     return config;
