@@ -1,9 +1,7 @@
 // src/screens/LoginScreen.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import Loader from '../components/Loader';
-import Message from '../components/Message';
 import api from '../utils/api';
 import { setUserInfo, getUserInfo } from '../components/localStorage';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -12,9 +10,6 @@ import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import './LoginScreen.css';
 
 library.add(faEye, faEyeSlash);
-
-//const GOOGLE_CLIENT_ID = "280404144707-bmoon3dudmvgv3vuvihft0uem3elk32b.apps.googleusercontent.com";
-const GOOGLE_CLIENT_ID = "729274233685-h48vkscuohkqt32n8o72ifik06g2cv0d.apps.googleusercontent.com";
 
 function LoginScreen() {
     const location = useLocation();
@@ -46,20 +41,6 @@ function LoginScreen() {
         }
         setLoading(false);
     };
-
-    const handleGoogleLoginSuccess = async (credentialResponse) => {
-        setLoading(true);
-        try {
-            const { data } = await api.post('/api/auth/google-login/', { token: credentialResponse.credential });
-            setUserInfo(data);
-            navigate(redirect);
-        } catch {
-            setError('Error during Google login');
-        }
-        setLoading(false);
-    };
-
-    const handleGoogleLoginFailure = () => setError('Google login failed');
 
     return (
         <div className="ls-page">
@@ -140,21 +121,6 @@ function LoginScreen() {
                             <span className="ls-btn-arrow">→</span>
                         </button>
                     </form>
-
-                    {/* Divider */}
-                    <div className="ls-divider">
-                        <span /><span className="ls-divider-text">or continue with</span><span />
-                    </div>
-
-                    {/* Google login */}
-                    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-                        <div className="ls-google-wrap">
-                            <GoogleLogin
-                                onSuccess={handleGoogleLoginSuccess}
-                                onError={handleGoogleLoginFailure}
-                            />
-                        </div>
-                    </GoogleOAuthProvider>
 
                     {/* Footer links */}
                     <div className="ls-links">
