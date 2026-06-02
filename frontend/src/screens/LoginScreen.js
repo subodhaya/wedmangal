@@ -33,33 +33,6 @@ function LoginScreen() {
         if (userInfo && userInfo.token) navigate(redirect);
     }, [navigate, redirect]);
 
-    useEffect(() => {
-        if (window.google) {
-            window.google.accounts.id.initialize({
-                client_id: GOOGLE_CLIENT_ID,
-                callback: handleGoogleResponse,
-                auto_select: true,
-            });
-            window.google.accounts.id.renderButton(
-                document.getElementById("google-login-button"),
-                { theme: "outline", size: "large" }
-            );
-            window.google.accounts.id.prompt();
-        }
-    }, []);
-
-    const handleGoogleResponse = async (response) => {
-        setLoading(true);
-        try {
-            const { data } = await api.post('/api/auth/google-login/', { token: response.credential });
-            setUserInfo(data);
-            navigate(redirect);
-        } catch {
-            setError('Google login failed');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const submitHandler = async (e) => {
         e.preventDefault();

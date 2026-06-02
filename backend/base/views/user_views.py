@@ -250,8 +250,7 @@ def deleteUser(request, pk):
 
 @csrf_exempt
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def claim_send_otp(request):
     """
     POST /api/users/claim/send-otp/
@@ -309,8 +308,7 @@ def claim_send_otp(request):
 
 @csrf_exempt
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def claim_verify_otp(request):
     """
     POST /api/users/claim/verify-otp/

@@ -65,11 +65,17 @@ api.interceptors.request.use(
   async (config) => {
     let userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
-    if (isTokenExpired() && userInfo?.refresh) {
-      const newToken = await refreshAccessToken();
-      if (newToken) {
-        userInfo = JSON.parse(localStorage.getItem("userInfo"));
-        config.headers.Authorization = `Bearer ${userInfo.token}`;
+    if (isTokenExpired()) {
+      if (userInfo?.refresh) {
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          userInfo = JSON.parse(localStorage.getItem("userInfo"));
+          config.headers.Authorization = `Bearer ${userInfo.token}`;
+        }
+      } else if (userInfo) {
+        localStorage.removeItem("userInfo");
+        window.location.href = "/login";
+        return Promise.reject(new Error("Session expired. Please log in again."));
       }
     } else if (userInfo?.token) {
       config.headers.Authorization = `Bearer ${userInfo.token}`;
