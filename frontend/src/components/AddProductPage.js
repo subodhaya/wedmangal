@@ -42,12 +42,16 @@ const AddProductPage = () => {
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // ── Video upload step (shown after product is created) ──
+    // ── Multi-step post-submit state ──
+    // step: null = form, 'videos' = step 2, 'services' = step 3
+    const [step, setStep]                         = useState(null);
     const [createdProductId, setCreatedProductId] = useState(null);
     const [videos, setVideos]                     = useState([]);
     const [uploadingCount, setUploadingCount]     = useState(0);
     const uploadingRef                            = useRef(0);
     const [videoError, setVideoError]             = useState('');
+    const [isSubmittingServices, setIsSubmittingServices] = useState(false);
+    const [servicesError, setServicesError]       = useState('');
 
     const handleProductChange = (e) => {
         const { name, value, files } = e.target;
@@ -93,23 +97,6 @@ const AddProductPage = () => {
         const formData = new FormData();
         Object.keys(finalProductData).forEach(key => formData.append(key, finalProductData[key]));
 
-        services.forEach((service, index) => {
-            if (!service.name && !service.price) return;
-
-            formData.append(`services[${index}][name]`, service.name || '');
-            formData.append(`services[${index}][description]`, service.description || '');
-
-            if (service.price) {
-                formData.append(`services[${index}][price]`, service.price);
-            }
-
-            formData.append(`services[${index}][countInStock]`, 1);
-
-            service.images.forEach((image, imgIndex) => {
-                formData.append(`services[${index}][images][${imgIndex}]`, image);
-            });
-        });
-
         try {
             const response = await api.post('/api/products/register-product/', formData, {
                 headers: {
@@ -120,11 +107,11 @@ const AddProductPage = () => {
 
             setProductData(emptyProduct);
             setRawPhones({ business_phone: '', personal_phone: '' });
-            setServices([{ name: '', description: '', price: '', countInStock: '', images: [] }]);
-            setResponseMessage('Business registered successfully! Add promo videos below, or skip to your dashboard.');
+            setResponseMessage('Business registered successfully! Now add promo videos below.');
             setError('');
             setIsFormVisible(false);
             setCreatedProductId(response.data.productId);
+            setStep('videos');
 
         } catch (err) {
             const backendMsg = err.response?.data?.detail
@@ -184,6 +171,31 @@ const AddProductPage = () => {
             setVideos(prev => prev.filter(v => v._id !== videoId));
         } catch {
             setVideoError('Could not remove video. Please try again.');
+        }
+    };
+
+    const handleServicesSubmit = async (e) => {
+        e.preventDefault();
+        setIsSubmittingServices(true);
+        setServicesError('');
+        try {
+            const toSubmit = services.filter(s => s.name || s.price);
+            for (const service of toSubmit) {
+                const fd = new FormData();
+                fd.append('name', service.name || '');
+                fd.append('description', service.description || '');
+                fd.append('price', service.price || '0');
+                fd.append('countInStock', 1);
+                service.images.forEach((img, i) => fd.append(`images[${i}]`, img));
+                await api.post('/api/products/add_service/', fd, {
+                    headers: { Authorization: `Bearer ${userInfo.token}` },
+                });
+            }
+            navigate('/manage-my-page');
+        } catch (err) {
+            setServicesError(err.response?.data?.detail || 'Failed to save services. Please try again.');
+        } finally {
+            setIsSubmittingServices(false);
         }
     };
 
@@ -515,13 +527,101 @@ const AddProductPage = () => {
                                     Set your overall price range so clients can filter by budget.
                                 </div>
 
-                                {/* ── Services section ── */}
+                                <button
+                                    type="submit"
+                                    className="ap-submit-btn"
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? '⏳ Submitting...' : '🎊 Submit Business Registration'}
+                                </button>
+
+                            </form>
+                        )}
+
+                        {responseMessage && (
+                            <div className="ap-alert ap-alert-success" style={{ marginBottom: '20px' }}>
+                                ✅ {responseMessage}
+                            </div>
+                        )}
+                        {error && (
+                            <div className="ap-alert ap-alert-danger">
+                                ⚠️ {error}
+                            </div>
+                        )}
+
+                        {/* ── Step 2: Video Upload ── */}
+                        {step === 'videos' && (
+                            <div>
+                                <div className="ap-section-divider">
+                                    <span className="ap-section-label">🎬 Add Promo Videos</span>
+                                    <div className="ap-section-line"></div>
+                                </div>
+                                <p style={{ fontSize: '12px', color: '#888', margin: '0 0 12px' }}>
+                                    Up to 4 videos · MP4, MOV, AVI, MKV, WEBM · Max 100 MB each
+                                </p>
+                                {videoError && (
+                                    <div className="ap-alert ap-alert-danger" style={{ marginBottom: '12px' }}>⚠️ {videoError}</div>
+                                )}
+                                {(() => {
+                                    const emptySlots = Math.max(0, 4 - videos.length - uploadingCount);
+                                    return (
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '20px' }}>
+                                            {videos.map((vid) => (
+                                                <div key={vid._id} style={{ position: 'relative' }}>
+                                                    <img src={vid.video_thumb} alt="thumb"
+                                                        style={{ width: '100%', aspectRatio: '9/16', objectFit: 'cover', borderRadius: '8px', border: '2px solid #5e143f', display: 'block' }} />
+                                                    {vid.video_duration && (
+                                                        <span style={{ position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: '10px', padding: '2px 5px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+                                                            {Math.floor(vid.video_duration)}s
+                                                        </span>
+                                                    )}
+                                                    <button type="button" onClick={() => handleVideoDelete(vid._id)}
+                                                        style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: '24px', height: '24px', color: '#fff', fontSize: '12px', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+                                                </div>
+                                            ))}
+                                            {Array.from({ length: uploadingCount }).map((_, i) => (
+                                                <div key={`uploading-${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #c9a96e', borderRadius: '8px', aspectRatio: '9/16', background: '#fdf8f0', padding: '12px', gap: '6px' }}>
+                                                    <span style={{ fontSize: '22px' }}>🎬</span>
+                                                    <span style={{ fontSize: '11px', color: '#5e143f', fontWeight: 700, textAlign: 'center' }}>Processing video…</span>
+                                                    <span style={{ fontSize: '10px', color: '#888', textAlign: 'center', lineHeight: 1.4 }}>This can take up to a minute. Please don't close this page.</span>
+                                                </div>
+                                            ))}
+                                            {Array.from({ length: emptySlots }).map((_, i) => (
+                                                <label key={`empty-${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #c9a96e', borderRadius: '8px', aspectRatio: '9/16', cursor: 'pointer', background: '#fdf8f0' }}>
+                                                    <span style={{ fontSize: '22px' }}>＋</span>
+                                                    <span style={{ fontSize: '10px', color: '#5e143f', fontWeight: 600, marginTop: '4px' }}>Add Video</span>
+                                                    <span style={{ fontSize: '9px', color: '#aaa', marginTop: '2px' }}>{videos.length + uploadingCount + i + 1}/4</span>
+                                                    <input type="file" accept=".mp4,.mov,.avi,.mkv,.webm" style={{ display: 'none' }} onChange={handleVideoSelect} />
+                                                </label>
+                                            ))}
+                                        </div>
+                                    );
+                                })()}
+                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                    <button
+                                        type="button"
+                                        className="ap-submit-btn"
+                                        onClick={() => setStep('services')}
+                                    >
+                                        {videos.length > 0 ? 'Next — Add Services →' : 'Skip → Add Services'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── Step 3: Services ── */}
+                        {step === 'services' && (
+                            <form onSubmit={handleServicesSubmit}>
                                 <div className="ap-services-heading">
                                     ✨ Your Services
                                 </div>
                                 <p className="ap-services-hint">
                                     Add the services you offer. You can add more services later from Manage My Page.
                                 </p>
+
+                                {servicesError && (
+                                    <div className="ap-alert ap-alert-danger" style={{ marginBottom: '12px' }}>⚠️ {servicesError}</div>
+                                )}
 
                                 {services.map((service, index) => (
                                     <div key={index} className="ap-service-card">
@@ -570,8 +670,6 @@ const AddProductPage = () => {
                                             />
                                         </div>
 
-                                        <input type="hidden" name="countInStock" value={service.countInStock || 5} />
-
                                         <div className="ap-form-group">
                                             <label className="ap-label">Service Images</label>
                                             <input
@@ -593,91 +691,23 @@ const AddProductPage = () => {
                                     + Add Another Service
                                 </button>
 
-                                <button
-                                    type="submit"
-                                    className="ap-submit-btn"
-                                    disabled={isSubmitting}
-                                >
-                                    {isSubmitting ? '⏳ Submitting...' : '🎊 Submit Business Registration'}
-                                </button>
-
-                            </form>
-                        )}
-
-                        {responseMessage && (
-                            <div className="ap-alert ap-alert-success" style={{ marginBottom: '20px' }}>
-                                ✅ {responseMessage}
-                            </div>
-                        )}
-                        {error && (
-                            <div className="ap-alert ap-alert-danger">
-                                ⚠️ {error}
-                            </div>
-                        )}
-
-                        {/* ── Step 2: Video Upload ── */}
-                        {createdProductId && (
-                            <div>
-                                <div className="ap-section-divider">
-                                    <span className="ap-section-label">🎬 Add Promo Videos</span>
-                                    <div className="ap-section-line"></div>
-                                </div>
-                                <p style={{ fontSize: '12px', color: '#888', margin: '0 0 12px' }}>
-                                    Up to 4 videos · MP4, MOV, AVI, MKV, WEBM · Max 100 MB each
-                                </p>
-                                {videoError && (
-                                    <div className="ap-alert ap-alert-danger" style={{ marginBottom: '12px' }}>⚠️ {videoError}</div>
-                                )}
-                                {(() => {
-                                    const emptySlots = Math.max(0, 4 - videos.length - uploadingCount);
-                                    return (
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '20px' }}>
-                                            {/* Filled slots */}
-                                            {videos.map((vid) => (
-                                                <div key={vid._id} style={{ position: 'relative' }}>
-                                                    <img src={vid.video_thumb} alt="thumb"
-                                                        style={{ width: '100%', aspectRatio: '9/16', objectFit: 'cover', borderRadius: '8px', border: '2px solid #5e143f', display: 'block' }} />
-                                                    {vid.video_duration && (
-                                                        <span style={{ position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: '10px', padding: '2px 5px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
-                                                            {Math.floor(vid.video_duration)}s
-                                                        </span>
-                                                    )}
-                                                    <button type="button" onClick={() => handleVideoDelete(vid._id)}
-                                                        style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: '24px', height: '24px', color: '#fff', fontSize: '12px', cursor: 'pointer', lineHeight: 1 }}>✕</button>
-                                                </div>
-                                            ))}
-
-                                            {/* Uploading slots */}
-                                            {Array.from({ length: uploadingCount }).map((_, i) => (
-                                                <div key={`uploading-${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #c9a96e', borderRadius: '8px', aspectRatio: '9/16', background: '#fdf8f0', padding: '12px', gap: '6px' }}>
-                                                    <span style={{ fontSize: '22px' }}>🎬</span>
-                                                    <span style={{ fontSize: '11px', color: '#5e143f', fontWeight: 700, textAlign: 'center' }}>Processing video…</span>
-                                                    <span style={{ fontSize: '10px', color: '#888', textAlign: 'center', lineHeight: 1.4 }}>This can take up to a minute. Please don't close this page.</span>
-                                                </div>
-                                            ))}
-
-                                            {/* Empty upload slots */}
-                                            {Array.from({ length: emptySlots }).map((_, i) => (
-                                                <label key={`empty-${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #c9a96e', borderRadius: '8px', aspectRatio: '9/16', cursor: 'pointer', background: '#fdf8f0' }}>
-                                                    <span style={{ fontSize: '22px' }}>＋</span>
-                                                    <span style={{ fontSize: '10px', color: '#5e143f', fontWeight: 600, marginTop: '4px' }}>Add Video</span>
-                                                    <span style={{ fontSize: '9px', color: '#aaa', marginTop: '2px' }}>{videos.length + uploadingCount + i + 1}/4</span>
-                                                    <input type="file" accept=".mp4,.mov,.avi,.mkv,.webm" style={{ display: 'none' }} onChange={handleVideoSelect} />
-                                                </label>
-                                            ))}
-                                        </div>
-                                    );
-                                })()}
-                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
                                     <button
                                         type="button"
-                                        className="ap-submit-btn"
+                                        className="ap-add-service-btn"
                                         onClick={() => navigate('/manage-my-page')}
                                     >
-                                        {videos.length > 0 ? '✅ Done — Go to Dashboard' : 'Skip → Go to Dashboard'}
+                                        Skip → Go to Dashboard
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="ap-submit-btn"
+                                        disabled={isSubmittingServices}
+                                    >
+                                        {isSubmittingServices ? '⏳ Saving...' : '✅ Save Services & Go to Dashboard'}
                                     </button>
                                 </div>
-                            </div>
+                            </form>
                         )}
                     </div>
                 </div>
