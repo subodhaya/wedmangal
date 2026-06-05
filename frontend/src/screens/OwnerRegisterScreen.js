@@ -64,7 +64,7 @@ function OwnerRegisterScreen() {
       setLoading(false);
 
       setTimeout(() => {
-        navigate('/login');
+        navigate('/');
       }, 2000);
 
     } catch (error) {
