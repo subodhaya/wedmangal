@@ -266,7 +266,7 @@ const handleDirectBooking = async (serviceId) => {
    <div className="ps-page">
       {product && (
         <Helmet>
-          <title>{product.name} | {product.category?.replace(/_/g, ' ')} in {product.city} | WedMangal</title>
+          <title>{`${product.name} | ${(product.category || '').replace(/_/g, ' ')} in ${product.city || ''} | WedMangal`}</title>
           <meta name="description" content={product.description?.slice(0, 155) || `Book ${product.name}, a trusted ${product.category?.replace(/_/g, ' ')} in ${product.city}. View services, pricing and reviews on WedMangal.`} />
           <link rel="canonical" href={`https://www.wedmangal.com/product/${product._id}`} />
 
