@@ -56,6 +56,18 @@
   border: 1px solid rgba(192,57,43,0.2);
 }
 
+.mp-field-error {
+  color: var(--danger);
+  font-size: 11px;
+  margin-top: 4px;
+  display: block;
+}
+.mp-input--error,
+.mp-textarea--error {
+  border-color: var(--danger) !important;
+  background: rgba(192,57,43,0.03);
+}
+
 /* ── Welcome hero ─────────────────────────────────────────── */
 .mp-welcome-card {
   background: var(--white);

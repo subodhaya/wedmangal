@@ -33,6 +33,7 @@ function ManagePage() {
     const [errorMessage, setErrorMessage] = useState('');
     const [selectedServiceIndex, setSelectedServiceIndex] = useState(null);
     const [isSubmitDisabled, setIsSubmitDisabled] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState({});
 
     // ── Video state ─────────────────────────────────────────
     const [videos, setVideos]               = useState([]);
@@ -64,8 +65,49 @@ function ManagePage() {
     useEffect(() => { fetchData(); }, [userInfo.token]);
 
     /* ── Handle changes ─────────────────────────────────────── */
+    const validateForm = () => {
+        const e = {};
+        if (!productData.name?.trim())
+            e.name = 'Business name is required.';
+        else if (productData.name.trim().length < 2)
+            e.name = 'Name must be at least 2 characters.';
+
+        const phoneDigits = (productData.business_phone || '').replace(/\D/g, '');
+        if (!phoneDigits)
+            e.business_phone = 'Business phone is required.';
+        else if (phoneDigits.length !== 10 && phoneDigits.length !== 12)
+            e.business_phone = 'Enter a valid 10-digit mobile number (or 12-digit with country code).';
+
+        if (productData.personal_phone) {
+            const alt = productData.personal_phone.replace(/\D/g, '');
+            if (alt.length !== 10 && alt.length !== 12)
+                e.personal_phone = 'Enter a valid 10-digit mobile number.';
+        }
+
+        if (productData.instagram_url && !/^https?:\/\/.+\..+/.test(productData.instagram_url))
+            e.instagram_url = 'Enter a valid URL (e.g. https://instagram.com/yourpage).';
+
+        if (productData.website_url && !/^https?:\/\/.+\..+/.test(productData.website_url))
+            e.website_url = 'Enter a valid URL (e.g. https://yourbusiness.com).';
+
+        const min = parseFloat(productData.min_price);
+        const max = parseFloat(productData.max_price);
+        if (productData.min_price !== '' && productData.min_price != null && min < 0)
+            e.min_price = 'Minimum price cannot be negative.';
+        if (productData.max_price !== '' && productData.max_price != null && max < 0)
+            e.max_price = 'Maximum price cannot be negative.';
+        if (productData.min_price && productData.max_price && max < min)
+            e.max_price = 'Maximum price must be greater than minimum price.';
+
+        if (productData.opening_time && productData.closing_time && productData.closing_time <= productData.opening_time)
+            e.closing_time = 'Closing time must be after opening time.';
+
+        return e;
+    };
+
     const handleProductChange = (e) => {
         const { name, value, files } = e.target;
+        if (fieldErrors[name]) setFieldErrors(prev => ({ ...prev, [name]: '' }));
         if (name === 'image' && files.length > 0) {
             setProductData((prev) => ({
                 ...prev,
@@ -79,6 +121,14 @@ function ManagePage() {
 
     /* ── Submit ─────────────────────────────────────────────── */
     const handleProductSubmit = async () => {
+        const errors = validateForm();
+        if (Object.keys(errors).length > 0) {
+            setFieldErrors(errors);
+            const firstErrorEl = document.querySelector('.mp-input--error, .mp-textarea--error');
+            if (firstErrorEl) firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        setFieldErrors({});
         setIsSubmitDisabled(true);
         try {
             const formData = new FormData();
@@ -271,12 +321,13 @@ function ManagePage() {
                                 <input
                                     type="text"
                                     name="name"
-                                    className="mp-input"
+                                    className={`mp-input${fieldErrors.name ? ' mp-input--error' : ''}`}
                                     value={productData.name || ''}
                                     onChange={handleProductChange}
                                     placeholder="Enter business name"
                                     required
                                 />
+                                {fieldErrors.name && <span className="mp-field-error">{fieldErrors.name}</span>}
                             </div>
 
                             {/* Image with preview */}
@@ -400,12 +451,13 @@ function ManagePage() {
                                     <input
                                         type="text"
                                         name="business_phone"
-                                        className="mp-input"
+                                        className={`mp-input${fieldErrors.business_phone ? ' mp-input--error' : ''}`}
                                         value={productData.business_phone || ''}
                                         onChange={handleProductChange}
                                         placeholder="10-digit mobile number"
                                     />
                                     <div className="mp-hint">Include country code if already saved (e.g. 919876543210)</div>
+                                    {fieldErrors.business_phone && <span className="mp-field-error">{fieldErrors.business_phone}</span>}
                                 </div>
                             </div>
 
@@ -414,11 +466,12 @@ function ManagePage() {
                                 <input
                                     type="text"
                                     name="personal_phone"
-                                    className="mp-input"
+                                    className={`mp-input${fieldErrors.personal_phone ? ' mp-input--error' : ''}`}
                                     value={productData.personal_phone || ''}
                                     onChange={handleProductChange}
                                     placeholder="Optional alternative number"
                                 />
+                                {fieldErrors.personal_phone && <span className="mp-field-error">{fieldErrors.personal_phone}</span>}
                             </div>
 
                             {/* ── Working hours ── */}
@@ -443,10 +496,11 @@ function ManagePage() {
                                     <input
                                         type="time"
                                         name="closing_time"
-                                        className="mp-time-input"
+                                        className={`mp-time-input${fieldErrors.closing_time ? ' mp-input--error' : ''}`}
                                         value={productData.closing_time || ''}
                                         onChange={handleProductChange}
                                     />
+                                    {fieldErrors.closing_time && <span className="mp-field-error">{fieldErrors.closing_time}</span>}
                                 </div>
                             </div>
 
@@ -461,11 +515,12 @@ function ManagePage() {
                                 <input
                                     type="url"
                                     name="instagram_url"
-                                    className="mp-input"
+                                    className={`mp-input${fieldErrors.instagram_url ? ' mp-input--error' : ''}`}
                                     value={productData.instagram_url || ''}
                                     onChange={handleProductChange}
                                     placeholder="https://instagram.com/yourbusiness"
                                 />
+                                {fieldErrors.instagram_url && <span className="mp-field-error">{fieldErrors.instagram_url}</span>}
                             </div>
 
                             <div className="mp-form-group">
@@ -473,11 +528,12 @@ function ManagePage() {
                                 <input
                                     type="url"
                                     name="website_url"
-                                    className="mp-input"
+                                    className={`mp-input${fieldErrors.website_url ? ' mp-input--error' : ''}`}
                                     value={productData.website_url || ''}
                                     onChange={handleProductChange}
                                     placeholder="https://yourbusiness.com"
                                 />
+                                {fieldErrors.website_url && <span className="mp-field-error">{fieldErrors.website_url}</span>}
                             </div>
 
                             {/* ── Price Range ── */}
@@ -492,24 +548,26 @@ function ManagePage() {
                                     <input
                                         type="number"
                                         name="min_price"
-                                        className="mp-time-input"
+                                        className={`mp-time-input${fieldErrors.min_price ? ' mp-input--error' : ''}`}
                                         value={productData.min_price || ''}
                                         onChange={handleProductChange}
                                         placeholder="e.g. 2000"
                                         min="0"
                                     />
+                                    {fieldErrors.min_price && <span className="mp-field-error">{fieldErrors.min_price}</span>}
                                 </div>
                                 <div className="mp-time-group">
                                     <label className="mp-time-label">Max Price (₹)</label>
                                     <input
                                         type="number"
                                         name="max_price"
-                                        className="mp-time-input"
+                                        className={`mp-time-input${fieldErrors.max_price ? ' mp-input--error' : ''}`}
                                         value={productData.max_price || ''}
                                         onChange={handleProductChange}
                                         placeholder="e.g. 50000"
                                         min="0"
                                     />
+                                    {fieldErrors.max_price && <span className="mp-field-error">{fieldErrors.max_price}</span>}
                                 </div>
                             </div>
                             <div className="mp-hint" style={{ marginTop: '-8px', marginBottom: '16px' }}>

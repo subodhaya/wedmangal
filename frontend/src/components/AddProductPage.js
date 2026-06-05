@@ -41,6 +41,7 @@ const AddProductPage = () => {
     const [isFormVisible, setIsFormVisible] = useState(true);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState({});
 
     // ── Video files selected in-form (uploaded after product is created) ──
     const [pendingVideos, setPendingVideos]        = useState([]); // { file, preview }[]
@@ -55,6 +56,7 @@ const AddProductPage = () => {
     const handleProductChange = (e) => {
         const { name, value, files } = e.target;
         setProductData({ ...productData, [name]: files ? files[0] : value });
+        if (fieldErrors[name]) setFieldErrors(prev => ({ ...prev, [name]: '' }));
     };
 
     const normalizePhone = (value) => {
@@ -83,6 +85,49 @@ const AddProductPage = () => {
         setServices([...services, { name: '', description: '', price: '', countInStock: '', images: [] }]);
     };
 
+    const validateForm = () => {
+        const e = {};
+        if (!productData.name?.trim())
+            e.name = 'Business name is required.';
+        else if (productData.name.trim().length < 2)
+            e.name = 'Name must be at least 2 characters.';
+
+        if (!productData.category)
+            e.category = 'Please select a category.';
+
+        const phoneDigits = (productData.business_phone || '').replace(/\D/g, '');
+        if (!phoneDigits)
+            e.business_phone = 'Business phone is required.';
+        else if (phoneDigits.length !== 10 && phoneDigits.length !== 12)
+            e.business_phone = 'Enter a valid 10-digit mobile number.';
+
+        if (productData.personal_phone) {
+            const alt = productData.personal_phone.replace(/\D/g, '');
+            if (alt.length !== 10 && alt.length !== 12)
+                e.personal_phone = 'Enter a valid 10-digit mobile number.';
+        }
+
+        if (productData.instagram_url && !/^https?:\/\/.+\..+/.test(productData.instagram_url))
+            e.instagram_url = 'Enter a valid URL (e.g. https://instagram.com/yourpage).';
+
+        if (productData.website_url && !/^https?:\/\/.+\..+/.test(productData.website_url))
+            e.website_url = 'Enter a valid URL (e.g. https://yourbusiness.com).';
+
+        const min = parseFloat(productData.min_price);
+        const max = parseFloat(productData.max_price);
+        if (productData.min_price !== '' && productData.min_price !== undefined && min < 0)
+            e.min_price = 'Minimum price cannot be negative.';
+        if (productData.max_price !== '' && productData.max_price !== undefined && max < 0)
+            e.max_price = 'Maximum price cannot be negative.';
+        if (productData.min_price && productData.max_price && max < min)
+            e.max_price = 'Maximum price must be greater than minimum price.';
+
+        if (productData.opening_time && productData.closing_time && productData.closing_time <= productData.opening_time)
+            e.closing_time = 'Closing time must be after opening time.';
+
+        return e;
+    };
+
     const handlePendingVideoSelect = (e) => {
         const file = e.target.files[0];
         e.target.value = '';
@@ -99,6 +144,14 @@ const AddProductPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const errors = validateForm();
+        if (Object.keys(errors).length > 0) {
+            setFieldErrors(errors);
+            const firstErrorEl = document.querySelector('.ap-input--error, .ap-select--error, .ap-textarea--error');
+            if (firstErrorEl) firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        setFieldErrors({});
         setIsSubmitting(true);
         setError('');
 
@@ -256,12 +309,13 @@ const AddProductPage = () => {
                                     <input
                                         type="text"
                                         name="name"
-                                        className="ap-input"
+                                        className={`ap-input${fieldErrors.name ? ' ap-input--error' : ''}`}
                                         value={productData.name}
                                         onChange={handleProductChange}
                                         placeholder="e.g. Priya Bridal Studio"
                                         required
                                     />
+                                    {fieldErrors.name && <span className="ap-field-error">{fieldErrors.name}</span>}
                                 </div>
 
                                 <div className="ap-form-group">
@@ -291,7 +345,7 @@ const AddProductPage = () => {
                                     <div className="ap-select-wrap">
                                         <select
                                             name="category"
-                                            className="ap-select"
+                                            className={`ap-select${fieldErrors.category ? ' ap-select--error' : ''}`}
                                             value={productData.category}
                                             onChange={handleProductChange}
                                             required
@@ -313,6 +367,7 @@ const AddProductPage = () => {
                                         </select>
                                         <i className="fa fa-caret-down ap-select-arrow"></i>
                                     </div>
+                                    {fieldErrors.category && <span className="ap-field-error">{fieldErrors.category}</span>}
                                 </div>
 
                                 <div className="ap-form-group">
@@ -381,11 +436,12 @@ const AddProductPage = () => {
                                         <input
                                             type="tel"
                                             name="business_phone"
-                                            className="ap-input"
+                                            className={`ap-input${fieldErrors.business_phone ? ' ap-input--error' : ''}`}
                                             value={rawPhones.business_phone}
-                                            onChange={(e) =>
-                                                setRawPhones(p => ({ ...p, business_phone: e.target.value }))
-                                            }
+                                            onChange={(e) => {
+                                                setRawPhones(p => ({ ...p, business_phone: e.target.value }));
+                                                if (fieldErrors.business_phone) setFieldErrors(p => ({ ...p, business_phone: '' }));
+                                            }}
                                             onBlur={(e) => {
                                                 const normalized = normalizePhone(e.target.value);
                                                 setRawPhones(p => ({ ...p, business_phone: normalized }));
@@ -394,6 +450,7 @@ const AddProductPage = () => {
                                             placeholder="e.g. 9876543210"
                                         />
                                         <div className="ap-hint">Enter 10-digit number. Country code +91 added automatically.</div>
+                                        {fieldErrors.business_phone && <span className="ap-field-error">{fieldErrors.business_phone}</span>}
                                     </div>
                                 </div>
 
@@ -403,11 +460,12 @@ const AddProductPage = () => {
                                         <input
                                             type="tel"
                                             name="personal_phone"
-                                            className="ap-input"
+                                            className={`ap-input${fieldErrors.personal_phone ? ' ap-input--error' : ''}`}
                                             value={rawPhones.personal_phone}
-                                            onChange={(e) =>
-                                                setRawPhones(p => ({ ...p, personal_phone: e.target.value }))
-                                            }
+                                            onChange={(e) => {
+                                                setRawPhones(p => ({ ...p, personal_phone: e.target.value }));
+                                                if (fieldErrors.personal_phone) setFieldErrors(p => ({ ...p, personal_phone: '' }));
+                                            }}
                                             onBlur={(e) => {
                                                 const normalized = normalizePhone(e.target.value);
                                                 setRawPhones(p => ({ ...p, personal_phone: normalized }));
@@ -416,6 +474,7 @@ const AddProductPage = () => {
                                             placeholder="Optional alternative number"
                                         />
                                         <div className="ap-hint">Leave blank to use business phone.</div>
+                                        {fieldErrors.personal_phone && <span className="ap-field-error">{fieldErrors.personal_phone}</span>}
                                     </div>
                                 </div>
 
@@ -441,10 +500,11 @@ const AddProductPage = () => {
                                         <input
                                             type="time"
                                             name="closing_time"
-                                            className="ap-time-input"
+                                            className={`ap-time-input${fieldErrors.closing_time ? ' ap-input--error' : ''}`}
                                             value={productData.closing_time}
                                             onChange={handleProductChange}
                                         />
+                                        {fieldErrors.closing_time && <span className="ap-field-error">{fieldErrors.closing_time}</span>}
                                     </div>
                                 </div>
 
@@ -459,11 +519,12 @@ const AddProductPage = () => {
                                     <input
                                         type="url"
                                         name="instagram_url"
-                                        className="ap-input"
+                                        className={`ap-input${fieldErrors.instagram_url ? ' ap-input--error' : ''}`}
                                         value={productData.instagram_url}
                                         onChange={handleProductChange}
                                         placeholder="https://instagram.com/yourbusiness"
                                     />
+                                    {fieldErrors.instagram_url && <span className="ap-field-error">{fieldErrors.instagram_url}</span>}
                                 </div>
 
                                 <div className="ap-form-group">
@@ -471,11 +532,12 @@ const AddProductPage = () => {
                                     <input
                                         type="url"
                                         name="website_url"
-                                        className="ap-input"
+                                        className={`ap-input${fieldErrors.website_url ? ' ap-input--error' : ''}`}
                                         value={productData.website_url}
                                         onChange={handleProductChange}
                                         placeholder="https://yourbusiness.com"
                                     />
+                                    {fieldErrors.website_url && <span className="ap-field-error">{fieldErrors.website_url}</span>}
                                 </div>
 
                                 {/* ── Price Range section ── */}
@@ -490,24 +552,26 @@ const AddProductPage = () => {
                                         <input
                                             type="number"
                                             name="min_price"
-                                            className="ap-time-input"
+                                            className={`ap-time-input${fieldErrors.min_price ? ' ap-input--error' : ''}`}
                                             value={productData.min_price}
                                             onChange={handleProductChange}
                                             placeholder="e.g. 2000"
                                             min="0"
                                         />
+                                        {fieldErrors.min_price && <span className="ap-field-error">{fieldErrors.min_price}</span>}
                                     </div>
                                     <div className="ap-time-group">
                                         <label className="ap-time-label">Max Price (₹)</label>
                                         <input
                                             type="number"
                                             name="max_price"
-                                            className="ap-time-input"
+                                            className={`ap-time-input${fieldErrors.max_price ? ' ap-input--error' : ''}`}
                                             value={productData.max_price}
                                             onChange={handleProductChange}
                                             placeholder="e.g. 50000"
                                             min="0"
                                         />
+                                        {fieldErrors.max_price && <span className="ap-field-error">{fieldErrors.max_price}</span>}
                                     </div>
                                 </div>
                                 <div className="ap-hint" style={{ marginTop: '-8px', marginBottom: '16px' }}>
