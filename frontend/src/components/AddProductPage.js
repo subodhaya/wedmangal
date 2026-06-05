@@ -42,14 +42,13 @@ const AddProductPage = () => {
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // ── Multi-step post-submit state ──
-    // step: null = form, 'videos' = step 2, 'services' = step 3
+    // ── Video files selected in-form (uploaded after product is created) ──
+    const [pendingVideos, setPendingVideos]        = useState([]); // { file, preview }[]
+    const [pendingVideoError, setPendingVideoError] = useState('');
+
+    // ── Post-submit state ──
     const [step, setStep]                         = useState(null);
     const [createdProductId, setCreatedProductId] = useState(null);
-    const [videos, setVideos]                     = useState([]);
-    const [uploadingCount, setUploadingCount]     = useState(0);
-    const uploadingRef                            = useRef(0);
-    const [videoError, setVideoError]             = useState('');
     const [isSubmittingServices, setIsSubmittingServices] = useState(false);
     const [servicesError, setServicesError]       = useState('');
 
@@ -84,6 +83,20 @@ const AddProductPage = () => {
         setServices([...services, { name: '', description: '', price: '', countInStock: '', images: [] }]);
     };
 
+    const handlePendingVideoSelect = (e) => {
+        const file = e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        setPendingVideoError('');
+        if (pendingVideos.length >= 4) { setPendingVideoError('Maximum 4 videos allowed.'); return; }
+        if (file.size > 100 * 1024 * 1024) { setPendingVideoError('File too large. Maximum 100 MB.'); return; }
+        setPendingVideos(prev => [...prev, { file, name: file.name }]);
+    };
+
+    const removePendingVideo = (index) => {
+        setPendingVideos(prev => prev.filter((_, i) => i !== index));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -105,13 +118,29 @@ const AddProductPage = () => {
                 },
             });
 
+            const productId = response.data.productId;
+
+            // Upload any videos the user selected in the form
+            for (const pv of pendingVideos) {
+                try {
+                    const vfd = new FormData();
+                    vfd.append('video', pv.file);
+                    await api.post(`/api/products/${productId}/upload-video/`, vfd, {
+                        headers: { Authorization: `Bearer ${userInfo.token}` },
+                    });
+                } catch {
+                    // non-blocking — video failures don't block registration
+                }
+            }
+
             setProductData(emptyProduct);
             setRawPhones({ business_phone: '', personal_phone: '' });
-            setResponseMessage('Business registered successfully! Now add promo videos below.');
+            setPendingVideos([]);
+            setResponseMessage('Business registered successfully! Now add your services below.');
             setError('');
             setIsFormVisible(false);
-            setCreatedProductId(response.data.productId);
-            setStep('videos');
+            setCreatedProductId(productId);
+            setStep('services');
 
         } catch (err) {
             const backendMsg = err.response?.data?.detail
@@ -129,48 +158,6 @@ const AddProductPage = () => {
             }
         } finally {
             setIsSubmitting(false);
-        }
-    };
-
-    /* ── Video upload handlers ───────────────────────────────── */
-    const handleVideoSelect = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        setVideoError('');
-        if (videos.length + uploadingRef.current >= 4) { setVideoError('Maximum 4 videos allowed.'); return; }
-        if (file.size > 100 * 1024 * 1024) { setVideoError('File too large. Maximum 100 MB.'); return; }
-        if (!createdProductId) { setVideoError('Product ID missing.'); return; }
-        uploadingRef.current += 1;
-        setUploadingCount(uploadingRef.current);
-        try {
-            const formData = new FormData();
-            formData.append('video', file);
-            const res = await api.post(`/api/products/${createdProductId}/upload-video/`, formData, {
-                headers: { Authorization: `Bearer ${userInfo.token}` },
-            });
-            setVideos(prev => [...prev, {
-                _id: res.data.id,
-                video_url: res.data.video_url,
-                video_thumb: res.data.thumb_url,
-                video_duration: res.data.duration,
-            }]);
-        } catch (err) {
-            setVideoError(err.response?.data?.error || 'Upload failed. Please try again.');
-        } finally {
-            uploadingRef.current -= 1;
-            setUploadingCount(uploadingRef.current);
-            e.target.value = '';
-        }
-    };
-
-    const handleVideoDelete = async (videoId) => {
-        try {
-            await api.delete(`/api/products/${createdProductId}/videos/${videoId}/`, {
-                headers: { Authorization: `Bearer ${userInfo.token}` },
-            });
-            setVideos(prev => prev.filter(v => v._id !== videoId));
-        } catch {
-            setVideoError('Could not remove video. Please try again.');
         }
     };
 
@@ -527,6 +514,36 @@ const AddProductPage = () => {
                                     Set your overall price range so clients can filter by budget.
                                 </div>
 
+                                {/* ── Promo Videos (in-form) ── */}
+                                <div className="ap-section-divider">
+                                    <span className="ap-section-label">🎬 Promo Videos</span>
+                                    <div className="ap-section-line"></div>
+                                </div>
+                                <p style={{ fontSize: '12px', color: '#888', margin: '0 0 12px' }}>
+                                    Up to 4 videos · MP4, MOV, AVI, MKV, WEBM · Max 100 MB each · Optional
+                                </p>
+                                {pendingVideoError && (
+                                    <div className="ap-alert ap-alert-danger" style={{ marginBottom: '12px' }}>⚠️ {pendingVideoError}</div>
+                                )}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '20px' }}>
+                                    {pendingVideos.map((pv, i) => (
+                                        <div key={i} style={{ position: 'relative', border: '2px solid #5e143f', borderRadius: '8px', aspectRatio: '9/16', background: '#fdf0f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '8px', overflow: 'hidden' }}>
+                                            <span style={{ fontSize: '28px' }}>🎬</span>
+                                            <span style={{ fontSize: '9px', color: '#5e143f', fontWeight: 600, textAlign: 'center', marginTop: '4px', wordBreak: 'break-all', lineHeight: 1.3 }}>{pv.name}</span>
+                                            <button type="button" onClick={() => removePendingVideo(i)}
+                                                style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: '22px', height: '22px', color: '#fff', fontSize: '11px', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+                                        </div>
+                                    ))}
+                                    {pendingVideos.length < 4 && (
+                                        <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #c9a96e', borderRadius: '8px', aspectRatio: '9/16', cursor: 'pointer', background: '#fdf8f0' }}>
+                                            <span style={{ fontSize: '22px' }}>＋</span>
+                                            <span style={{ fontSize: '10px', color: '#5e143f', fontWeight: 600, marginTop: '4px' }}>Add Video</span>
+                                            <span style={{ fontSize: '9px', color: '#aaa', marginTop: '2px' }}>{pendingVideos.length + 1}/4</span>
+                                            <input type="file" accept=".mp4,.mov,.avi,.mkv,.webm" style={{ display: 'none' }} onChange={handlePendingVideoSelect} />
+                                        </label>
+                                    )}
+                                </div>
+
                                 <button
                                     type="submit"
                                     className="ap-submit-btn"
@@ -549,67 +566,7 @@ const AddProductPage = () => {
                             </div>
                         )}
 
-                        {/* ── Step 2: Video Upload ── */}
-                        {step === 'videos' && (
-                            <div>
-                                <div className="ap-section-divider">
-                                    <span className="ap-section-label">🎬 Add Promo Videos</span>
-                                    <div className="ap-section-line"></div>
-                                </div>
-                                <p style={{ fontSize: '12px', color: '#888', margin: '0 0 12px' }}>
-                                    Up to 4 videos · MP4, MOV, AVI, MKV, WEBM · Max 100 MB each
-                                </p>
-                                {videoError && (
-                                    <div className="ap-alert ap-alert-danger" style={{ marginBottom: '12px' }}>⚠️ {videoError}</div>
-                                )}
-                                {(() => {
-                                    const emptySlots = Math.max(0, 4 - videos.length - uploadingCount);
-                                    return (
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '20px' }}>
-                                            {videos.map((vid) => (
-                                                <div key={vid._id} style={{ position: 'relative' }}>
-                                                    <img src={vid.video_thumb} alt="thumb"
-                                                        style={{ width: '100%', aspectRatio: '9/16', objectFit: 'cover', borderRadius: '8px', border: '2px solid #5e143f', display: 'block' }} />
-                                                    {vid.video_duration && (
-                                                        <span style={{ position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: '10px', padding: '2px 5px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
-                                                            {Math.floor(vid.video_duration)}s
-                                                        </span>
-                                                    )}
-                                                    <button type="button" onClick={() => handleVideoDelete(vid._id)}
-                                                        style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: '24px', height: '24px', color: '#fff', fontSize: '12px', cursor: 'pointer', lineHeight: 1 }}>✕</button>
-                                                </div>
-                                            ))}
-                                            {Array.from({ length: uploadingCount }).map((_, i) => (
-                                                <div key={`uploading-${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #c9a96e', borderRadius: '8px', aspectRatio: '9/16', background: '#fdf8f0', padding: '12px', gap: '6px' }}>
-                                                    <span style={{ fontSize: '22px' }}>🎬</span>
-                                                    <span style={{ fontSize: '11px', color: '#5e143f', fontWeight: 700, textAlign: 'center' }}>Processing video…</span>
-                                                    <span style={{ fontSize: '10px', color: '#888', textAlign: 'center', lineHeight: 1.4 }}>This can take up to a minute. Please don't close this page.</span>
-                                                </div>
-                                            ))}
-                                            {Array.from({ length: emptySlots }).map((_, i) => (
-                                                <label key={`empty-${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #c9a96e', borderRadius: '8px', aspectRatio: '9/16', cursor: 'pointer', background: '#fdf8f0' }}>
-                                                    <span style={{ fontSize: '22px' }}>＋</span>
-                                                    <span style={{ fontSize: '10px', color: '#5e143f', fontWeight: 600, marginTop: '4px' }}>Add Video</span>
-                                                    <span style={{ fontSize: '9px', color: '#aaa', marginTop: '2px' }}>{videos.length + uploadingCount + i + 1}/4</span>
-                                                    <input type="file" accept=".mp4,.mov,.avi,.mkv,.webm" style={{ display: 'none' }} onChange={handleVideoSelect} />
-                                                </label>
-                                            ))}
-                                        </div>
-                                    );
-                                })()}
-                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                    <button
-                                        type="button"
-                                        className="ap-submit-btn"
-                                        onClick={() => setStep('services')}
-                                    >
-                                        {videos.length > 0 ? 'Next — Add Services →' : 'Skip → Add Services'}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* ── Step 3: Services ── */}
+                        {/* ── Step 2: Services ── */}
                         {step === 'services' && (
                             <form onSubmit={handleServicesSubmit}>
                                 <div className="ap-services-heading">
