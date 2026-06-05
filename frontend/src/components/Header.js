@@ -415,6 +415,12 @@ const Header = () => {
                     </Nav.Link>
                   </LinkContainer>
 
+                  <LinkContainer to="/blog">
+                    <Nav.Link>
+                      <i className="fas fa-pen-nib" aria-hidden="true" /> Blog
+                    </Nav.Link>
+                  </LinkContainer>
+
                   {!isServiceOwner && (
                     <>
                       <LinkContainer to="/budget">
