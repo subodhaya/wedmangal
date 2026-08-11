@@ -1,0 +1,79 @@
+.trv-widget {
+  margin: 32px 0;
+  padding: 20px;
+  background: #fdf4f8;
+  border: 1px solid rgba(94, 20, 63, 0.12);
+  border-radius: 14px;
+}
+
+.trv-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #3d0d28;
+  margin: 0 0 14px;
+}
+
+.trv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trv-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid rgba(94, 20, 63, 0.1);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-decoration: none;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.trv-card:hover {
+  box-shadow: 0 6px 18px rgba(94, 20, 63, 0.14);
+  transform: translateY(-1px);
+}
+
+.trv-img {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #f0d0de;
+}
+
+.trv-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.trv-name {
+  font-weight: 700;
+  color: #3d0d28;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.trv-city {
+  font-size: 0.78rem;
+  color: #9a7a85;
+}
+.trv-rating {
+  font-size: 0.8rem;
+  color: #c9973a;
+  font-weight: 600;
+}
+
+.trv-more {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #5e143f;
+  text-decoration: none;
+}
+.trv-more:hover { text-decoration: underline; }

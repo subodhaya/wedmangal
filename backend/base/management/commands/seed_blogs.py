@@ -6,6 +6,7 @@ POSTS = [
     {
         "title": "The Complete Tamil Wedding Planning Checklist — 12 Months to Your Big Day",
         "slug": "tamil-wedding-planning-checklist",
+        "cover_image": "blog/12-Month-Wedding-Checklist-pdf-.png",
         "category": "wedding-tips",
         "author": "WedMangal Team",
         "tags": "Tamil wedding, wedding checklist, wedding planning, muhurtham",
@@ -87,6 +88,7 @@ POSTS = [
     {
         "title": "How to Set a Wedding Budget — A Practical Guide for Tamil Families",
         "slug": "tamil-wedding-budget-guide",
+        "cover_image": "blog/budget.jpeg",
         "category": "wedding-tips",
         "author": "WedMangal Team",
         "tags": "wedding budget, Tamil wedding cost, wedding planning budget",
@@ -143,6 +145,7 @@ POSTS = [
     {
         "title": "7 Tamil Wedding Rituals Every Couple Should Know",
         "slug": "tamil-wedding-rituals-guide",
+        "cover_image": "blog/tamil-marriage-rituals.jpg",
         "category": "wedding-rituals",
         "author": "WedMangal Team",
         "tags": "Tamil wedding rituals, muhurtham, nalangu, sapthapathi, oonjal, thali",
@@ -192,11 +195,357 @@ POSTS = [
 <p>Understanding these rituals makes any Tamil wedding more meaningful — whether you are the bride, groom, or a guest. Each step is a thread in the beautiful fabric of Tamil culture and tradition.</p>
 <p>Looking for vendors to help make your Tamil wedding perfect? Find photographers, makeup artists, pandits, and decorators on <strong>WedMangal</strong>.</p>""",
     },
+    {
+        "title": "Best Wedding Venues in Chennai, Coimbatore & Madurai for Tamil Weddings",
+        "slug": "best-wedding-venues-chennai-coimbatore-madurai",
+        "cover_image": "blog/wedding-venue.avif",
+        "category": "tamil-weddings",
+        "author": "WedMangal Team",
+        "related_category": "Halls",
+        "tags": "wedding venues Chennai, wedding halls Coimbatore, Madurai wedding venues, Tamil wedding halls",
+        "excerpt": "Picking the right hall shapes your whole wedding. Here's how to choose a Tamil wedding venue in Chennai, Coimbatore, or Madurai — capacity, parking, catering rules, and more.",
+        "content": """<p>The wedding hall is usually the first big booking a Tamil family makes — and the one every other decision (catering, décor, guest count, even the muhurtham time) gets built around. Here's what actually matters when you're comparing venues in Chennai, Coimbatore, Madurai, and other Tamil Nadu cities.</p>
+
+<hr/>
+
+<h2>🏛️ Types of Wedding Venues in Tamil Nadu</h2>
+<ul>
+<li><strong>Kalyana Mandapams</strong> — the traditional choice, purpose-built for Tamil wedding rituals with a raised stage, homam area, and large dining halls. Common across Chennai (Mylapore, T. Nagar, Alwarpet), Coimbatore (RS Puram, Saibaba Colony), and Madurai.</li>
+<li><strong>Banquet halls in hotels</strong> — air-conditioned, often with in-house catering and décor tie-ups. Priced higher but lower on logistics headaches.</li>
+<li><strong>Community halls / Sabha mandapams</strong> — budget-friendly, run by community trusts, often need advance booking through members.</li>
+<li><strong>Resort &amp; outdoor lawns</strong> — increasingly popular for 2-3 day multi-function weddings just outside city limits.</li>
+</ul>
+
+<hr/>
+
+<h2>✅ What to Check Before Booking</h2>
+<ol>
+<li><strong>Guest capacity vs. your actual headcount</strong> — ask for both "seated dining" and "peak simultaneous" capacity, they're usually different numbers.</li>
+<li><strong>Muhurtham time flexibility</strong> — some halls run tight back-to-back bookings; confirm your hall is exclusively yours for the full auspicious window, not shared with another function that day.</li>
+<li><strong>In-house vs. outside catering</strong> — some mandapams insist on their own catering team, which limits your menu choices. Ask upfront.</li>
+<li><strong>Parking &amp; guest access</strong> — especially important in dense areas like T. Nagar or Coimbatore's RS Puram; ask about valet or nearby parking arrangements.</li>
+<li><strong>Power backup</strong> — a must, especially during monsoon season bookings.</li>
+<li><strong>Decoration restrictions</strong> — some halls restrict open-flame décor, hanging installations, or external decorators. Get this in writing.</li>
+</ol>
+
+<hr/>
+
+<h2>📍 Booking Timeline by City</h2>
+<p>Popular halls in Chennai and Coimbatore get booked <strong>10–12 months in advance</strong> for peak wedding season (December–February, April–May). Madurai and smaller towns have slightly more flexibility but book early for weekend and auspicious-date slots regardless.</p>
+
+<hr/>
+<p>Ready to shortlist venues? Browse verified <a href="/category/Halls">wedding halls near you</a> on WedMangal, complete with photos, pricing, and availability — then pair your hall with a trusted <a href="/category/Caterers">caterer</a> and <a href="/category/Decorators">decorator</a> in the same city.</p>""",
+    },
+    {
+        "title": "How Wedding Vendors in Tamil Nadu Can Get More Bookings Online",
+        "slug": "grow-wedding-vendor-business-tamil-nadu",
+        "category": "vendor-tips",
+        "author": "WedMangal Team",
+        "tags": "wedding vendor tips, grow wedding business, wedding vendor marketing Tamil Nadu",
+        "excerpt": "Photographers, decorators, caterers, and makeup artists — here's a practical guide to getting discovered by more couples and turning enquiries into bookings.",
+        "content": """<p>Word-of-mouth still matters in the wedding industry — but more and more couples now start their vendor search online, comparing photos, prices, and reviews before ever making a phone call. If you run a photography studio, decoration business, catering service, or any other wedding vendor business in Tamil Nadu, here's how to make sure you're the one they find and book.</p>
+
+<hr/>
+
+<h2>📸 1. Your Portfolio Is Your First Impression</h2>
+<p>Couples decide within seconds whether to enquire further. Keep your listing photos recent, high-resolution, and varied — show your best work across different venues, budgets, and styles, not just one wedding on repeat.</p>
+
+<h2>💬 2. Respond Fast — Speed Wins Bookings</h2>
+<p>Couples typically message 4–5 vendors in a category at once. The ones who reply within a few hours, not days, get first-mover advantage. Set a daily reminder to check your enquiries if you can't reply instantly.</p>
+
+<h2>⭐ 3. Reviews Build Trust Faster Than Ads</h2>
+<p>After every wedding, politely ask happy clients for a review. A profile with 10+ genuine reviews converts dramatically better than one with none — it answers the "can I trust this vendor" question before you even speak to them.</p>
+
+<h2>💰 4. Be Transparent About Pricing</h2>
+<p>Vague pricing ("contact for quote") loses budget-conscious couples who are comparing multiple vendors quickly. Where possible, list a clear starting price or price range — it filters in serious enquiries and filters out mismatched budgets.</p>
+
+<h2>📍 5. Keep Your Availability Calendar Updated</h2>
+<p>Nothing frustrates a couple more than a great vendor who turns out to be already booked on their date — after days of back-and-forth. Mark your unavailable dates as soon as you confirm a booking so serious couples don't waste time or lose interest.</p>
+
+<h2>🎥 6. Add Video, Not Just Photos</h2>
+<p>Short highlight reels — even a 30-second clip from a recent wedding — build far more confidence than photos alone, especially for photographers, decorators, and DJ/music artists. Couples want to see how you actually work.</p>
+
+<hr/>
+<p>Own a wedding business in Tamil Nadu? <a href="/owner-register">List your business on WedMangal</a> — it's free to create a profile, and couples across Chennai, Coimbatore, Madurai, and beyond are searching for vendors like you every day.</p>""",
+    },
+    {
+        "title": "5 Tamil Wedding Themes & Décor Ideas We're Loving This Season",
+        "slug": "tamil-wedding-themes-decor-ideas",
+        "cover_image": "blog/decors.jpeg",
+        "category": "real-weddings",
+        "author": "WedMangal Team",
+        "related_category": "Decorators",
+        "tags": "Tamil wedding decor, wedding themes, mandap decoration ideas, Tamil wedding inspiration",
+        "excerpt": "From classic temple-style mandaps to modern floral minimalism — here are five décor directions Tamil couples are choosing for their big day this season.",
+        "content": """<p>Every wedding season brings its own décor language. Based on what couples across Chennai, Coimbatore, and Madurai have been booking lately, here are five themes worth considering for your own mandap and reception décor.</p>
+
+<hr/>
+
+<h2>🛕 1. Classic Temple-Style Mandap</h2>
+<p>Inspired by South Indian temple architecture — stone-textured pillars, brass lamps (kuthu vilakku), banana stalks, and marigold garlands. This theme keeps the ritual space feeling authentic and rooted in tradition, and pairs beautifully with a traditional Kanjeevaram bridal look.</p>
+
+<h2>🌸 2. Floral Minimalism</h2>
+<p>A shift many couples are making — fewer, larger floral installations instead of dense wall-to-wall décor. Think a single dramatic flower wall behind the stage, pastel roses and jasmine strands, and clean white drapery. Elegant, photographs beautifully, and often costs less than an elaborate full-hall setup.</p>
+
+<h2>✨ 3. Gold &amp; Ivory Royal Theme</h2>
+<p>A popular choice for evening receptions — gold sequin drapes, crystal chandeliers, ivory florals, and warm amber lighting. Works especially well in banquet-hall settings and creates striking photos under low light.</p>
+
+<h2>🪔 4. Traditional South Indian with a Modern Twist</h2>
+<p>Couples are blending heritage elements — kolam-inspired floor art, brass urulis with floating flowers and candles, banana leaf motifs — with contemporary touches like fairy-light backdrops and modern typography signage ("Save the Date," welcome boards).</p>
+
+<h2>🌿 5. Garden &amp; Outdoor Mandap</h2>
+<p>For resort and lawn weddings just outside the city, a botanical theme with greenery arches, hanging lanterns, and natural wood mandap structures is trending — especially for two-day, multi-function weddings.</p>
+
+<hr/>
+<p>Whichever direction you choose, your decorator's experience with your specific venue matters as much as the mood board. Browse <a href="/category/Decorators">wedding decorators</a> on WedMangal, filter by city, and ask to see photos of their past work at your chosen hall before you book.</p>""",
+    },
+    {
+        "title": "Bridal Makeup Guide for Tamil Brides — Trends, Tips & Choosing an Artist",
+        "slug": "bridal-makeup-guide-tamil-brides",
+        "cover_image": "blog/makeupartist.jpeg",
+        "category": "tamil-weddings",
+        "author": "WedMangal Team",
+        "related_category": "Makeup_Artist",
+        "tags": "bridal makeup Tamil Nadu, Tamil bride makeup, bridal makeup artist Chennai, wedding makeup trends",
+        "excerpt": "Traditional or contemporary? Airbrush or HD? Here's a practical guide to bridal makeup trends for Tamil brides, plus how to choose and trial an artist before the big day.",
+        "content": """<p>Bridal makeup is one of the most personal decisions in wedding planning — and one of the hardest to get right without a trial. Here's what to know before you book a bridal makeup artist for your Tamil wedding.</p>
+
+<hr/>
+
+<h2>💄 Popular Bridal Makeup Styles Right Now</h2>
+<ul>
+<li><strong>Traditional Tamil Bridal</strong> — bold kumkum-red lips, defined eyes, and a look built to stand out against Kanjeevaram silk and temple jewellery. Long-lasting formulas are a must given the length of muhurtham ceremonies.</li>
+<li><strong>HD &amp; Airbrush Makeup</strong> — a matte, camera-ready finish that holds up beautifully under both daylight and studio flash — popular for brides prioritising photography and video.</li>
+<li><strong>Contemporary Soft Glam</strong> — dewy skin, softer eye tones, nude-pink lips — often chosen for the reception look, paired with a lighter outfit.</li>
+<li><strong>Pre-Wedding / Engagement Look</strong> — lighter, dewier makeup distinct from the wedding-day look, usually planned as a separate trial.</li>
+</ul>
+
+<hr/>
+
+<h2>🗓️ How Far Ahead to Book</h2>
+<p>Reputed bridal makeup artists in Chennai, Coimbatore, and Madurai get booked <strong>4–6 months in advance</strong> for peak wedding season (December–February). Book early, especially if you have a specific artist in mind from Instagram or a friend's wedding.</p>
+
+<h2>🧪 Why the Trial Session Matters</h2>
+<p>A trial isn't optional — it's how you avoid wedding-day surprises. Use it to:</p>
+<ul>
+<li>Test how the makeup photographs, not just how it looks in person</li>
+<li>Check how long it lasts through heat, tears (there will be some), and hours of ceremony</li>
+<li>Confirm the artist understands your skin type and any allergies</li>
+<li>Finalise hair styling alongside makeup — they need to work together</li>
+</ul>
+
+<h2>❓ Questions to Ask Before Booking</h2>
+<ol>
+<li>Do you bring your own products, and are they suitable for sensitive skin?</li>
+<li>How many looks are included (muhurtham, reception, pre-wedding)?</li>
+<li>Do you travel to the venue, and is travel cost included?</li>
+<li>How many bridal makeups do you take on the same day — will I have your full attention?</li>
+<li>Is touch-up service included through the day?</li>
+</ol>
+
+<hr/>
+<p>Ready to book your trial? Explore verified <a href="/category/Makeup_Artist">bridal makeup artists</a> near you on WedMangal, compare portfolios and pricing, and message artists directly to check availability for your muhurtham date.</p>""",
+    },
+    {
+        "title": "Tamil Wedding Muhurtham Dates 2026 — Valarpirai & Theipirai Guide (April–December)",
+        "slug": "tamil-wedding-muhurtham-dates-2026",
+        "cover_image": "blog/muhurtham.jpeg",
+        "category": "wedding-tips",
+        "author": "WedMangal Team",
+        "tags": "Tamil wedding muhurtham 2026, muhurtham dates 2026, Valarpirai Theipirai, Tamil wedding panchangam, wedding date 2026",
+        "excerpt": "Every Tamil wedding muhurtham date from April to December 2026, month by month, with Valarpirai and Theipirai clearly marked — plus how to read a panchangam and which months to avoid.",
+        "content": """<p>Before the hall is booked, before the invitations are printed, before anything else — a Tamil wedding begins with the muhurtham. It's the one decision every other date in the planning calendar works backward from, so it's worth understanding what actually goes into choosing one, not just which dates are marked auspicious on a calendar.</p>
+
+<p style="background:#fdf4f8; border-left:3px solid #c9973a; padding:12px 16px; border-radius:6px;"><strong>A note before you read further:</strong> The dates below are compiled from the Tamil panchangam for general reference. Your family astrologer or purohit should always have the final word — they'll weigh your specific horoscope, nakshatra porutham, and family customs, which can narrow this list down to one or two dates that are right for you specifically.</p>
+
+<hr/>
+
+<h2>🪔 What Makes a Date a "Suba Muhurtham"?</h2>
+<p>A Suba Muhurtham (சுப முகூர்த்தம்) isn't picked at random — it's calculated from the panchangam, the traditional Tamil almanac, by weighing five factors together:</p>
+<ul>
+<li><strong>Nakshatra</strong> — which lunar constellation the day falls under</li>
+<li><strong>Tithi</strong> — the lunar day (Dwitiya, Tritiya, Panchami, and so on)</li>
+<li><strong>Vara</strong> — the day of the week</li>
+<li><strong>Yoga</strong> — the astrological combination formed that day</li>
+<li><strong>Karana</strong> — the half-day lunar segment</li>
+</ul>
+<p>A date only qualifies once these five line up favourably <em>and</em> the inauspicious windows — Rahu Kalam, Yamagandam, Kuligai — fall outside the ceremony time. Even then, families still need Jathagam Porutham (horoscope matching) confirmed for the specific couple before locking in a date.</p>
+
+<hr/>
+
+<h2>🌕🌖 Valarpirai vs. Theipirai — Why It Matters</h2>
+<p>Almost every muhurtham list you'll see is split into two lunar fortnights, and knowing the difference changes how you read the calendar below.</p>
+
+<h3>Valarpirai (வளர்பிறை) — the waxing moon</h3>
+<p>This is the fortnight from new moon to full moon, when the moon is visibly growing each night. Tamil tradition reads this growth as a good omen for anything meant to expand — including a marriage. Valarpirai dates are generally treated as the stronger, more preferred category of muhurtham.</p>
+
+<h3>Theipirai (தேய்பிறை) — the waning moon</h3>
+<p>The mirror-image fortnight, running from full moon back to new moon. It's considered a notch below Valarpirai for new beginnings, but a Theipirai date is by no means a compromise — plenty of families choose one deliberately, whether because the nakshatra that day suits their horoscope, the hall was easier to book, or guests could travel more easily. A Theipirai date with a strong nakshatra, confirmed by your astrologer, is a perfectly valid muhurtham.</p>
+
+<p><strong>The short version:</strong> lean toward Valarpirai if you're choosing freely between multiple good options — but don't rule out a Theipirai date your astrologer has approved.</p>
+
+<hr/>
+
+<h2>📅 Muhurtham Dates, April–December 2026</h2>
+<p>⭐ marks a Valarpirai (waxing moon) date. Unmarked dates fall in Theipirai.</p>
+
+<h3>April 2026 — 7 dates</h3>
+<table style="width:100%; border-collapse:collapse;">
+<tr><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Date</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Day</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Tamil Month</th></tr>
+<tr><td style="padding:8px;">6 April</td><td style="padding:8px;">Monday</td><td style="padding:8px;">பங்குனி (Panguni)</td></tr>
+<tr><td style="padding:8px;">12 April</td><td style="padding:8px;">Sunday</td><td style="padding:8px;">பங்குனி (Panguni)</td></tr>
+<tr><td style="padding:8px;">13 April</td><td style="padding:8px;">Monday</td><td style="padding:8px;">பங்குனி (Panguni)</td></tr>
+<tr><td style="padding:8px;">16 April</td><td style="padding:8px;">Thursday</td><td style="padding:8px;">சித்திரை (Chithirai)</td></tr>
+<tr><td style="padding:8px;">⭐ 20 April</td><td style="padding:8px;">Monday</td><td style="padding:8px;">சித்திரை (Chithirai)</td></tr>
+<tr><td style="padding:8px;">⭐ 23 April</td><td style="padding:8px;">Thursday</td><td style="padding:8px;">சித்திரை (Chithirai)</td></tr>
+<tr><td style="padding:8px;">⭐ 30 April</td><td style="padding:8px;">Thursday</td><td style="padding:8px;">சித்திரை (Chithirai)</td></tr>
+</table>
+<p class="claim-hint" style="font-style:italic; color:#9a7a85; font-size:0.85rem;">💡 19 April 2026 (Sunday) is Akshaya Tritiya — a self-auspicious day that doesn't need separate muhurtham calculation. More on this below.</p>
+
+<h3>May 2026 — 6 dates</h3>
+<table style="width:100%; border-collapse:collapse;">
+<tr><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Date</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Day</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Tamil Month</th></tr>
+<tr><td style="padding:8px;">8 May</td><td style="padding:8px;">Friday</td><td style="padding:8px;">சித்திரை (Chithirai)</td></tr>
+<tr><td style="padding:8px;">13 May</td><td style="padding:8px;">Wednesday</td><td style="padding:8px;">சித்திரை (Chithirai)</td></tr>
+<tr><td style="padding:8px;">14 May</td><td style="padding:8px;">Thursday</td><td style="padding:8px;">சித்திரை (Chithirai)</td></tr>
+<tr><td style="padding:8px;">⭐ 18 May</td><td style="padding:8px;">Monday</td><td style="padding:8px;">வைகாசி (Vaikasi)</td></tr>
+<tr><td style="padding:8px;">⭐ 28 May</td><td style="padding:8px;">Thursday</td><td style="padding:8px;">வைகாசி (Vaikasi)</td></tr>
+<tr><td style="padding:8px;">⭐ 29 May</td><td style="padding:8px;">Friday</td><td style="padding:8px;">வைகாசி (Vaikasi)</td></tr>
+</table>
+
+<h3>June 2026 — 6 dates</h3>
+<table style="width:100%; border-collapse:collapse;">
+<tr><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Date</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Day</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Tamil Month</th></tr>
+<tr><td style="padding:8px;">4 June</td><td style="padding:8px;">Thursday</td><td style="padding:8px;">வைகாசி (Vaikasi)</td></tr>
+<tr><td style="padding:8px;">7 June</td><td style="padding:8px;">Sunday</td><td style="padding:8px;">வைகாசி (Vaikasi)</td></tr>
+<tr><td style="padding:8px;">⭐ 17 June</td><td style="padding:8px;">Wednesday</td><td style="padding:8px;">ஆனி (Aani)</td></tr>
+<tr><td style="padding:8px;">⭐ 18 June</td><td style="padding:8px;">Thursday</td><td style="padding:8px;">ஆனி (Aani)</td></tr>
+<tr><td style="padding:8px;">⭐ 24 June</td><td style="padding:8px;">Wednesday</td><td style="padding:8px;">ஆனி (Aani)</td></tr>
+<tr><td style="padding:8px;">⭐ 25 June</td><td style="padding:8px;">Thursday</td><td style="padding:8px;">ஆனி (Aani)</td></tr>
+</table>
+
+<h3>July 2026 — 3 dates</h3>
+<table style="width:100%; border-collapse:collapse;">
+<tr><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Date</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Day</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Tamil Month</th></tr>
+<tr><td style="padding:8px;">2 July</td><td style="padding:8px;">Thursday</td><td style="padding:8px;">ஆனி (Aani)</td></tr>
+<tr><td style="padding:8px;">5 July</td><td style="padding:8px;">Sunday</td><td style="padding:8px;">ஆனி (Aani)</td></tr>
+<tr><td style="padding:8px;">12 July</td><td style="padding:8px;">Sunday</td><td style="padding:8px;">ஆனி (Aani)</td></tr>
+</table>
+<p class="claim-hint" style="font-style:italic; color:#9a7a85; font-size:0.85rem;">⚠️ ஆடி (Aadi) — roughly mid-July to mid-August — is traditionally skipped for weddings, which is why the list thins out here.</p>
+
+<h3>August 2026 — 3 dates</h3>
+<table style="width:100%; border-collapse:collapse;">
+<tr><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Date</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Day</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Tamil Month</th></tr>
+<tr><td style="padding:8px;">⭐ 23 August</td><td style="padding:8px;">Sunday</td><td style="padding:8px;">ஆவணி (Aavani)</td></tr>
+<tr><td style="padding:8px;">30 August</td><td style="padding:8px;">Sunday</td><td style="padding:8px;">ஆவணி (Aavani)</td></tr>
+<tr><td style="padding:8px;">31 August</td><td style="padding:8px;">Monday</td><td style="padding:8px;">ஆவணி (Aavani)</td></tr>
+</table>
+
+<h3>September 2026 — 3 dates</h3>
+<table style="width:100%; border-collapse:collapse;">
+<tr><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Date</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Day</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Tamil Month</th></tr>
+<tr><td style="padding:8px;">7 September</td><td style="padding:8px;">Monday</td><td style="padding:8px;">ஆவணி (Aavani)</td></tr>
+<tr><td style="padding:8px;">⭐ 13 September</td><td style="padding:8px;">Sunday</td><td style="padding:8px;">ஆவணி (Aavani)</td></tr>
+<tr><td style="padding:8px;">⭐ 17 September</td><td style="padding:8px;">Thursday</td><td style="padding:8px;">ஆவணி (Aavani)</td></tr>
+</table>
+<p class="claim-hint" style="font-style:italic; color:#9a7a85; font-size:0.85rem;">⚠️ புரட்டாசி (Purattasi) — mid-September to mid-October — is set aside for Lord Vishnu and traditionally kept free of weddings.</p>
+
+<h3>October 2026 — 2 dates</h3>
+<table style="width:100%; border-collapse:collapse;">
+<tr><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Date</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Day</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Tamil Month</th></tr>
+<tr><td style="padding:8px;">⭐ 25 October</td><td style="padding:8px;">Sunday</td><td style="padding:8px;">ஐப்பசி (Aippasi)</td></tr>
+<tr><td style="padding:8px;">30 October</td><td style="padding:8px;">Friday</td><td style="padding:8px;">ஐப்பசி (Aippasi)</td></tr>
+</table>
+
+<h3>November 2026 — 7 dates 🏆</h3>
+<p>The busiest muhurtham month of the year — 7 dates, 5 of them Valarpirai. Wedding halls across Tamil Nadu book out fastest for these weekends, so start your venue search early if you're eyeing November.</p>
+<table style="width:100%; border-collapse:collapse;">
+<tr><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Date</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Day</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Tamil Month</th></tr>
+<tr><td style="padding:8px;">1 November</td><td style="padding:8px;">Sunday</td><td style="padding:8px;">ஐப்பசி (Aippasi)</td></tr>
+<tr><td style="padding:8px;">⭐ 11 November</td><td style="padding:8px;">Wednesday</td><td style="padding:8px;">ஐப்பசி (Aippasi)</td></tr>
+<tr><td style="padding:8px;">⭐ 13 November</td><td style="padding:8px;">Friday</td><td style="padding:8px;">ஐப்பசி (Aippasi)</td></tr>
+<tr><td style="padding:8px;">⭐ 15 November</td><td style="padding:8px;">Sunday</td><td style="padding:8px;">ஐப்பசி (Aippasi)</td></tr>
+<tr><td style="padding:8px;">⭐ 16 November</td><td style="padding:8px;">Monday</td><td style="padding:8px;">ஐப்பசி (Aippasi)</td></tr>
+<tr><td style="padding:8px;">⭐ 20 November</td><td style="padding:8px;">Friday</td><td style="padding:8px;">கார்த்திகை (Karthikai)</td></tr>
+<tr><td style="padding:8px;">29 November</td><td style="padding:8px;">Sunday</td><td style="padding:8px;">கார்த்திகை (Karthikai)</td></tr>
+</table>
+
+<h3>December 2026 — 5 dates</h3>
+<table style="width:100%; border-collapse:collapse;">
+<tr><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Date</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Day</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Tamil Month</th></tr>
+<tr><td style="padding:8px;">4 December</td><td style="padding:8px;">Friday</td><td style="padding:8px;">கார்த்திகை (Karthikai)</td></tr>
+<tr><td style="padding:8px;">6 December</td><td style="padding:8px;">Sunday</td><td style="padding:8px;">கார்த்திகை (Karthikai)</td></tr>
+<tr><td style="padding:8px;">⭐ 10 December</td><td style="padding:8px;">Thursday</td><td style="padding:8px;">கார்த்திகை (Karthikai)</td></tr>
+<tr><td style="padding:8px;">⭐ 13 December</td><td style="padding:8px;">Sunday</td><td style="padding:8px;">கார்த்திகை (Karthikai)</td></tr>
+<tr><td style="padding:8px;">⭐ 14 December</td><td style="padding:8px;">Monday</td><td style="padding:8px;">கார்த்திகை (Karthikai)</td></tr>
+</table>
+<p class="claim-hint" style="font-style:italic; color:#9a7a85; font-size:0.85rem;">⚠️ மார்கழி (Margazhi) begins mid-December — a sacred month that's traditionally kept free of weddings, which is why the year's list ends here.</p>
+
+<hr/>
+
+<h2>📊 Quick Reference — All 42 Dates by Month</h2>
+<table style="width:100%; border-collapse:collapse;">
+<tr><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Month</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">🌕 Valarpirai</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">🌖 Theipirai</th><th style="text-align:right; padding:8px; border-bottom:1px solid #e8d5de;">Total</th></tr>
+<tr><td style="padding:8px;">April</td><td style="padding:8px;">20, 23, 30</td><td style="padding:8px;">6, 12, 13, 16</td><td style="text-align:right; padding:8px;">7</td></tr>
+<tr><td style="padding:8px;">May</td><td style="padding:8px;">18, 28, 29</td><td style="padding:8px;">8, 13, 14</td><td style="text-align:right; padding:8px;">6</td></tr>
+<tr><td style="padding:8px;">June</td><td style="padding:8px;">17, 18, 24, 25</td><td style="padding:8px;">4, 7</td><td style="text-align:right; padding:8px;">6</td></tr>
+<tr><td style="padding:8px;">July</td><td style="padding:8px;">—</td><td style="padding:8px;">2, 5, 12</td><td style="text-align:right; padding:8px;">3</td></tr>
+<tr><td style="padding:8px;">August</td><td style="padding:8px;">23</td><td style="padding:8px;">30, 31</td><td style="text-align:right; padding:8px;">3</td></tr>
+<tr><td style="padding:8px;">September</td><td style="padding:8px;">13, 17</td><td style="padding:8px;">7</td><td style="text-align:right; padding:8px;">3</td></tr>
+<tr><td style="padding:8px;">October</td><td style="padding:8px;">25</td><td style="padding:8px;">30</td><td style="text-align:right; padding:8px;">2</td></tr>
+<tr><td style="padding:8px;">November</td><td style="padding:8px;">11, 13, 15, 16, 20</td><td style="padding:8px;">1, 29</td><td style="text-align:right; padding:8px;">7</td></tr>
+<tr><td style="padding:8px;">December</td><td style="padding:8px;">10, 13, 14</td><td style="padding:8px;">4, 6</td><td style="text-align:right; padding:8px;">5</td></tr>
+<tr><td style="padding:8px;"><strong>Total</strong></td><td style="padding:8px;"><strong>22</strong></td><td style="padding:8px;"><strong>20</strong></td><td style="text-align:right; padding:8px;"><strong>42</strong></td></tr>
+</table>
+
+<hr/>
+
+<h2>🌟 Auspicious Days That Fall Outside the Muhurtham List</h2>
+<p>The panchangam isn't the only source of good wedding dates. A few other occasions are considered auspicious in their own right:</p>
+
+<h3>1. அட்சய திரிதியை (Akshaya Tritiya) — 19 April 2026, Sunday</h3>
+<p>One of the three Swayam Siddha days — dates considered self-auspicious, needing no separate muhurtham calculation. "Akshaya" translates to "never diminishing," and weddings held on this day are believed to carry that quality forward. Because of this, mandapams across Tamil Nadu are typically booked out 12–18 months ahead for Akshaya Tritiya — if this date interests you, start your venue search now.</p>
+
+<h3>2. விஜயதசமி (Vijayadasami) — October 2026</h3>
+<p>The tenth and final day of Navratri, another Swayam Siddha day, associated with triumph and fresh starts. Like Akshaya Tritiya, it doesn't require separate astrological sign-off.</p>
+
+<h3>3. பௌர்ணமி (Pournami) with a Favourable Nakshatra</h3>
+<p>Full moon days carry their own elevated energy in Tamil tradition. When a Pournami lines up with a favourable nakshatra, some astrologers will approve it as a standalone wedding date.</p>
+
+<h3>4. தமிழ் புத்தாண்டு (Puthandu / Tamil New Year) — 14 April 2026</h3>
+<p>The first day of சித்திரை (Chithirai), marking the start of the Tamil calendar year. Some families and astrologers consider it an appropriate day for a wedding given its association with new beginnings.</p>
+
+<h3>5. Strong Nakshatras on Preferred Weekdays</h3>
+<p>Outside the dates listed above, a day carrying a particularly favourable nakshatra — Rohini, Uttara, Hastam, Revathi, or Swathi — falling on a Monday, Wednesday, Thursday, or Friday may still be approved by an experienced astrologer once your horoscopes are checked.</p>
+
+<hr/>
+
+<h2>⚠️ Months Traditionally Avoided</h2>
+<table style="width:100%; border-collapse:collapse;">
+<tr><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Period</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Tamil Month</th><th style="text-align:left; padding:8px; border-bottom:1px solid #e8d5de;">Why</th></tr>
+<tr><td style="padding:8px;">Mid-July to mid-August</td><td style="padding:8px;">ஆடி (Aadi)</td><td style="padding:8px;">Considered inauspicious for new beginnings</td></tr>
+<tr><td style="padding:8px;">Mid-September to mid-October</td><td style="padding:8px;">புரட்டாசி (Purattasi)</td><td style="padding:8px;">Dedicated to Lord Vishnu; weddings traditionally paused</td></tr>
+<tr><td style="padding:8px;">Mid-December to mid-January</td><td style="padding:8px;">மார்கழி (Margazhi)</td><td style="padding:8px;">A sacred, contemplative month; weddings traditionally paused</td></tr>
+</table>
+
+<hr/>
+
+<h2>✅ Before You Lock In a Date</h2>
+<ul>
+<li><strong>Book your hall 9–12 months ahead</strong> for April and November dates especially — these are the two most competitive months for kalyana mandapams across Tamil Nadu.</li>
+<li><strong>Get the exact time window, not just the date</strong> — the auspicious period on a given day can be as short as 1–2 hours, and it moves depending on your priest's calculation.</li>
+<li><strong>Double-check Rahu Kalam and Yamagandam</strong> against your ceremony time even on a listed muhurtham date — these inauspicious windows shift daily and can fall inside an otherwise good day.</li>
+<li><strong>Shortlist 2–3 alternate dates</strong> before you start contacting vendors, so a single fully-booked hall doesn't stall your entire planning timeline.</li>
+</ul>
+
+<hr/>
+<p>Once your date is confirmed, the next step is locking down your venue and vendors before the good dates fill up. Browse verified <a href="/category/Halls">wedding halls</a>, <a href="/category/Photographers">photographers</a>, and <a href="/category/Caterers">caterers</a> near you on WedMangal, filtered by city and availability.</p>""",
+    },
 ]
 
 
 class Command(BaseCommand):
-    help = 'Seed 3 WedMangal blog posts'
+    help = 'Seed WedMangal blog posts'
 
     def handle(self, *args, **kwargs):
         created = 0

@@ -13,15 +13,22 @@ const CATEGORIES = [
   { value: 'real-weddings',   label: 'Real Weddings' },
 ];
 
+const CATEGORY_IMAGES = {
+  'tamil-weddings':  '/images/1.jpg',
+  'wedding-rituals': '/images/2.jpg',
+  'wedding-tips':    '/images/3.jpg',
+  'vendor-tips':     '/images/makeupartist.jpg',
+  'real-weddings':   '/images/4.jpg',
+};
+
 function BlogCard({ post }) {
+  const fallback = CATEGORY_IMAGES[post.category] || '/images/5.jpg';
+  const imgSrc   = post.cover_image_url || fallback;
+
   return (
     <Link to={`/blog/${post.slug}`} className="bl-card">
       <div className="bl-card-img-wrap">
-        {post.cover_image_url ? (
-          <img src={post.cover_image_url} alt={post.title} className="bl-card-img" />
-        ) : (
-          <div className="bl-card-img-placeholder">💍</div>
-        )}
+        <img src={imgSrc} alt={post.title} className="bl-card-img" />
         <span className="bl-category-badge">
           {CATEGORIES.find(c => c.value === post.category)?.label || post.category}
         </span>
@@ -60,7 +67,13 @@ export default function BlogListScreen() {
         <link rel="canonical" href="https://www.wedmangal.com/blog" />
       </Helmet>
 
-      <div className="bl-hero">
+      <div
+        className="bl-hero"
+        style={{
+          backgroundImage:
+            `linear-gradient(135deg, rgba(94,20,63,0.82), rgba(138,26,86,0.78)), url(${process.env.PUBLIC_URL}/images/makeupartist.jpg)`,
+        }}
+      >
         <h1 className="bl-hero-title">WedMangal Blog</h1>
         <p className="bl-hero-sub">Wedding rituals, traditions, planning tips and more</p>
       </div>

@@ -342,6 +342,7 @@ def addOrderItems(request):
             # ── Create order item ─────────────────────────────────
             item = OrderItem.objects.create(
                 service=service,
+                product=service.product,
                 order=order,
                 user=user,
                 name=service.name,

@@ -289,6 +289,21 @@
   margin-bottom: 1.4rem;
 }
 
+/* ── Tab switch (phone / email) ────────────────────────── */
+.ls-tab-switch { text-align: center; margin: 1rem 0 0.4rem; }
+.ls-tab-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--maroon);
+  padding: 0;
+  transition: color 0.2s;
+}
+.ls-tab-link:hover { color: var(--maroon-deep); text-decoration: underline; }
+
 /* ── Footer links ──────────────────────────────────────── */
 .ls-links { display: flex; flex-direction: column; gap: 0.5rem; }
 .ls-link-row {

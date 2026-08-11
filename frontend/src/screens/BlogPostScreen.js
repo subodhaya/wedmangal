@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import api from '../utils/api';
+import TopRatedVendors from '../components/TopRatedVendors';
 import './BlogPostScreen.css';
 
 export default function BlogPostScreen() {
@@ -99,6 +100,11 @@ export default function BlogPostScreen() {
           className="bp-content"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
+
+        {/* Live "top rated" listings — only renders if the post has a related category */}
+        {post.related_category && (
+          <TopRatedVendors category={post.related_category} city={post.related_city} />
+        )}
 
         {/* Footer CTA */}
         <div className="bp-cta">

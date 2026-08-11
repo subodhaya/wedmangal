@@ -8,6 +8,7 @@ from django.utils import timezone
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     wedding_date = models.DateField(null=True, blank=True)
+    phone = models.CharField(max_length=15, unique=True, null=True, blank=True)
     role = models.CharField(max_length=50, choices=[
         ('customer', 'Customer'),
         ('service-owner', 'Service Owner'),
@@ -260,6 +261,12 @@ class BlogPost(models.Model):
     published    = models.BooleanField(default=False, help_text='Only published posts appear on the website')
     created_at   = models.DateTimeField(default=timezone.now)
     updated_at   = models.DateTimeField(auto_now=True)
+
+    # Optional: show a "Top Rated Near You" widget of real, live listings on this
+    # post — matches Product.category (e.g. 'Halls', 'Makeup_Artist'). City is
+    # optional; blank shows top-rated listings across all cities.
+    related_category = models.CharField(max_length=200, blank=True, null=True)
+    related_city      = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         ordering = ['-created_at']

@@ -38,14 +38,14 @@ def _generate_otp():
     return ''.join(random.choices(string.digits, k=6))
 
 
-def _cache_key_otp(phone):
-    return f"claim_otp:{phone}"
+def _cache_key_otp(phone, purpose='claim'):
+    return f"{purpose}_otp:{phone}"
 
-def _cache_key_tries(phone):
-    return f"claim_otp_tries:{phone}"
+def _cache_key_tries(phone, purpose='claim'):
+    return f"{purpose}_otp_tries:{phone}"
 
-def _cache_key_rate(phone):
-    return f"claim_otp_rate:{phone}"
+def _cache_key_rate(phone, purpose='claim'):
+    return f"{purpose}_otp_rate:{phone}"
 
 
 def _send_otp_fast2sms(phone, otp):
@@ -86,10 +86,14 @@ def getRoutes(request):
     routes = [
         '/api/users/',
         '/api/users/login/',
+        '/api/users/login/send-otp/',
+        '/api/users/login/verify-otp/',
         '/api/users/register/',
         '/api/users/owner-register/',
         '/api/users/profile/',
         '/api/users/profile/update/',
+        '/api/users/profile/phone/send-otp/',
+        '/api/users/profile/phone/verify-otp/',
         '/api/users/wedding-date/',
         '/api/users/claim/send-otp/',
         '/api/users/claim/verify-otp/',
@@ -110,6 +114,224 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
+
+# ── Phone login — OTP ────────────────────────────────────────────────────────────
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_send_otp(request):
+    """
+    POST /api/users/login/send-otp/
+    Body: { "phone": "9876543210" }
+
+    Sends a login OTP to any phone number (existing account or not —
+    verifying it will log in the existing user or create a new one).
+    """
+    phone = ''.join(filter(str.isdigit, request.data.get('phone', '')))
+
+    if len(phone) != 10:
+        return Response(
+            {'detail': 'Please provide a valid 10-digit mobile number.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if cache.get(_cache_key_rate(phone, 'login')):
+        return Response(
+            {'detail': f'Please wait {OTP_RATE_LIMIT} seconds before requesting a new code.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS
+        )
+
+    otp = _generate_otp()
+    cache.set(_cache_key_otp(phone, 'login'),  otp, timeout=OTP_EXPIRY_SECS)
+    cache.set(_cache_key_rate(phone, 'login'), '1', timeout=OTP_RATE_LIMIT)
+    cache.delete(_cache_key_tries(phone, 'login'))
+
+    success, error = _send_otp_fast2sms(phone, otp)
+    if not success:
+        return Response(
+            {'detail': f'SMS delivery failed: {error}. Please try again.'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+
+    return Response({
+        'detail': f'Verification code sent to +91 {phone}. Valid for 5 minutes.',
+        'phone': phone,
+    }, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_verify_otp(request):
+    """
+    POST /api/users/login/verify-otp/
+    Body: { "phone": "9876543210", "otp": "482916" }
+
+    Verifies the OTP. Logs in the existing account for this phone,
+    or creates a new customer account on first-ever login for this number.
+    """
+    phone   = ''.join(filter(str.isdigit, request.data.get('phone', '')))
+    entered = str(request.data.get('otp', '')).strip()
+
+    if len(phone) != 10:
+        return Response({'detail': 'Invalid phone number.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if len(entered) != 6 or not entered.isdigit():
+        return Response({'detail': 'OTP must be a 6-digit number.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    tries = cache.get(_cache_key_tries(phone, 'login'), 0)
+    if tries >= MAX_VERIFY_TRIES:
+        return Response(
+            {'detail': 'Too many incorrect attempts. Please request a new code.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS
+        )
+
+    stored_otp = cache.get(_cache_key_otp(phone, 'login'))
+    if not stored_otp:
+        return Response(
+            {'detail': 'Verification code has expired. Please request a new one.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if entered != stored_otp:
+        cache.set(_cache_key_tries(phone, 'login'), tries + 1, timeout=OTP_EXPIRY_SECS)
+        remaining = MAX_VERIFY_TRIES - tries - 1
+        return Response(
+            {'detail': f'Incorrect code. {remaining} attempt(s) remaining.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    cache.delete(_cache_key_otp(phone, 'login'))
+    cache.delete(_cache_key_tries(phone, 'login'))
+    cache.delete(_cache_key_rate(phone, 'login'))
+
+    try:
+        profile = Profile.objects.get(phone=phone)
+        user = profile.user
+    except Profile.DoesNotExist:
+        user = User.objects.create(username=phone)
+        user.set_unusable_password()
+        user.save()
+        # base.signals.create_user_profile already created a blank Profile for this user.
+        # Mutate the same instance cached on `user` (rather than a fresh query) so the
+        # serializer below — which reads obj.profile off this same `user` object — sees
+        # the update instead of the stale copy `save_user_profile`'s signal cached on save().
+        user.profile.phone = phone
+        user.profile.role = 'customer'
+        user.profile.save()
+
+    serializer = UserSerializerWithToken(user, many=False)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# ── Link phone to an existing account — OTP ──────────────────────────────────────
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def link_phone_send_otp(request):
+    """
+    POST /api/users/profile/phone/send-otp/
+    Body: { "phone": "9876543210" }
+
+    Sends an OTP to link a phone number to the logged-in user's account.
+    """
+    phone = ''.join(filter(str.isdigit, request.data.get('phone', '')))
+
+    if len(phone) != 10:
+        return Response(
+            {'detail': 'Please provide a valid 10-digit mobile number.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if Profile.objects.exclude(user=request.user).filter(phone=phone).exists():
+        return Response(
+            {'detail': 'This phone number is already linked to another account.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if cache.get(_cache_key_rate(phone, 'link')):
+        return Response(
+            {'detail': f'Please wait {OTP_RATE_LIMIT} seconds before requesting a new code.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS
+        )
+
+    otp = _generate_otp()
+    cache.set(_cache_key_otp(phone, 'link'),  otp, timeout=OTP_EXPIRY_SECS)
+    cache.set(_cache_key_rate(phone, 'link'), '1', timeout=OTP_RATE_LIMIT)
+    cache.delete(_cache_key_tries(phone, 'link'))
+
+    success, error = _send_otp_fast2sms(phone, otp)
+    if not success:
+        return Response(
+            {'detail': f'SMS delivery failed: {error}. Please try again.'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+
+    return Response({
+        'detail': f'Verification code sent to +91 {phone}. Valid for 5 minutes.',
+        'phone': phone,
+    }, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def link_phone_verify_otp(request):
+    """
+    POST /api/users/profile/phone/verify-otp/
+    Body: { "phone": "9876543210", "otp": "482916" }
+
+    Verifies the OTP and saves the phone number on the logged-in user's profile.
+    """
+    phone   = ''.join(filter(str.isdigit, request.data.get('phone', '')))
+    entered = str(request.data.get('otp', '')).strip()
+
+    if len(phone) != 10:
+        return Response({'detail': 'Invalid phone number.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if len(entered) != 6 or not entered.isdigit():
+        return Response({'detail': 'OTP must be a 6-digit number.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if Profile.objects.exclude(user=request.user).filter(phone=phone).exists():
+        return Response(
+            {'detail': 'This phone number is already linked to another account.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    tries = cache.get(_cache_key_tries(phone, 'link'), 0)
+    if tries >= MAX_VERIFY_TRIES:
+        return Response(
+            {'detail': 'Too many incorrect attempts. Please request a new code.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS
+        )
+
+    stored_otp = cache.get(_cache_key_otp(phone, 'link'))
+    if not stored_otp:
+        return Response(
+            {'detail': 'Verification code has expired. Please request a new one.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if entered != stored_otp:
+        cache.set(_cache_key_tries(phone, 'link'), tries + 1, timeout=OTP_EXPIRY_SECS)
+        remaining = MAX_VERIFY_TRIES - tries - 1
+        return Response(
+            {'detail': f'Incorrect code. {remaining} attempt(s) remaining.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    cache.delete(_cache_key_otp(phone, 'link'))
+    cache.delete(_cache_key_tries(phone, 'link'))
+    cache.delete(_cache_key_rate(phone, 'link'))
+
+    request.user.profile.phone = phone
+    request.user.profile.save()
+
+    serializer = UserSerializerWithToken(request.user, many=False)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # ── User management ────────────────────────────────────────────────────────────

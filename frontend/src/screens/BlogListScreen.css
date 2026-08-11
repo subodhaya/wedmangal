@@ -2,10 +2,13 @@
 
 /* Hero */
 .bl-hero {
-  background: linear-gradient(135deg, #5e143f, #8a1a56);
+  background-color: #5e143f;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: #f9e79f;
   text-align: center;
-  padding: 48px 20px 36px;
+  padding: 64px 20px 48px;
 }
 .bl-hero-title { font-size: 2rem; font-weight: 800; margin: 0 0 10px; }
 .bl-hero-sub   { font-size: 1rem; opacity: 0.85; margin: 0; }

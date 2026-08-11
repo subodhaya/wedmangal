@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 import SplashScreen from './screens/SplashScreen';
 import HomeScreen from './screens/HomeScreen';
 import LoginScreen from './screens/LoginScreen';
+import AddPhoneScreen from './screens/AddPhoneScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import OwnerRegisterScreen from './screens/OwnerRegisterScreen';
@@ -64,6 +65,7 @@ function App() {
             <Route path="/" element={<HomeScreen />} />
             <Route path="/plan" element={<PlanScreen />} />
             <Route path="/login" element={<LoginScreen />} />
+            <Route path="/add-phone" element={<PrivateRoute roles={['customer', 'admin', 'service-owner', 'product-manager']} element={<AddPhoneScreen />} />} />
             <Route path="/accounts/google/login/callback" element={<GoogleLoginCallback />} />
             <Route path="/register" element={<RegisterScreen />} />
             <Route path="/owner-register" element={<OwnerRegisterScreen />} />

@@ -19,10 +19,11 @@ class UserSerializer(serializers.ModelSerializer):
     _id = serializers.SerializerMethodField(read_only=True)
     isAdmin = serializers.SerializerMethodField(read_only=True)
     role = serializers.SerializerMethodField(read_only=True)
+    phone = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
-        fields = ['id', '_id', 'username', 'email', 'name', 'isAdmin', 'role']
+        fields = ['id', '_id', 'username', 'email', 'name', 'isAdmin', 'role', 'phone']
 
     def get__id(self, obj):
         return obj.id
@@ -33,11 +34,14 @@ class UserSerializer(serializers.ModelSerializer):
     def get_name(self, obj):
         name = obj.first_name
         if name == '':
-            name = obj.email
+            name = obj.email or obj.profile.phone or obj.username
         return name
 
     def get_role(self, obj):
         return obj.profile.role
+
+    def get_phone(self, obj):
+        return getattr(obj.profile, 'phone', None)
 
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username', instance.username)
@@ -58,7 +62,7 @@ class UserSerializerWithToken(UserSerializer):
 
     class Meta:
         model = User
-        fields = ['id', '_id', 'username', 'email', 'name', 'isAdmin', 'role', 'token']
+        fields = ['id', '_id', 'username', 'email', 'name', 'isAdmin', 'role', 'phone', 'token']
 
     def get_token(self, obj):
         token = RefreshToken.for_user(obj)
@@ -478,6 +482,7 @@ class BlogPostSerializer(serializers.ModelSerializer):
             'id', 'title', 'slug', 'excerpt', 'content',
             'cover_image_url', 'author', 'category', 'tags',
             'published', 'created_at', 'updated_at', 'read_time',
+            'related_category', 'related_city',
         ]
 
     def get_cover_image_url(self, obj):
