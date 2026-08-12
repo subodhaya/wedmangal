@@ -264,7 +264,24 @@ const handleDirectBooking = async (serviceId) => {
   return (
     
    <div className="ps-page">
-      {product && (
+      {product && (() => {
+        // product.image is already an absolute path (e.g. "/images/foo.jpg" —
+        // served from MEDIA_URL), so just prepend the domain. Do NOT insert
+        // "/static/images/" here — that double-prefixes the path and 404s.
+        const imageUrl = product.image
+          ? `https://www.wedmangal.com${product.image}`
+          : 'https://www.wedmangal.com/og-image-1200x630.jpg';
+
+        // Service objects expose `rating`/`numReviews` (not `average_rating`,
+        // which doesn't exist on this API response and previously made
+        // ratingValue silently evaluate to undefined).
+        const ratedServices = product.services?.filter(s => s.numReviews > 0) || [];
+        const totalReviews = ratedServices.reduce((sum, s) => sum + s.numReviews, 0);
+        const weightedRating = totalReviews > 0
+          ? ratedServices.reduce((sum, s) => sum + (Number(s.rating) * s.numReviews), 0) / totalReviews
+          : null;
+
+        return (
         <Helmet>
           <title>{`${product.name} | ${(product.category || '').replace(/_/g, ' ')} in ${product.city || ''} | WedMangal`}</title>
           <meta name="description" content={product.description?.slice(0, 155) || `Book ${product.name}, a trusted ${product.category?.replace(/_/g, ' ')} in ${product.city}. View services, pricing and reviews on WedMangal.`} />
@@ -273,14 +290,14 @@ const handleDirectBooking = async (serviceId) => {
           <meta property="og:type" content="business.business" />
           <meta property="og:title" content={`${product.name} | WedMangal`} />
           <meta property="og:description" content={product.description?.slice(0, 155)} />
-          <meta property="og:image" content={`https://www.wedmangal.com/static/images/${product.image}`} />
+          <meta property="og:image" content={imageUrl} />
           <meta property="og:url" content={`https://www.wedmangal.com/product/${product._id}`} />
           <meta property="og:site_name" content="WedMangal" />
 
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:title" content={`${product.name} | WedMangal`} />
           <meta name="twitter:description" content={product.description?.slice(0, 155)} />
-          <meta name="twitter:image" content={`https://www.wedmangal.com/static/images/${product.image}`} />
+          <meta name="twitter:image" content={imageUrl} />
 
           <script type="application/ld+json">{JSON.stringify({
             '@context': 'https://schema.org',
@@ -288,7 +305,7 @@ const handleDirectBooking = async (serviceId) => {
             name: product.name,
             description: product.description,
             url: `https://www.wedmangal.com/product/${product._id}`,
-            image: `https://www.wedmangal.com/static/images/${product.image}`,
+            image: imageUrl,
             telephone: product.business_phone || product.personal_phone,
             address: {
               '@type': 'PostalAddress',
@@ -299,11 +316,19 @@ const handleDirectBooking = async (serviceId) => {
             },
             areaServed: product.city || 'Chennai',
             priceRange: product.min_price ? `₹${product.min_price}${product.max_price ? ` – ₹${product.max_price}` : '+'}` : undefined,
-            ...(product.services?.some(s => s.numReviews > 0) && {
+            ...(product.opening_time && product.closing_time && {
+              openingHoursSpecification: {
+                '@type': 'OpeningHoursSpecification',
+                dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                opens: product.opening_time,
+                closes: product.closing_time,
+              }
+            }),
+            ...(weightedRating !== null && {
               aggregateRating: {
                 '@type': 'AggregateRating',
-                ratingValue: product.services.reduce((sum, s) => sum + (s.average_rating || 0), 0) / product.services.filter(s => s.numReviews > 0).length || undefined,
-                reviewCount: product.services.reduce((sum, s) => sum + (s.numReviews || 0), 0),
+                ratingValue: Math.round(weightedRating * 10) / 10,
+                reviewCount: totalReviews,
                 bestRating: 5,
                 worstRating: 1,
               }
@@ -311,7 +336,8 @@ const handleDirectBooking = async (serviceId) => {
             sameAs: [`https://www.wedmangal.com/product/${product._id}`],
           })}</script>
         </Helmet>
-      )}
+        );
+      })()}
 
       <Link to="/" className="ps-back-btn">
         <i className="fas fa-arrow-left"></i> Go Back
