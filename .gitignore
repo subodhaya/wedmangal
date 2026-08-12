@@ -7,7 +7,10 @@ backend/settingsL.py
 backend/settingsS.py
 backend/static/images/
 backend/venv/
-backend/db.sqlite3
+*.sqlite3
+*.sqlite3.old
+backend/wedmangal_backup.sql
+backend/wedmangal_data.json
 frontend/node_modules/
 __pycache__/
 *.pyc

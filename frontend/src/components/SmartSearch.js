@@ -1,6 +1,7 @@
 // src/components/SmartSearch.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import api from '../utils/api';
 import './SmartSearch.css';
 
 const SUGGESTIONS = [
@@ -23,11 +24,37 @@ function SmartSearch({ variant = 'compact' }) {
   const [keyword, setKeyword]         = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [focused, setFocused]         = useState(false);
+  const [vendorMatches, setVendorMatches] = useState([]);
+  const [vendorLoading, setVendorLoading] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
   const inputRef = useRef(null);
   const wrapRef  = useRef(null);
+
+  // Live vendor-name matches (debounced) — the hardcoded category list below
+  // only covers 13 category names, so searching an actual business name like
+  // "Sri..." used to show "No matching categories" even though the real
+  // search results page finds it fine via the same /api/products/all lookup.
+  useEffect(() => {
+    const kw = keyword.trim();
+    if (kw.length < 2) {
+      setVendorMatches([]);
+      return;
+    }
+    let cancelled = false;
+    setVendorLoading(true);
+    const timer = setTimeout(() => {
+      api.get('/api/products/all', { params: { keyword: kw, page: 1 } })
+        .then(({ data }) => {
+          if (cancelled) return;
+          setVendorMatches((data.products || []).slice(0, 5));
+        })
+        .catch(() => { if (!cancelled) setVendorMatches([]); })
+        .finally(() => { if (!cancelled) setVendorLoading(false); });
+    }, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [keyword]);
 
   // Sync keyword from URL on mount
   useEffect(() => {
@@ -106,23 +133,52 @@ function SmartSearch({ variant = 'compact' }) {
           {keyword.length === 0 && (
             <div className="smart-search__dropdown-label">Popular searches</div>
           )}
-          {filteredSuggestions.length === 0 ? (
-            <div className="smart-search__no-results">No matching categories</div>
-          ) : (
-            filteredSuggestions.map(s => (
-              <button
-                key={s.name}
-                type="button"
-                className="smart-search__suggestion"
-                onMouseDown={() => { setKeyword(s.label); doSearch(s.name); }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.4">
-                  <circle cx="11" cy="11" r="8"/>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                {s.label}
-              </button>
-            ))
+
+          {/* Live vendor-name matches */}
+          {vendorMatches.length > 0 && (
+            <>
+              <div className="smart-search__dropdown-label">Vendors</div>
+              {vendorMatches.map(v => (
+                <button
+                  key={`vendor-${v._id}`}
+                  type="button"
+                  className="smart-search__suggestion"
+                  onMouseDown={() => { setShowSuggestions(false); setFocused(false); navigate(`/product/${v._id}`); }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.4">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  {v.name}{v.city ? ` — ${v.city}` : ''}
+                </button>
+              ))}
+            </>
+          )}
+
+          {filteredSuggestions.length > 0 && (
+            <>
+              {vendorMatches.length > 0 && <div className="smart-search__dropdown-label">Categories</div>}
+              {filteredSuggestions.map(s => (
+                <button
+                  key={s.name}
+                  type="button"
+                  className="smart-search__suggestion"
+                  onMouseDown={() => { setKeyword(s.label); doSearch(s.name); }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.4">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  {s.label}
+                </button>
+              ))}
+            </>
+          )}
+
+          {filteredSuggestions.length === 0 && vendorMatches.length === 0 && (
+            vendorLoading
+              ? <div className="smart-search__no-results">Searching…</div>
+              : <div className="smart-search__no-results">No matching vendors or categories</div>
           )}
         </div>
       )}
