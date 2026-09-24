@@ -22,6 +22,7 @@ from django.views.generic import TemplateView
 from django.http import FileResponse, Http404
 from dj_rest_auth.views import LoginView
 from base.views.sitemap_view import sitemap_xml
+from base.views.seo_views import product_page, category_page
 import os
 
 def serve_public_file(filename):
@@ -57,6 +58,12 @@ urlpatterns = [
 # Add static and media file serving
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Server-rendered SEO for public React pages (must come before the index.html fallback)
+urlpatterns += [
+    re_path(r'^product/(?P<pk>\d+)/?$', product_page, name='seo-product'),
+    re_path(r'^category/(?P<category>[^/]+)/?$', category_page, name='seo-category'),
+]
 
 # Add a fallback for React's index.html
 urlpatterns += [

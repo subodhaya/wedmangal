@@ -19,10 +19,15 @@ STATIC_URLS = [
     ("category/Entertainment",   "weekly","0.7"),
     ("category/Travel_Transport","weekly","0.7"),
     ("category/Pandit",          "weekly","0.7"),
-    ("login/",      "monthly","0.4"),
-    ("register/",   "monthly","0.5"),
-    ("terms/",      "yearly", "0.3"),
-    ("refund/",     "yearly", "0.3"),
+    ("plan",            "monthly","0.6"),
+    ("available-today", "daily",  "0.6"),
+    ("blog",            "weekly", "0.6"),
+    ("faq",             "monthly","0.5"),
+    ("login",       "monthly","0.4"),
+    ("register",    "monthly","0.5"),
+    ("ContactUs",             "yearly", "0.3"),
+    ("TermsAndCondition",     "yearly", "0.3"),
+    ("RefundAndCancellation", "yearly", "0.3"),
 ]
 
 def sitemap_xml(request):
@@ -39,16 +44,13 @@ def sitemap_xml(request):
   </url>""")
 
     # Dynamic vendor pages — only approved/active products
-    try:
-        products = Product.objects.filter(is_approved=True).values("_id", "updatedAt").order_by("-updatedAt")
-    except Exception:
-        products = Product.objects.all().values("_id", "updatedAt").order_by("-updatedAt")
+    products = Product.objects.filter(is_approved=True).values("_id", "createdAt").order_by("-createdAt")
 
     for p in products:
-        lastmod = p.get("updatedAt")
+        lastmod = p.get("createdAt")
         lastmod_str = f"\n    <lastmod>{lastmod.date().isoformat()}</lastmod>" if lastmod else ""
         urls.append(f"""  <url>
-    <loc>{SITE}/product/{p['_id']}/</loc>{lastmod_str}
+    <loc>{SITE}/product/{p['_id']}</loc>{lastmod_str}
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>""")
@@ -59,7 +61,7 @@ def sitemap_xml(request):
         for post in posts:
             lastmod_str = f"\n    <lastmod>{post['updated_at'].date().isoformat()}</lastmod>" if post.get('updated_at') else ""
             urls.append(f"""  <url>
-    <loc>{SITE}/blog/{post['slug']}/</loc>{lastmod_str}
+    <loc>{SITE}/blog/{post['slug']}</loc>{lastmod_str}
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>""")
