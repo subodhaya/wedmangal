@@ -6,7 +6,7 @@ SITE = "https://www.wedmangal.com"
 
 STATIC_URLS = [
     ("",            "daily",  "1.0"),
-    ("search/",     "daily",  "0.8"),
+    ("category/Halls",           "daily", "0.9"),
     ("category/Photographers",   "daily", "0.9"),
     ("category/Makeup_Artist",   "daily", "0.9"),
     ("category/Caterers",        "daily", "0.9"),
@@ -23,8 +23,6 @@ STATIC_URLS = [
     ("available-today", "daily",  "0.6"),
     ("blog",            "weekly", "0.6"),
     ("faq",             "monthly","0.5"),
-    ("login",       "monthly","0.4"),
-    ("register",    "monthly","0.5"),
     ("ContactUs",             "yearly", "0.3"),
     ("TermsAndCondition",     "yearly", "0.3"),
     ("RefundAndCancellation", "yearly", "0.3"),

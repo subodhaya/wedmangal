@@ -7,6 +7,7 @@ from django.test import TestCase
 from django.urls import resolve
 
 from base.models import Product, BlogPost, Service
+from base.views.seo_views import CATEGORY_LABELS
 from base.views.sitemap_view import SITE
 
 NS = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
@@ -88,6 +89,15 @@ class SitemapTests(TestCase):
                 any(re.fullmatch(p, path) for p in PUBLIC_ROUTE_PATTERNS),
                 f'{path} does not match a public React route',
             )
+
+    def test_all_categories_listed_and_low_value_pages_excluded(self):
+        _, locs = self.get_locs()
+        for key in CATEGORY_LABELS:
+            self.assertIn(f'{SITE}/category/{key}', locs)
+        self.assertIn(f'{SITE}/category/Halls', locs)
+        for path in ('/login', '/register', '/search/'):
+            self.assertNotIn(SITE + path, locs)
+        self.assertEqual(len(locs), len(set(locs)), 'duplicate URLs in sitemap')
 
 
 def json_ld_blocks(html):
