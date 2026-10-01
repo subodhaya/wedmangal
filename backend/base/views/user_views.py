@@ -433,9 +433,12 @@ def getUserProfile(request):
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def getUsers(request):
-    users = User.objects.all()
-    serializer = UserSerializer(users, many=True)
-    return Response(serializer.data)
+    # Newest first, with join date, for the admin user list
+    users = User.objects.select_related('profile').order_by('-date_joined')
+    data = UserSerializer(users, many=True).data
+    for row, user in zip(data, users):
+        row['date_joined'] = user.date_joined
+    return Response(data)
 
 
 @api_view(['GET'])

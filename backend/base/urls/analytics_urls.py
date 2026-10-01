@@ -8,4 +8,5 @@ urlpatterns = [
     path('admin-summary/', views.admin_summary, name='analytics-admin-summary'),
     path('searches/', views.log_search, name='analytics-log-search'),
     path('search-summary/', views.search_summary, name='analytics-search-summary'),
+    path('recent-signups/', views.recent_signups, name='analytics-recent-signups'),
 ]

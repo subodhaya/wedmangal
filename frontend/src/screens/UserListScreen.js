@@ -6,6 +6,7 @@ import axios from 'axios';
 import api from '../utils/api';  
 import Loader from '../components/Loader';
 import Message from '../components/Message';
+import { formatJoined } from '../components/RecentSignups';
 
 function UserListScreen() {
     const navigate = useNavigate();
@@ -76,6 +77,7 @@ function UserListScreen() {
                             <th>NAME</th>
                             <th>EMAIL</th>
                             <th>ADMIN</th>
+                            <th>JOINED</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -92,8 +94,9 @@ function UserListScreen() {
                                         <i className='fas fa-check' style={{ color: 'red' }}></i>
                                     )}
                                 </td>
+                                <td>{user.date_joined ? formatJoined(user.date_joined) : ''}</td>
                                 <td>
-                                    <LinkContainer to={`/admin/user/${user._id}/edit`}>
+                                    <LinkContainer to={`/user/${user._id}/edit`}>
                                         <Button variant='light' className='btn-sm'>
                                             <i className='fas fa-edit'></i>
                                         </Button>

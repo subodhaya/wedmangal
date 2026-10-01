@@ -8,6 +8,7 @@ import Message from '../components/Message';
 import PerformanceSummary from '../components/PerformanceSummary';
 import { isAdminUser } from '../utils/auth';
 import SearchIntentSummary from '../components/SearchIntentSummary';
+import RecentSignups from '../components/RecentSignups';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 function ProductListScreen() {
@@ -103,6 +104,7 @@ function ProductListScreen() {
         subtitle='Customer activity across all vendors.'
       />
       <SearchIntentSummary />
+      <RecentSignups />
       <Row className='align-items-center'>
         <Col>
           <h1>Services</h1>

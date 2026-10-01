@@ -323,3 +323,38 @@ def search_summary(request):
             'not_required': searches.filter(parking_required=False).count(),
         },
     })
+
+
+# ── Recent sign-ups (admin dashboard) ────────────────────────────────────────
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def recent_signups(request):
+    """Newest accounts first, for admins. Phone numbers are never returned."""
+    if not _is_admin(request.user):
+        return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        limit = min(max(int(request.query_params.get('limit', 10)), 1), 50)
+    except ValueError:
+        limit = 10
+    from django.contrib.auth.models import User
+    now = timezone.now()
+    _, month_start, _ = analytics.date_range('month')
+    users = User.objects.select_related('profile').order_by('-date_joined')[:limit]
+    return Response({
+        'counts': {
+            'last_7_days': User.objects.filter(date_joined__gte=now - timedelta(days=7)).count(),
+            'this_month': User.objects.filter(date_joined__gte=month_start).count(),
+            'total': User.objects.count(),
+        },
+        'users': [{
+            'id': u.id,
+            'name': u.get_full_name() or '',
+            'username': u.username,
+            'email': u.email,
+            'role': getattr(getattr(u, 'profile', None), 'role', None),
+            'is_staff': u.is_staff,
+            'phone_linked': bool(getattr(getattr(u, 'profile', None), 'phone', None)),
+            'date_joined': u.date_joined,
+        } for u in users],
+    })
