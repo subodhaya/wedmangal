@@ -5,6 +5,7 @@ import { Navbar, Nav, Container, NavDropdown } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import SmartSearch from './SmartSearch';
+import { isAdminUser } from '../utils/auth';
 import './Header.css';
 
 const getUserInfo = () => {
@@ -464,21 +465,21 @@ const Header = () => {
                     </>
                   )}
 
-                  {userInfo?.role === 'admin' && (
+                  {isAdminUser(userInfo) && (
                     <NavDropdown 
                       title="Admin Menu" 
                       id="admin-nav-dropdown" 
                       align="end"
                       onClick={e => e.stopPropagation()}
                     >
-                      <LinkContainer to="/admin/productlist">
+                      <LinkContainer to="/productlist/">
                         <NavDropdown.Item onClick={collapseNav}>Services List</NavDropdown.Item>
                       </LinkContainer>
-                      <LinkContainer to="/admin/userlist">
+                      <LinkContainer to="/userlist/">
                         <NavDropdown.Item onClick={collapseNav}>User List</NavDropdown.Item>
                       </LinkContainer>
                       <NavDropdown.Divider />
-                      <LinkContainer to="/admin/orderlist">
+                      <LinkContainer to="/orderlist/">
                         <NavDropdown.Item onClick={collapseNav}>Booking List</NavDropdown.Item>
                       </LinkContainer>
                     </NavDropdown>

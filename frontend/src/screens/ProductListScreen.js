@@ -6,6 +6,7 @@ import { Table, Button, Row, Col } from 'react-bootstrap';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
 import PerformanceSummary from '../components/PerformanceSummary';
+import { isAdminUser } from '../utils/auth';
 import SearchIntentSummary from '../components/SearchIntentSummary';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -26,7 +27,7 @@ function ProductListScreen() {
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
 
-    if (!userInfo || userInfo.isAdmin) {
+    if (!isAdminUser(userInfo)) {
       navigate('/login');
     } else {
       fetchProducts(location.search);

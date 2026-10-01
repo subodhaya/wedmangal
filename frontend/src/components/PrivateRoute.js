@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { isAdminUser } from '../utils/auth';
 //PrivateRoute.js
 const PrivateRoute = ({ roles, element }) => {
   const userInfo = JSON.parse(localStorage.getItem('userInfo'));
@@ -10,7 +11,9 @@ const PrivateRoute = ({ roles, element }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (!roles.includes(userInfo.role)) {
+  // Admin routes also admit Django staff (isAdmin), matching the backend
+  const allowed = roles.includes(userInfo.role) || (roles.includes('admin') && isAdminUser(userInfo));
+  if (!allowed) {
     // User role not authorized
     alert(`User role "${userInfo.role}" not authorized for this route, redirecting to home.`);
     return <Navigate to="/" replace />;
