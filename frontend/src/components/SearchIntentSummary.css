@@ -1,0 +1,57 @@
+/* SearchIntentSummary — admin search-intent overview (card/range styles come from PerformanceSummary.css) */
+
+.si-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.si-block {
+  background: var(--cream, #fdf8f0);
+  border-radius: var(--radius-md, 16px);
+  padding: 14px 16px;
+}
+
+.si-block-title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--plum, #5e143f);
+}
+
+.si-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: si;
+}
+
+.si-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 13.5px;
+  border-bottom: 1px solid var(--border, #e8d5de);
+}
+.si-row:last-child { border-bottom: none; }
+
+.si-row-label { color: var(--text-dark, #2a1a1f); }
+.si-row-count {
+  color: var(--text-mid, #5a3a45);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.si-stat {
+  margin: 4px 0;
+  font-size: 13.5px;
+  color: var(--text-mid, #5a3a45);
+}
+.si-stat strong { color: var(--text-dark, #2a1a1f); }
+
+.si-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-light, #9a7a85);
+}

@@ -8,7 +8,7 @@ import Product from '../components/Product';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
 import Paginate from '../components/Paginate';
-import { trackEvent, EVENTS } from '../utils/analytics';
+import { trackSearch } from '../utils/analytics';
 
 function SearchResultScreen() {
   const [products, setProducts] = useState([]);
@@ -23,6 +23,7 @@ function SearchResultScreen() {
   const city = queryParams.get('city') || '';
   const vendor = queryParams.get('vendor') || '';
   const pageNumber = parseInt(queryParams.get('page'), 10) || 1; // Convert pageNumber to integer
+  const trackedSearchRef = useRef('');  // last search sent to search-intent tracking
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -45,6 +46,17 @@ function SearchResultScreen() {
           setProducts([]);
         }
 
+        // Search intent (fire-and-forget): once per new search, not per page or re-render
+        const searchKey = `${city}|${vendor}`;
+        if ((city || vendor) && trackedSearchRef.current !== searchKey) {
+          trackedSearchRef.current = searchKey;
+          trackSearch({
+            source: 'search_page',
+            filters: { ...(city && { city }), ...(vendor && { category: vendor }) },
+            resultCount: Array.isArray(data) ? data.length : null,
+          });
+        }
+
         // If pagination data is returned separately, adjust the logic to set page and pages
         // For example:
         // setPage(data.page || 1);
@@ -63,16 +75,6 @@ function SearchResultScreen() {
 
     fetchProducts();
   }, [city, vendor, pageNumber]);
-
-  // One SEARCH event per new search (not per page or re-render)
-  const trackedSearchRef = useRef('');
-  useEffect(() => {
-    const key = `${city}|${vendor}`;
-    if ((city || vendor) && trackedSearchRef.current !== key) {
-      trackedSearchRef.current = key;
-      trackEvent(EVENTS.SEARCH, { source: 'search', metadata: { query: vendor, city } });
-    }
-  }, [city, vendor]);
 
   const handlePageChange = (newPage) => {
     const queryString = new URLSearchParams({ city, vendor, page: newPage }).toString();

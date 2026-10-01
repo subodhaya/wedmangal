@@ -1,4 +1,7 @@
-import { EVENTS, getSessionId, normalizeIndianMobile, postJSON, trackEvent, trackSessionStart } from './analytics';
+import {
+  EVENTS, activeSearchFilters, createSearchTracker, getSessionId, normalizeIndianMobile, postJSON,
+  trackEvent, trackSearch, trackSessionStart,
+} from './analytics';
 
 const okResponse = (status = 201, body = { recorded: true }) =>
   Promise.resolve({ ok: status < 400, status, json: () => Promise.resolve(body) });
@@ -107,5 +110,50 @@ describe('normalizeIndianMobile', () => {
 
   it.each(['', '12345', '5876543210', '98765 4321', 'abcdefghij', '+1 415 555 0100', null])('rejects %s', (input) => {
     expect(normalizeIndianMobile(input)).toBe('');
+  });
+});
+
+describe('search intent tracking', () => {
+  afterEach(() => jest.useRealTimers());
+
+  it('keeps only filters that express a need', () => {
+    expect(activeSearchFilters({ sort: 'newest', city: '', area_name: 'Tambaram', hall_parking: true, food_type: null }))
+      .toEqual({ area_name: 'Tambaram', hall_parking: true });
+  });
+
+  it('sends the raw search for the server to parse', async () => {
+    await trackSearch({ source: 'keyword', query: 'hall in Tambaram', filters: {}, resultCount: 4 });
+    const [url, options] = global.fetch.mock.calls[0];
+    expect(url).toMatch(/\/api\/analytics\/searches\/$/);
+    expect(options.keepalive).toBe(true);
+    expect(sentBody()).toMatchObject({
+      source: 'keyword', query: 'hall in Tambaram', result_count: 4, session_id: getSessionId(),
+    });
+  });
+
+  it('never rejects when the network fails', async () => {
+    global.fetch = jest.fn(() => Promise.reject(new TypeError('Failed to fetch')));
+    await expect(trackSearch({ source: 'keyword', query: 'hall' })).resolves.toMatchObject({ ok: false });
+  });
+
+  it('debounces rapid filter changes and sends only the final search once', () => {
+    jest.useFakeTimers();
+    const track = createSearchTracker(1000);
+    track({ source: 'filters', filters: { max_price: '1' } });
+    track({ source: 'filters', filters: { max_price: '15' } });
+    track({ source: 'filters', filters: { max_price: '150000' } });
+    jest.advanceTimersByTime(1000);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(sentBody().filters).toEqual({ max_price: '150000' });
+    track({ source: 'filters', filters: { max_price: '150000' } });  // same search again (e.g. re-render)
+    jest.advanceTimersByTime(1000);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('a tracker never throws even if tracking blows up', () => {
+    jest.useFakeTimers();
+    global.fetch = jest.fn(() => { throw new Error('boom'); });
+    const track = createSearchTracker(10);
+    expect(() => { track({ source: 'keyword', query: 'hall' }); jest.advanceTimersByTime(10); }).not.toThrow();
   });
 });

@@ -16,6 +16,7 @@ import FilterBar from '../components/FilterBar';
 import { Helmet } from 'react-helmet-async';
 import './HomeScreen.css';
 import api from '../utils/api';
+import { activeSearchFilters, createSearchTracker } from '../utils/analytics';
 import { useParams } from 'react-router-dom';
 
 const SITE_URL = process.env.REACT_APP_SITE_URL || 'https://wedmangal.com';
@@ -205,6 +206,8 @@ function HomeScreen() {
 
   // ── Filters ─────────────────────────
   const [filters, setFilters] = useState({ sort: 'newest' });
+  const searchTrackerRef = useRef(null);
+  if (!searchTrackerRef.current) searchTrackerRef.current = createSearchTracker();
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -402,6 +405,18 @@ if (!isMounted) return;
 setProducts(Array.isArray(data.products) ? data.products : []);
 setPage(Number(data.page) || 1);
 setPages(Number(data.pages) || 1);
+// Search intent (fire-and-forget): free-text searches and filter-bar searches, first page only
+const searchText = new URLSearchParams(location.search).get('keyword') || '';
+const searchFilters = activeSearchFilters(filters);
+const searchCategory = keyword && keyword !== searchText ? keyword : '';
+if (pageNumber === 1 && (searchText || Object.keys(searchFilters).length)) {
+  searchTrackerRef.current({
+    source: searchText ? 'keyword' : 'filters',
+    query: searchText,
+    filters: { ...searchFilters, ...(searchCategory && { category: searchCategory }) },
+    resultCount: Number.isInteger(data.count) ? data.count : null,
+  });
+}
       } catch (err) {
 if (!isMounted) return;
 setError('Failed to fetch services. Please try again.');

@@ -117,3 +117,52 @@ export function normalizeIndianMobile(value) {
   else if (digits.length === 11 && digits.startsWith('0')) digits = digits.slice(1);
   return /^[6-9]\d{9}$/.test(digits) ? digits : '';
 }
+
+// ── Search intent (Step 8) ───────────────────────────────────────────────────
+
+// Filters that describe what the customer wants (sorting alone isn't a search).
+export function activeSearchFilters(filters) {
+  const active = {};
+  Object.entries(filters || {}).forEach(([key, value]) => {
+    if (key !== 'sort' && value !== '' && value !== null && value !== undefined && value !== false) {
+      active[key] = value;
+    }
+  });
+  return active;
+}
+
+// Record a search. The server re-parses everything; nothing here is trusted.
+export function trackSearch({ source, query = '', filters = {}, resultCount = null } = {}) {
+  try {
+    return postJSON('/api/analytics/searches/', {
+      source,
+      query,
+      filters,
+      result_count: Number.isInteger(resultCount) ? resultCount : null,
+      session_id: getSessionId(),
+      path: window.location.pathname,
+    }, { keepalive: true });
+  } catch {
+    return Promise.resolve({ ok: false, status: 0, data: null });
+  }
+}
+
+// Debounced, de-duplicated tracker for screens whose filters change rapidly
+// (e.g. typing a price). Only the search the customer settles on is sent.
+export function createSearchTracker(delay = 1200) {
+  let timer = null;
+  let lastSent = '';
+  const track = (search) => {
+    try {
+      const key = JSON.stringify([search.source, search.query || '', search.filters || {}]);
+      if (key === lastSent) return;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        lastSent = key;
+        trackSearch(search);
+      }, delay);
+    } catch { /* tracking must never break search */ }
+  };
+  track.cancel = () => clearTimeout(timer);
+  return track;
+}

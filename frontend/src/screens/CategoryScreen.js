@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';  // ✅ one import at top
 import Product from '../components/Product';
@@ -7,6 +7,7 @@ import Message from '../components/Message';
 import Paginate from '../components/Paginate';
 import FilterBar from '../components/FilterBar';
 import api from '../utils/api';
+import { activeSearchFilters, createSearchTracker } from '../utils/analytics';
 import './CategoryScreen.css';
 
 const CATEGORY_LABELS = {
@@ -43,6 +44,8 @@ function CategoryScreen() {
   const [page, setPage]         = useState(1);
   const [pages, setPages]       = useState(1);
   const [filters, setFilters]   = useState({ sort: 'newest' });
+  const searchTrackerRef = useRef(null);
+  if (!searchTrackerRef.current) searchTrackerRef.current = createSearchTracker();
 
   useEffect(() => {
     setFilters({ sort: 'newest' });
@@ -79,6 +82,15 @@ function CategoryScreen() {
         setProducts(Array.isArray(data.products) ? data.products : []);
         setPage(Number(data.page) || 1);
         setPages(Number(data.pages) || 1);
+        // Search intent (fire-and-forget): only once the customer applies filters
+        const searchFilters = activeSearchFilters(filters);
+        if (pageNumber === 1 && Object.keys(searchFilters).length) {
+          searchTrackerRef.current({
+            source: 'category',
+            filters: { ...searchFilters, category },
+            resultCount: Number.isInteger(data.count) ? data.count : null,
+          });
+        }
       } catch {
         if (!isMounted) return;
         setError('Failed to fetch services. Please try again.');

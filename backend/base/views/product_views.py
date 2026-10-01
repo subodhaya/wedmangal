@@ -1370,6 +1370,7 @@ def getProducts(request):
         'products': response_data,
         'page':  1 if is_home else int(page),
         'pages': 1 if is_home else (paginator.num_pages if paginator else 1),
+        'count': paginator.count if paginator else len(response_data),
     })
 # ── Toggle availability (vendor ON/OFF) ───────────────────────────────────────
 @api_view(['POST'])

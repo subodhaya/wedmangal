@@ -6,6 +6,7 @@ import { Table, Button, Row, Col } from 'react-bootstrap';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
 import PerformanceSummary from '../components/PerformanceSummary';
+import SearchIntentSummary from '../components/SearchIntentSummary';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 function ProductListScreen() {
@@ -100,6 +101,7 @@ function ProductListScreen() {
         title='WedMangal totals'
         subtitle='Customer activity across all vendors.'
       />
+      <SearchIntentSummary />
       <Row className='align-items-center'>
         <Col>
           <h1>Services</h1>

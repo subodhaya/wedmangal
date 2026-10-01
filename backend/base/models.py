@@ -369,3 +369,55 @@ class QuoteRequest(models.Model):
 
     def __str__(self):
         return f'{self.name} → {self.vendor} ({self.get_status_display()})'
+
+
+class SearchQuery(models.Model):
+    """One customer search and the structured intent extracted from it.
+
+    Used only in aggregate (search-intent analytics). The raw query has phone
+    numbers and email addresses removed before it is stored.
+    """
+
+    class Source(models.TextChoices):
+        KEYWORD     = 'keyword', 'Search box'
+        FILTERS     = 'filters', 'Filter bar'
+        CATEGORY    = 'category', 'Category page filters'
+        SEARCH_PAGE = 'search_page', 'Search page'
+
+    # Same values as Product.attributes["food_type"] and the food_type filter
+    class Food(models.TextChoices):
+        VEG    = 'veg', 'Vegetarian'
+        NONVEG = 'nonveg', 'Non-vegetarian'
+        BOTH   = 'both', 'Veg & non-veg'
+
+    user             = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='search_queries')
+    session_id       = models.CharField(max_length=64, blank=True, default='')
+    source           = models.CharField(max_length=20, choices=Source.choices)
+    query            = models.CharField(max_length=200, blank=True, default='')
+    normalized_query = models.CharField(max_length=200, blank=True, default='')
+    filters          = models.JSONField(default=dict, blank=True)
+    result_count     = models.PositiveIntegerField(null=True, blank=True)
+
+    # Structured intent — null whenever it couldn't be determined confidently
+    category         = models.CharField(max_length=32, null=True, blank=True)  # a CATEGORY_LABELS key
+    area             = models.CharField(max_length=150, null=True, blank=True)
+    city             = models.CharField(max_length=100, null=True, blank=True)
+    capacity         = models.PositiveIntegerField(null=True, blank=True)
+    budget_min       = models.PositiveIntegerField(null=True, blank=True)  # INR
+    budget_max       = models.PositiveIntegerField(null=True, blank=True)  # INR
+    food_preference  = models.CharField(max_length=10, choices=Food.choices, null=True, blank=True)
+    parking_required = models.BooleanField(null=True, blank=True)
+    ac_required      = models.BooleanField(null=True, blank=True)
+    event_date       = models.DateField(null=True, blank=True)
+
+    created_at       = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['category', 'created_at'], name='searchquery_category_time'),
+            models.Index(fields=['area', 'created_at'], name='searchquery_area_time'),
+        ]
+
+    def __str__(self):
+        return f'{self.get_source_display()}: {self.query or self.filters} ({self.created_at:%Y-%m-%d})'
