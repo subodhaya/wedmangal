@@ -52,6 +52,18 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from base.decorators import admin_only, product_manager_only
 
 
+# Vendor fields that must never appear in public API responses.
+# They stay writable and are still returned to the owner via my_business_view.
+PRIVATE_VENDOR_FIELDS = ('personal_phone',)
+
+
+def _public(data):
+    """Strip private vendor fields from serialized data (a dict or a list of dicts)."""
+    if isinstance(data, list):
+        return [_public(item) for item in data]
+    return {k: v for k, v in data.items() if k not in PRIVATE_VENDOR_FIELDS}
+
+
 
 
 
@@ -136,6 +148,9 @@ class ProductDetailView(generics.RetrieveAPIView):
         # Override to get the object based on the provided ID
         pk = self.kwargs.get('pk')
         return Product.objects.get(pk=pk)
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response(_public(self.get_serializer(self.get_object()).data))
     
 
 
@@ -340,7 +355,7 @@ def getProductRelated(request, pk):
     try:
         product = Product.objects.prefetch_related('services').get(_id=pk)
         serializer = ProductSerializer(product, many=False)
-        return Response(serializer.data)
+        return Response(_public(serializer.data))
     except Product.DoesNotExist:
         return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -383,7 +398,6 @@ def getRelatedServices(request, pk):
                 'area_name': product_serializer.data['area_name'],  # Include area_name
                 'address': product_serializer.data['address'],  # Include address
                 'business_phone': product_serializer.data['business_phone'],
-                'personal_phone': product_serializer.data['personal_phone'],
                 'opening_time': product_serializer.data['opening_time'],  # Include opening_time
                 'closing_time': product_serializer.data['closing_time'],  # Include closing_time
                 'is_approved': product_serializer.data.get('is_approved', None),  # Include is_approved if needed
@@ -622,7 +636,12 @@ def register_service(request):
         return Response({'detail': f'Validation error: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def my_business_view(request, user_id=None):
+    # Owner-only: returns private fields (e.g. personal_phone) for the edit form
+    if request.user.id != user_id and not request.user.is_staff:
+        return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
+
     # Get the product for the specified user ID
     product = get_object_or_404(Product, user_id=user_id)
     
@@ -708,7 +727,7 @@ def getTopProducts(request):
     ]
 
     serializer = ProductSerializer(ordered_products, many=True)
-    return Response(serializer.data)
+    return Response(_public(serializer.data))
 
 
 @api_view(['GET'])
@@ -718,7 +737,7 @@ def getProduct(request, pk):
     except (Product.DoesNotExist, ValueError, TypeError):
         return Response({'detail': 'Vendor not found'}, status=status.HTTP_404_NOT_FOUND)
     serializer = ProductReviewSerializer(product, many=False)
-    return Response(serializer.data)
+    return Response(_public(serializer.data))
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
@@ -896,7 +915,7 @@ def searchProducts(request):
         products = Product.objects.none()
     
     serializer = ProductSerializer(products, many=True)
-    return Response(serializer.data)
+    return Response(_public(serializer.data))
 
 
 
@@ -1319,7 +1338,6 @@ def getProducts(request):
             'area_name':         product.area_name,
             'address':           product.address,
             'business_phone':    product.business_phone,
-            'personal_phone':    product.personal_phone,
             'opening_time':      product.opening_time,
             'closing_time':      product.closing_time,
             'is_approved':       product.is_approved,

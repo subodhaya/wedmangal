@@ -233,3 +233,125 @@ class SeoPageTests(TestCase):
 
     def test_unknown_category_returns_404(self):
         self.get_html('/category/Not_A_Category', status=404)
+
+
+class ApiPrivacyTests(TestCase):
+    """personal_phone is private: never in public API responses, still available to its owner/staff."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+        from rest_framework.test import APIClient
+        self.client = APIClient()
+        self.owner = User.objects.create_user(username='owner', password='x')
+        self.other = User.objects.create_user(username='other', password='x')
+        self.staff = User.objects.create_user(username='staff', password='x', is_staff=True)
+        self.vendor = Product.objects.create(
+            user=self.owner, name='Private Phone Hall', category='Halls', city='Chennai',
+            area_name='Adyar', business_phone='9111111111', personal_phone='9222222222',
+            is_approved=True,
+        )
+        self.service = Service.objects.create(product=self.vendor, name='Main Hall', rating=5, numReviews=3)
+
+    def assert_no_personal_phone(self, data):
+        self.assertNotIn('9222222222', json.dumps(data, default=str))
+        items = data if isinstance(data, list) else [data]
+        for item in items:
+            self.assertNotIn('personal_phone', item)
+
+    def get_json(self, path, status=200):
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, status, path)
+        return response.json()
+
+    # ── Public endpoints ─────────────────────────────────────
+
+    def test_listing_hides_personal_phone_keeps_business_phone(self):
+        for query in ('', '?home=true', '?keyword=Halls', '?category=Halls', '?area_name=Adyar'):
+            products = self.get_json('/api/products/all' + query)['products']
+            self.assertTrue(products, query)
+            self.assert_no_personal_phone(products)
+            self.assertEqual(products[0]['business_phone'], '9111111111')
+
+    def test_top_products_hide_personal_phone(self):
+        products = self.get_json('/api/products/all/top/')
+        self.assertTrue(products)
+        self.assert_no_personal_phone(products)
+
+    def test_search_hides_personal_phone(self):
+        products = self.get_json('/api/products/search/?city=chennai&vendor=Halls')
+        self.assertTrue(products)
+        self.assert_no_personal_phone(products)
+        self.assertEqual(products[0]['business_phone'], '9111111111')
+
+    def test_vendor_detail_hides_personal_phone_keeps_public_details(self):
+        data = self.get_json(f'/api/products/{self.vendor._id}/')
+        self.assert_no_personal_phone(data)
+        self.assertEqual(data['business_phone'], '9111111111')
+        self.assertEqual(data['name'], 'Private Phone Hall')
+
+    def test_other_single_vendor_endpoints_hide_personal_phone(self):
+        for path in (f'/api/products/product/{self.vendor._id}/',
+                     f'/api/products/products/{self.vendor._id}/business-data/'):
+            data = self.get_json(path)
+            self.assert_no_personal_phone(data)
+            self.assertEqual(data['business_phone'], '9111111111')
+
+    def test_service_page_hides_personal_phone(self):
+        data = self.get_json(f'/api/products/services/{self.service._id}/')
+        self.assert_no_personal_phone(data['product_related'])
+        self.assertEqual(data['product_related']['business_phone'], '9111111111')
+
+    def test_available_today_unchanged(self):
+        self.vendor.is_available_today = True
+        self.vendor.save()
+        data = self.get_json('/api/products/available-today/')
+        self.assert_no_personal_phone(data)
+        self.assertEqual(data[0]['business_phone'], '9111111111')
+
+    # ── Owner-only endpoint ──────────────────────────────────
+
+    def test_my_business_requires_login(self):
+        self.get_json(f'/api/products/my-business/{self.owner.id}/', status=401)
+
+    def test_my_business_forbidden_for_other_user(self):
+        self.client.force_authenticate(self.other)
+        data = self.get_json(f'/api/products/my-business/{self.owner.id}/', status=403)
+        self.assert_no_personal_phone(data)
+
+    def test_my_business_returns_personal_phone_to_owner(self):
+        self.client.force_authenticate(self.owner)
+        data = self.get_json(f'/api/products/my-business/{self.owner.id}/')
+        self.assertEqual(data['personal_phone'], '9222222222')
+        self.assertEqual(data['business_phone'], '9111111111')
+
+    def test_my_business_returns_personal_phone_to_staff(self):
+        self.client.force_authenticate(self.staff)
+        data = self.get_json(f'/api/products/my-business/{self.owner.id}/')
+        self.assertEqual(data['personal_phone'], '9222222222')
+
+    # ── Writing personal_phone is unchanged ──────────────────
+
+    def test_owner_can_still_update_personal_phone(self):
+        self.client.force_authenticate(self.owner)
+        response = self.client.post(f'/api/products/update_product/{self.owner.id}/',
+                                    {'personal_phone': '9333333333'}, format='multipart')
+        self.assertEqual(response.status_code, 200, response.content)
+        self.vendor.refresh_from_db()
+        self.assertEqual(self.vendor.personal_phone, '9333333333')
+        self.assertEqual(self.vendor.business_phone, '9111111111')
+
+    def test_register_product_still_saves_personal_phone(self):
+        from django.contrib.auth.models import User
+        new_owner = User.objects.create_user(username='newowner', password='x')
+        self.client.force_authenticate(new_owner)
+        response = self.client.post('/api/products/register-product/', {
+            'name': 'New Photo Studio', 'category': 'Photographers', 'city': 'Chennai',
+            'business_phone': '9444444444', 'personal_phone': '9555555555',
+        }, format='multipart')
+        self.assertIn(response.status_code, (200, 201), response.content)
+        created = Product.objects.get(name='New Photo Studio')
+        self.assertEqual(created.personal_phone, '9555555555')
+
+    def test_mine_still_works_for_owner(self):
+        self.client.force_authenticate(self.owner)
+        self.get_json('/api/products/mine/')
