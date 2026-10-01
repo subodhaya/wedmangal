@@ -355,3 +355,140 @@ class ApiPrivacyTests(TestCase):
     def test_mine_still_works_for_owner(self):
         self.client.force_authenticate(self.owner)
         self.get_json('/api/products/mine/')
+
+
+class AuthorizationTests(TestCase):
+    """Vendors can only edit their own listing; approval is admin-only; no personal_phone leaks to non-owners."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+        from rest_framework.test import APIClient
+        self.client = APIClient()
+        self.owner = User.objects.create_user(username='owner', password='x')
+        self.other = User.objects.create_user(username='other', password='x')
+        self.staff = User.objects.create_user(username='staff', password='x', is_staff=True)
+        self.role_admin = User.objects.create_user(username='roleadmin', password='x')
+        self.role_admin.profile.role = 'admin'
+        self.role_admin.profile.save()
+        self.vendor = Product.objects.create(
+            user=self.owner, name='Owner Hall', category='Halls', city='Chennai',
+            business_phone='9111111111', personal_phone='9222222222', is_approved=True,
+        )
+
+    def update(self, user, **data):
+        if user:
+            self.client.force_authenticate(user)
+        return self.client.post(f'/api/products/update_product/{self.owner.id}/', data, format='multipart')
+
+    # ── update_product ownership ─────────────────────────────
+
+    def test_owner_can_update_own_vendor(self):
+        response = self.update(self.owner, name='Owner Hall Renamed')
+        self.assertEqual(response.status_code, 200, response.content)
+        self.vendor.refresh_from_db()
+        self.assertEqual(self.vendor.name, 'Owner Hall Renamed')
+
+    def test_staff_can_update_vendor(self):
+        self.assertEqual(self.update(self.staff, name='Edited By Staff').status_code, 200)
+        self.vendor.refresh_from_db()
+        self.assertEqual(self.vendor.name, 'Edited By Staff')
+
+    def test_role_admin_can_update_vendor(self):
+        self.assertEqual(self.update(self.role_admin, name='Edited By Admin').status_code, 200)
+
+    def test_non_owner_gets_403_and_listing_is_unchanged(self):
+        response = self.update(self.other, name='Hijacked', personal_phone='9000000000')
+        self.assertEqual(response.status_code, 403)
+        self.vendor.refresh_from_db()
+        self.assertEqual(self.vendor.name, 'Owner Hall')
+        self.assertEqual(self.vendor.personal_phone, '9222222222')
+
+    def test_unauthenticated_update_is_rejected(self):
+        self.assertEqual(self.update(None, name='Anonymous').status_code, 401)
+        self.vendor.refresh_from_db()
+        self.assertEqual(self.vendor.name, 'Owner Hall')
+
+    def test_vendor_cannot_change_approval_via_update(self):
+        self.vendor.is_approved = False
+        self.vendor.save()
+        self.update(self.owner, is_approved='true')
+        self.vendor.refresh_from_db()
+        self.assertFalse(self.vendor.is_approved)
+
+    # ── Approval ─────────────────────────────────────────────
+
+    def register(self, **extra):
+        from django.contrib.auth.models import User
+        new_owner = User.objects.create_user(username='newvendor', password='x')
+        self.client.force_authenticate(new_owner)
+        data = {'name': 'Fresh Decor', 'category': 'Decorators', 'city': 'Chennai',
+                'business_phone': '9444444444', **extra}
+        return self.client.post('/api/products/register-product/', data, format='multipart')
+
+    def test_register_ignores_client_is_approved(self):
+        response = self.register(is_approved='true')
+        self.assertIn(response.status_code, (200, 201), response.content)
+        self.assertFalse(Product.objects.get(name='Fresh Decor').is_approved)
+
+    def test_legitimate_registration_still_works(self):
+        response = self.register(area_name='Adyar', personal_phone='9555555555')
+        self.assertIn(response.status_code, (200, 201), response.content)
+        created = Product.objects.get(name='Fresh Decor')
+        self.assertEqual((created.category, created.area_name, created.business_phone, created.personal_phone),
+                         ('Decorators', 'Adyar', '9444444444', '9555555555'))
+        self.assertFalse(created.is_approved)
+
+    def test_vendor_cannot_approve_own_listing(self):
+        self.vendor.is_approved = False
+        self.vendor.save()
+        self.client.force_authenticate(self.owner)
+        self.assertEqual(self.client.put(f'/api/products/{self.vendor._id}/approve/').status_code, 403)
+        self.vendor.refresh_from_db()
+        self.assertFalse(self.vendor.is_approved)
+
+    def test_admins_can_approve(self):
+        for admin in (self.staff, self.role_admin):
+            self.vendor.is_approved = False
+            self.vendor.save()
+            self.client.force_authenticate(admin)
+            self.assertEqual(self.client.put(f'/api/products/{self.vendor._id}/approve/').status_code, 200)
+            self.vendor.refresh_from_db()
+            self.assertTrue(self.vendor.is_approved)
+
+    # ── Authenticated endpoint privacy ───────────────────────
+
+    def test_wishlist_does_not_leak_personal_phone(self):
+        from base.models import Wishlist
+        Wishlist.objects.create(user=self.other, product=self.vendor)
+        self.client.force_authenticate(self.other)
+        response = self.client.get('/api/products/wishlist/')
+        self.assertEqual(response.status_code, 200)
+        products = response.json()['products']
+        self.assertEqual([p['_id'] for p in products], [self.vendor._id])
+        self.assertNotIn('personal_phone', products[0])
+        self.assertNotIn('9222222222', response.content.decode())
+        self.assertEqual(products[0]['business_phone'], '9111111111')
+
+    def test_by_user_hides_personal_phone_from_non_owner(self):
+        self.client.force_authenticate(self.other)
+        response = self.client.get(f'/api/products/by-user/{self.owner.id}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('personal_phone', response.json())
+        self.assertNotIn('9222222222', response.content.decode())
+        self.assertEqual(response.json()['_id'], self.vendor._id)
+
+    def test_by_user_keeps_full_data_for_owner_and_admins(self):
+        for user in (self.owner, self.staff, self.role_admin):
+            self.client.force_authenticate(user)
+            response = self.client.get(f'/api/products/by-user/{self.owner.id}/')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()['personal_phone'], '9222222222')
+
+    def test_by_user_requires_login(self):
+        self.assertEqual(self.client.get(f'/api/products/by-user/{self.owner.id}/').status_code, 401)
+
+    def test_my_business_allows_role_admin(self):
+        self.client.force_authenticate(self.role_admin)
+        response = self.client.get(f'/api/products/my-business/{self.owner.id}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['personal_phone'], '9222222222')

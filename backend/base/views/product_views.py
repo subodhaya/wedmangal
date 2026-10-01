@@ -64,6 +64,17 @@ def _public(data):
     return {k: v for k, v in data.items() if k not in PRIVATE_VENDOR_FIELDS}
 
 
+def _is_admin(user):
+    # The app has two admin notions: Django staff (API isAdmin) and profile role 'admin'.
+    profile = getattr(user, 'profile', None)
+    return user.is_staff or getattr(profile, 'role', None) == 'admin'
+
+
+def _is_owner_or_admin(request, user_id):
+    # user_id comes from <int:...> or <str:...> URL converters depending on the route
+    return str(request.user.id) == str(user_id) or _is_admin(request.user)
+
+
 
 
 
@@ -159,6 +170,8 @@ class ProductDetailView(generics.RetrieveAPIView):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_product(request, user_id):
+    if not _is_owner_or_admin(request, user_id):
+        return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
     try:
         # Retrieve the product associated with the given user_id
         product = Product.objects.get(user_id=user_id)
@@ -258,7 +271,7 @@ def wishlist_view(request):
         items = Wishlist.objects.filter(user=request.user).select_related('product')
         products = [item.product for item in items]
         serializer = ProductSerializer(products, many=True)
-        return Response({'products': serializer.data})
+        return Response({'products': _public(serializer.data)})
 
     # POST — single item add: { product_id: X }
     product_id = request.data.get('product_id')
@@ -483,7 +496,7 @@ def register_product(request):
         'personal_phone': request.data.get('personal_phone'),
         'opening_time': request.data.get('opening_time'),  # New field
         'closing_time': request.data.get('closing_time'),  # New field
-        'is_approved': request.data.get('is_approved') == 'true',
+        'is_approved': False,  # approval is admin-only (approveProduct); never set by the client
         'instagram_url': request.data.get('instagram_url'),   # ADD
         'website_url': request.data.get('website_url'),     # ADD
         'min_price': request.data.get('min_price') or None,   # ADD
@@ -639,7 +652,7 @@ def register_service(request):
 @permission_classes([IsAuthenticated])
 def my_business_view(request, user_id=None):
     # Owner-only: returns private fields (e.g. personal_phone) for the edit form
-    if request.user.id != user_id and not request.user.is_staff:
+    if not _is_owner_or_admin(request, user_id):
         return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
 
     # Get the product for the specified user ID
@@ -652,8 +665,10 @@ def my_business_view(request, user_id=None):
  
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])  # Only authenticated users can approve
+@permission_classes([IsAuthenticated])  # plus the admin check below
 def approveProduct(request, pk):
+    if not _is_admin(request.user):
+        return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
     try:
         product = Product.objects.get(_id=pk)
         product.is_approved = True
@@ -1100,7 +1115,8 @@ def get_product_by_user(request, user_id):
     try:
         product = Product.objects.get(user_id=user_id)
         serializer = ProductSerializer(product, many=False)
-        return Response(serializer.data)
+        data = serializer.data
+        return Response(data if _is_owner_or_admin(request, user_id) else _public(data))
     except Product.DoesNotExist:
         return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 
