@@ -41,8 +41,8 @@ class Product(models.Model):
     website_url   = models.URLField(max_length=300, null=True, blank=True)
 
 # ── Price range ────────────────────────────────────────
-    min_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    max_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    min_price = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    max_price = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
     is_approved = models.BooleanField(default=False)
 
     # ── Claim ─────────────────────────────────────────────
@@ -99,7 +99,7 @@ class Service(models.Model):
     description = models.TextField(null=True, blank=True)
     rating = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True, default=1.0)
     numReviews = models.IntegerField(null=True, blank=True, default=0)
-    price = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
+    price = models.DecimalField(max_digits=13, decimal_places=1, null=True, blank=True)
     countInStock = models.IntegerField(null=True, blank=True, default=0)
     _id = models.AutoField(primary_key=True, editable=False)
 

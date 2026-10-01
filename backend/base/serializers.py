@@ -393,7 +393,7 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         reviews = service.reviews.all()
         return [{
             '_id': review._id,
-            'user': f"{review.user.first_name} {review.user.last_name}" if review.user else "Anonymous",
+            'user': review.name if review.name else "Anonymous",
             'rating': review.rating,
             'comment': review.comment,
             'createdAt': review.createdAt

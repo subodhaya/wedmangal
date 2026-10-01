@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('base', '0032_blogpost_related_category_blogpost_related_city'),
+        ('base', '0033_alter_product_max_price_alter_product_min_price_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
