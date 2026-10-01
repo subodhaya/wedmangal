@@ -290,3 +290,82 @@ class BlogPost(models.Model):
 
     def __str__(self):
         return self.title
+
+
+# ── Customer intent tracking ─────────────────────────────────────────────────
+
+class VendorEvent(models.Model):
+    """A customer action on WedMangal, e.g. viewing a vendor or tapping WhatsApp.
+
+    Deliberately stores no IP address and no raw user-agent string.
+    """
+
+    class EventType(models.TextChoices):
+        VENDOR_PAGE_VIEW       = 'vendor_page_view', 'Vendor page view'
+        PHONE_CLICK            = 'phone_click', 'Phone click'
+        WHATSAPP_CLICK         = 'whatsapp_click', 'WhatsApp click'
+        GET_QUOTE_STARTED      = 'get_quote_started', 'Get Quote started'
+        GET_QUOTE_SUBMITTED    = 'get_quote_submitted', 'Get Quote submitted'
+        EXTERNAL_CONTACT_CLICK = 'external_contact_click', 'External contact click'
+        EXTERNAL_BOOKING_CLICK = 'external_booking_click', 'External booking click'
+        SEARCH                 = 'search', 'Search'
+        SEARCH_RESULT_CLICK    = 'search_result_click', 'Search result click'
+        FAVORITE               = 'favorite', 'Favorite'
+        SHARE                  = 'share', 'Share'
+        SESSION_START          = 'session_start', 'Session start'
+
+    class DeviceType(models.TextChoices):
+        MOBILE  = 'mobile', 'Mobile'
+        TABLET  = 'tablet', 'Tablet'
+        DESKTOP = 'desktop', 'Desktop'
+
+    event_type  = models.CharField(max_length=32, choices=EventType.choices)
+    vendor      = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True, related_name='events')
+    user        = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='vendor_events')
+    session_id  = models.CharField(max_length=64, blank=True, default='')
+    source      = models.CharField(max_length=50, blank=True, default='')
+    path        = models.CharField(max_length=300, blank=True, default='')
+    referrer    = models.CharField(max_length=300, blank=True, default='')
+    device_type = models.CharField(max_length=10, choices=DeviceType.choices, blank=True, default='')
+    metadata    = models.JSONField(default=dict, blank=True)
+    created_at  = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['vendor', 'event_type', 'created_at'], name='vendorevent_vendor_type_time'),
+            models.Index(fields=['event_type', 'created_at'], name='vendorevent_type_time'),
+        ]
+
+    def __str__(self):
+        return f'{self.event_type} – {self.vendor_id or "-"} – {self.created_at:%Y-%m-%d %H:%M}'
+
+
+class QuoteRequest(models.Model):
+    """A customer's Get Quote enquiry for a vendor (a lead)."""
+
+    class Status(models.TextChoices):
+        NEW       = 'new', 'New'
+        CONTACTED = 'contacted', 'Contacted'
+        CONVERTED = 'converted', 'Converted'
+        CLOSED    = 'closed', 'Closed'
+
+    vendor     = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='quote_requests')
+    user       = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='quote_requests')
+    session_id = models.CharField(max_length=64, blank=True, default='')
+    name       = models.CharField(max_length=100)
+    phone      = models.CharField(max_length=10)  # normalised 10-digit Indian mobile
+    event_date = models.DateField(null=True, blank=True)
+    message    = models.TextField(blank=True, default='')
+    consent    = models.BooleanField(default=False)  # customer agreed to share details with the vendor
+    source     = models.CharField(max_length=30, default='wedmangal')
+    status     = models.CharField(max_length=12, choices=Status.choices, default=Status.NEW)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['vendor', 'created_at'], name='quoterequest_vendor_time')]
+
+    def __str__(self):
+        return f'{self.name} → {self.vendor} ({self.get_status_display()})'

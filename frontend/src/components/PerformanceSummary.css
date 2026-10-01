@@ -1,0 +1,89 @@
+/* PerformanceSummary — vendor dashboard + admin totals.
+   Uses ManagePage's design tokens when inside .manage-page, with fallbacks. */
+
+.perf-card {
+  background: var(--white, #fff);
+  border: 1px solid var(--border, #e8d5de);
+  border-radius: var(--radius-lg, 24px);
+  box-shadow: var(--shadow, 0 4px 24px rgba(94, 20, 63, 0.10));
+  padding: 22px 24px;
+  margin: 0 0 28px;
+}
+
+.perf-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.perf-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--plum, #5e143f);
+}
+.perf-subtitle {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--text-light, #9a7a85);
+}
+
+.perf-ranges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.perf-range {
+  border: 1.5px solid var(--border, #e8d5de);
+  background: var(--white, #fff);
+  color: var(--text-mid, #5a3a45);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.perf-range--active {
+  background: var(--plum, #5e143f);
+  border-color: var(--plum, #5e143f);
+  color: #fff;
+}
+.perf-range:focus-visible { outline: 3px solid var(--gold-deep, #d4a843); outline-offset: 2px; }
+
+.perf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+.perf-metric {
+  background: var(--cream, #fdf8f0);
+  border-radius: var(--radius-md, 16px);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.perf-num {
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-dark, #2a1a1f);
+  font-variant-numeric: tabular-nums;
+}
+.perf-label {
+  font-size: 13px;
+  color: var(--text-mid, #5a3a45);
+}
+
+.perf-error {
+  margin: 0;
+  color: var(--danger, #c0392b);
+  font-size: 14px;
+}
+
+@media (max-width: 576px) {
+  .perf-card { padding: 18px 16px; }
+  .perf-num { font-size: 1.6rem; }
+}

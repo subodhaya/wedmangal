@@ -94,3 +94,4 @@ api.interceptors.request.use(
 
 // Export API instance
 export default api;
+export { BASE_URL };

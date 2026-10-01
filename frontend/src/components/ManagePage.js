@@ -5,6 +5,7 @@ import { FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import './ManagePage.css';
 import AvailabilityToggle from './AvailabilityToggle';
+import PerformanceSummary from './PerformanceSummary';
 
 
 
@@ -299,6 +300,9 @@ function ManagePage() {
                         </Col>
                     </Row>
                 </div>
+
+                {/* ── WedMangal performance ────────────────────────── */}
+                <PerformanceSummary endpoint="/api/analytics/vendor-summary/" />
 
                 {/* ── Form card ────────────────────────────────────── */}
                 <div className="mp-form-card">

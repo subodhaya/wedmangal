@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import api from '../utils/api';
 import { useLocation } from 'react-router-dom';
@@ -8,6 +8,7 @@ import Product from '../components/Product';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
 import Paginate from '../components/Paginate';
+import { trackEvent, EVENTS } from '../utils/analytics';
 
 function SearchResultScreen() {
   const [products, setProducts] = useState([]);
@@ -62,6 +63,16 @@ function SearchResultScreen() {
 
     fetchProducts();
   }, [city, vendor, pageNumber]);
+
+  // One SEARCH event per new search (not per page or re-render)
+  const trackedSearchRef = useRef('');
+  useEffect(() => {
+    const key = `${city}|${vendor}`;
+    if ((city || vendor) && trackedSearchRef.current !== key) {
+      trackedSearchRef.current = key;
+      trackEvent(EVENTS.SEARCH, { source: 'search', metadata: { query: vendor, city } });
+    }
+  }, [city, vendor]);
 
   const handlePageChange = (newPage) => {
     const queryString = new URLSearchParams({ city, vendor, page: newPage }).toString();

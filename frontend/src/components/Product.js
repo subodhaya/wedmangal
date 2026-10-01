@@ -4,6 +4,7 @@ import { Card, ListGroup } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Rating from './Rating';
 import api from '../utils/api';
+import { trackEvent, EVENTS } from '../utils/analytics';
 import './Product.css';
 
 function VideoModal({ videoUrl, videoThumb, vendorName, onClose }) {
@@ -145,6 +146,7 @@ function Product({ product }) {
     try {
       if (next) {
         await api.post('/api/products/wishlist/', { product_id: product._id });
+        trackEvent(EVENTS.FAVORITE, { vendorId: product._id, source: 'listing_card' });
       } else {
         await api.delete(`/api/products/wishlist/${product._id}/`);
       }

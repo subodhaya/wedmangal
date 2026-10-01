@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
 import Header from './components/Header';
@@ -44,12 +44,15 @@ import FAQScreen from './screens/FAQScreen';
 import BlogListScreen from './screens/BlogListScreen';
 import BlogPostScreen from './screens/BlogPostScreen';
 import { HelmetProvider } from 'react-helmet-async';
+import { trackSessionStart } from './utils/analytics';
 
 // Only show splash when launched as installed PWA
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
 function App() {
   const [showSplash, setShowSplash] = useState(isStandalone);
+
+  useEffect(() => { trackSessionStart(); }, []);
 
   if (showSplash) {
     return <SplashScreen onDone={() => setShowSplash(false)} />;

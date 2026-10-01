@@ -10,6 +10,8 @@ import api from '../utils/api';
 import { useLocation } from 'react-router-dom';
 import ClaimButton from '../components/ClaimButton';
 import SlotPicker from '../components/SlotPicker';
+import QuoteModal from '../components/QuoteModal';
+import { trackEvent, EVENTS } from '../utils/analytics';
 import { Helmet } from 'react-helmet-async'; 
 
 const debounce = (func, delay) => {
@@ -38,7 +40,7 @@ const normalizePhone = (phone) => {
 };
 
 // ── PhoneBlock ────────────────────────────────────────────────────────────────
-const PhoneBlock = ({ label, phone, businessName }) => {
+export const PhoneBlock = ({ label, phone, businessName, vendorId }) => {
   if (!phone) return null;
   const clean = normalizePhone(phone);
   if (!clean) return null;
@@ -52,11 +54,13 @@ const PhoneBlock = ({ label, phone, businessName }) => {
         <span className="ps-phone-number">{phone}</span>
       </div>
       <div className="ps-phone-actions">
-        <a href={`tel:${clean}`} className="ps-contact-btn ps-call-btn" title="Call">
+        <a href={`tel:${clean}`} className="ps-contact-btn ps-call-btn" title="Call"
+          onClick={() => trackEvent(EVENTS.PHONE_CLICK, { vendorId, source: 'vendor_page' })}>
           <i className="fas fa-phone-alt"></i>
         </a>
         <a
           href={`https://wa.me/${clean}?text=${msg}`}
+          onClick={() => trackEvent(EVENTS.WHATSAPP_CLICK, { vendorId, source: 'vendor_page' })}
           target="_blank" rel="noreferrer"
           className="ps-contact-btn ps-wa-btn" title="WhatsApp"
         >
@@ -137,6 +141,30 @@ function ProductScreen() {
     if (product?.services)
       product.services.forEach(s => fetchBookedDates(s._id));
   }, [product]);
+
+  // ── Customer-intent tracking (fire-and-forget) ────────────────────────────
+  const [showQuote, setShowQuote] = useState(false);
+  const trackedViewRef = useRef(null);
+  useEffect(() => {
+    // Once per vendor, not on every re-render
+    if (product?._id && trackedViewRef.current !== product._id) {
+      trackedViewRef.current = product._id;
+      trackEvent(EVENTS.VENDOR_PAGE_VIEW, { vendorId: product._id, source: 'vendor_page' });
+    }
+  }, [product?._id]);
+
+  const openQuote = () => {
+    setShowQuote(true);
+    trackEvent(EVENTS.GET_QUOTE_STARTED, { vendorId: product._id, source: 'vendor_page' });
+  };
+
+  const trackExternalContact = (channel, url) => {
+    let host = '';
+    try { host = new URL(url).hostname.replace('www.', ''); } catch { /* not a valid URL */ }
+    trackEvent(EVENTS.EXTERNAL_CONTACT_CLICK, {
+      vendorId: product._id, source: 'vendor_page', metadata: { channel, ...(host && { host }) },
+    });
+  };
 
   useEffect(() => {
     setSelectedDates({});
@@ -471,11 +499,16 @@ const handleDirectBooking = async (serviceId) => {
 
             {/* Phone blocks */}
             {product.business_phone && (
-              <PhoneBlock label="📞 Business Phone" phone={product.business_phone} businessName={product.name} />
+              <PhoneBlock label="📞 Business Phone" phone={product.business_phone} businessName={product.name} vendorId={product._id} />
             )}
             {product.personal_phone && product.personal_phone !== product.business_phone && (
-              <PhoneBlock label="📱 Personal Phone" phone={product.personal_phone} businessName={product.name} />
+              <PhoneBlock label="📱 Personal Phone" phone={product.personal_phone} businessName={product.name} vendorId={product._id} />
             )}
+
+            {/* Get Quote */}
+            <button type="button" className="ps-quote-btn" onClick={openQuote}>
+              📝 Get a free quote
+            </button>
 
             {/* Info grid */}
             <div className="ps-info-grid" style={{ marginTop: '8px' }}>
@@ -531,6 +564,7 @@ const handleDirectBooking = async (serviceId) => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
                       {product.instagram_url && (
                         <a href={product.instagram_url} target="_blank" rel="noopener noreferrer"
+                          onClick={() => trackExternalContact('instagram', product.instagram_url)}
                           style={{ color: '#E1306C', fontWeight: 600, textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
                           <i className="fab fa-instagram"></i>
                           {(() => { try { return new URL(product.instagram_url).hostname.replace('www.', ''); } catch { return product.instagram_url; } })()}
@@ -538,6 +572,7 @@ const handleDirectBooking = async (serviceId) => {
                       )}
                       {product.website_url && (
                         <a href={product.website_url} target="_blank" rel="noopener noreferrer"
+                          onClick={() => trackExternalContact('website', product.website_url)}
                           style={{ color: '#5e143f', fontWeight: 600, textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
                           <i className="fas fa-globe"></i>
                           {(() => { try { return new URL(product.website_url).hostname.replace('www.', ''); } catch { return product.website_url; } })()}
@@ -784,6 +819,9 @@ const handleDirectBooking = async (serviceId) => {
         </>
       ) : (
         <div className="ps-alert ps-alert-danger">Product not found</div>
+      )}
+      {showQuote && product && (
+        <QuoteModal vendor={product} onClose={() => setShowQuote(false)} />
       )}
     </div>
   );

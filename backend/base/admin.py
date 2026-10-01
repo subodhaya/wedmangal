@@ -1,7 +1,7 @@
 # base/admin.py
 from django.contrib import admin
 from django.contrib.auth.models import User
-from .models import Profile, Product, Service, Review, Order, OrderItem, Budget, ShippingAddress, ServiceImage, CartItem, Wishlist, BlogPost
+from .models import Profile, Product, Service, Review, Order, OrderItem, Budget, ShippingAddress, ServiceImage, CartItem, Wishlist, BlogPost, VendorEvent, QuoteRequest
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 class ProfileInline(admin.StackedInline):
@@ -57,3 +57,25 @@ class BlogPostAdmin(admin.ModelAdmin):
             'description': 'Write the full post content in HTML. Use &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;strong&gt; etc.',
         }),
     )
+
+
+@admin.register(QuoteRequest)
+class QuoteRequestAdmin(admin.ModelAdmin):
+    list_display = ('name', 'phone', 'vendor', 'event_date', 'status', 'created_at')
+    list_editable = ('status',)
+    list_filter = ('status', 'created_at')
+    search_fields = ('name', 'phone', 'vendor__name')
+    readonly_fields = ('vendor', 'user', 'session_id', 'consent', 'source', 'created_at', 'updated_at')
+
+
+@admin.register(VendorEvent)
+class VendorEventAdmin(admin.ModelAdmin):
+    list_display = ('event_type', 'vendor', 'user', 'device_type', 'source', 'created_at')
+    list_filter = ('event_type', 'device_type', 'created_at')
+    search_fields = ('vendor__name',)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
