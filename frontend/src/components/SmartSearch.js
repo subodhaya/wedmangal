@@ -59,7 +59,7 @@ function SmartSearch({ variant = 'compact' }) {
   // Sync keyword from URL on mount
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.get('keyword')) setKeyword(params.get('keyword'));
+    if (params.get('q') || params.get('keyword')) setKeyword(params.get('q') || params.get('keyword'));
   }, []);
 
   // Close on outside click
@@ -80,7 +80,11 @@ function SmartSearch({ variant = 'compact' }) {
 
   const doSearch = (kw = keyword) => {
   const trimmed = kw.trim();
-  navigate(trimmed ? `/?keyword=${encodeURIComponent(trimmed)}&page=1` : '/');
+  // Category suggestions open that category's results; free text goes to the search page
+  const suggestion = SUGGESTIONS.find(s => s.name === trimmed);
+  navigate(!trimmed ? '/'
+    : suggestion ? `/search/?category=${encodeURIComponent(suggestion.name)}`
+    : `/search/?q=${encodeURIComponent(trimmed)}`);
   setShowSuggestions(false);
   setFocused(false);
   inputRef.current?.blur();

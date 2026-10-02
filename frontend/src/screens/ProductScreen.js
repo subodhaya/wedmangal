@@ -30,7 +30,7 @@ const formatTime = (t) => {
   return t.slice(0, 5);
 };
 
-const normalizePhone = (phone) => {
+export const normalizePhone = (phone) => {
   if (!phone) return '';
   const cleaned = phone.replace(/\D/g, '');
   if (!cleaned || cleaned === '0000') return '';
@@ -145,11 +145,15 @@ function ProductScreen() {
   // ── Customer-intent tracking (fire-and-forget) ────────────────────────────
   const [showQuote, setShowQuote] = useState(false);
   const trackedViewRef = useRef(null);
+  // Opened from search results? (/product/<id>?ref=search) — read once; canonical URL is unaffected
+  const fromSearchRef = useRef(new URLSearchParams(window.location.search).get('ref') === 'search');
   useEffect(() => {
     // Once per vendor, not on every re-render
     if (product?._id && trackedViewRef.current !== product._id) {
       trackedViewRef.current = product._id;
-      trackEvent(EVENTS.VENDOR_PAGE_VIEW, { vendorId: product._id, source: 'vendor_page' });
+      trackEvent(EVENTS.VENDOR_PAGE_VIEW, {
+        vendorId: product._id, source: fromSearchRef.current ? 'search_results' : 'vendor_page',
+      });
     }
   }, [product?._id]);
 
