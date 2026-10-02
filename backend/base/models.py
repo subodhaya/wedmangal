@@ -363,6 +363,18 @@ class QuoteRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Vendor notification (base/notifications.py). notified_at doubles as the claim
+    # that makes each enquiry notify the vendor at most once.
+    class NotifyStatus(models.TextChoices):
+        SENT    = 'sent', 'Sent'
+        FAILED  = 'failed', 'Failed'
+        SKIPPED = 'skipped', 'Skipped'
+
+    notified_at        = models.DateTimeField(null=True, blank=True)
+    sms_status         = models.CharField(max_length=8, choices=NotifyStatus.choices, blank=True, default='')
+    email_status       = models.CharField(max_length=8, choices=NotifyStatus.choices, blank=True, default='')
+    notification_error = models.CharField(max_length=255, blank=True, default='')
+
     class Meta:
         ordering = ['-created_at']
         indexes = [models.Index(fields=['vendor', 'created_at'], name='quoterequest_vendor_time')]

@@ -132,7 +132,7 @@ class QuoteRequestTests(AnalyticsTestCase):
 
     def test_quote_submitted_event_is_recorded_by_server(self):
         self.quote()
-        self.quote()  # every real submission counts — no dedupe
+        self.quote(message='A second, different enquiry')  # every real submission counts
         self.assertEqual(VendorEvent.objects.filter(event_type=E.GET_QUOTE_SUBMITTED, vendor=self.vendor).count(), 2)
 
     def test_authenticated_quote_is_linked_to_user(self):

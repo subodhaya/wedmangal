@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
-from base import analytics, search_intent
+from base import analytics, notifications, search_intent
 from base.models import Product, QuoteRequest, SearchQuery
 from base.views.product_views import _is_admin
 
@@ -140,6 +140,16 @@ def create_quote_request(request):
     if errors:
         return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
 
+    # A retried/double-submitted identical enquiry returns the existing quote:
+    # no second lead, no second vendor notification.
+    recent = QuoteRequest.objects.filter(
+        vendor=vendor, phone=phone, name=name, event_date=event_date, message=message,
+        created_at__gte=timezone.now() - timedelta(minutes=2),
+    ).order_by('-created_at').first()
+    if recent:
+        return Response({'id': recent.id, 'detail': 'Your enquiry has been received.'},
+                        status=status.HTTP_201_CREATED)
+
     user, session_id = _visitor(request, data)
     quote = QuoteRequest.objects.create(
         vendor=vendor, user=user, session_id=session_id, name=name, phone=phone,
@@ -154,6 +164,11 @@ def create_quote_request(request):
     except Exception:
         # The enquiry is already saved; analytics must never fail the customer's action.
         logger.exception('Could not record get_quote_submitted for quote %s', quote.id)
+    try:
+        # SMS/email go out after the commit, in the background; failures never affect this response.
+        notifications.schedule_vendor_notification(quote.id)
+    except Exception:
+        logger.exception('Could not schedule vendor notification for quote %s', quote.id)
     return Response({'id': quote.id, 'detail': 'Your enquiry has been received.'},
                     status=status.HTTP_201_CREATED)
 
