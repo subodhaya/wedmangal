@@ -63,3 +63,21 @@ it('formats real prices only', () => {
   expect(priceText(40000, 75000)).toBe('₹40,000–₹75,000');
   expect(priceText(150000, null)).toBe('From ₹1,50,000');
 });
+
+it('keeps the real vendor name (capitalisation and full text) with the full name on hover', () => {
+  const long = 'Sri Lakshmi Kalyana Mandapam & Banquet Hall (A/C) | Best Wedding Venue in Chennai | Tambaram';
+  renderCard({ ...vendor, name: long });
+  const link = screen.getByRole('link', { name: long });
+  expect(link).toHaveAttribute('title', long);
+  expect(screen.getByRole('heading', { level: 3, name: long })).toHaveClass('vr-name');
+});
+
+it('card titles override the theme heading style and wrap to two lines', () => {
+  const css = require('fs').readFileSync(require('path').join(__dirname, '../screens/SearchResultScreen.css'), 'utf8');
+  const rule = css.match(/\.vr-card \.vr-name\s*\{([^}]*)\}/)[1];
+  expect(rule).toMatch(/text-transform:\s*none/);
+  expect(rule).toMatch(/letter-spacing:\s*normal/);
+  expect(rule).toMatch(/-webkit-line-clamp:\s*2/);
+  expect(rule).toMatch(/font-size:\s*1\.05rem/);
+});
+

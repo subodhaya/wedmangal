@@ -16,7 +16,7 @@ export const imageSrc = (image) => {
 };
 
 // One search result. Uses only the public search fields (no personal_phone).
-export default function VendorResultCard({ vendor, position, query = '' }) {
+export default function VendorResultCard({ vendor, position, query = '', onOpen }) {
   const phone = normalizePhone(vendor.business_phone);
   const profile = `/product/${vendor._id}?ref=search`;
   const source = 'search_results';
@@ -24,9 +24,12 @@ export default function VendorResultCard({ vendor, position, query = '' }) {
     `Hi, I found you on WedMangal! I'm interested in your ${vendor.name || ''} services. Can you please share more details?`
   );
 
-  const openProfile = () => trackEvent(EVENTS.SEARCH_RESULT_CLICK, {
-    vendorId: vendor._id, source, metadata: { position, ...(query && { query }) },
-  });
+  const openProfile = () => {
+    if (onOpen) onOpen();  // e.g. send the search that led here before recording the click
+    trackEvent(EVENTS.SEARCH_RESULT_CLICK, {
+      vendorId: vendor._id, source, metadata: { position, ...(query && { query }) },
+    });
+  };
 
   return (
     <article className="vr-card">
@@ -36,7 +39,7 @@ export default function VendorResultCard({ vendor, position, query = '' }) {
       </Link>
       <div className="vr-body">
         <h3 className="vr-name">
-          <Link to={profile} onClick={openProfile}>{vendor.name}</Link>
+          <Link to={profile} onClick={openProfile} title={vendor.name}>{vendor.name}</Link>
         </h3>
         <p className="vr-meta">
           {vendor.category_label}{(vendor.area_name || vendor.city) && ` · ${vendor.area_name || vendor.city}`}

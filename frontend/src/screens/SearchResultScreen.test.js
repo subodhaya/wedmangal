@@ -87,3 +87,35 @@ it('shows a friendly error if search is down', async () => {
   renderAt('/search/?q=hall');
   expect(await screen.findByRole('alert')).toHaveTextContent('Search is unavailable right now');
 });
+
+it('the results heading and count are not inside a <header> (which takes the site header styles)', async () => {
+  api.get.mockResolvedValue({ data: results });
+  renderAt('/search/?q=photographer');
+  expect(await screen.findByRole('heading', { level: 1, name: 'Photographers in Chennai' })).toBeVisible();
+  expect(screen.getByText(/vendors found/)).toBeVisible();
+  // a <header> here would be a "banner" landmark and pick up the site header bar styles
+  expect(screen.queryByRole('banner')).not.toBeInTheDocument();
+});
+
+it('clicking a result immediately records the pending search exactly once, before the click', async () => {
+  api.get.mockResolvedValue({ data: results });
+  renderAt('/search/?q=photographer');
+  await screen.findByText('Lotus Studio');
+  const paths = () => global.fetch.mock.calls.map(c => c[0].replace(/^.*\/api\/analytics\//, ''));
+  expect(paths()).not.toContain('searches/');               // still inside the debounce window
+  fireEvent.click(screen.getAllByRole('link', { name: 'View profile' })[0]);
+  expect(paths().filter(p => p === 'searches/')).toHaveLength(1);
+  expect(paths().indexOf('searches/')).toBeLessThan(paths().indexOf('events/'));
+  jest.advanceTimersByTime(3000);
+  expect(paths().filter(p => p === 'searches/')).toHaveLength(1);
+});
+
+it('leaving the page flushes a pending search', async () => {
+  api.get.mockResolvedValue({ data: results });
+  renderAt('/search/?q=photographer');
+  await screen.findByText('Lotus Studio');
+  window.dispatchEvent(new Event('pagehide'));
+  const body = JSON.parse(global.fetch.mock.calls.find(c => c[0].endsWith('/api/analytics/searches/'))[1].body);
+  expect(body).toMatchObject({ source: 'search_page', query: 'photographer', result_count: 2 });
+});
+

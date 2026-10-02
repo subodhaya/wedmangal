@@ -157,3 +157,29 @@ describe('search intent tracking', () => {
     expect(() => { track({ source: 'keyword', query: 'hall' }); jest.advanceTimersByTime(10); }).not.toThrow();
   });
 });
+
+describe('search tracker flush', () => {
+  afterEach(() => jest.useRealTimers());
+  const searches = () => global.fetch.mock.calls.filter(c => c[0].endsWith('/api/analytics/searches/'));
+
+  it('flush sends a pending search immediately, exactly once', () => {
+    jest.useFakeTimers();
+    const track = createSearchTracker(800);
+    track({ source: 'search_page', query: 'photographer' });
+    expect(searches()).toHaveLength(0);       // still debouncing
+    track.flush();
+    expect(searches()).toHaveLength(1);
+    jest.advanceTimersByTime(2000);            // the cancelled timer must not send it again
+    track.flush();
+    track({ source: 'search_page', query: 'photographer' });  // same search again
+    jest.advanceTimersByTime(2000);
+    expect(searches()).toHaveLength(1);
+  });
+
+  it('flush does nothing when nothing is pending', () => {
+    const track = createSearchTracker(800);
+    track.flush();
+    expect(searches()).toHaveLength(0);
+  });
+});
+

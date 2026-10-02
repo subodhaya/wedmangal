@@ -152,17 +152,29 @@ export function trackSearch({ source, query = '', filters = {}, resultCount = nu
 export function createSearchTracker(delay = 1200) {
   let timer = null;
   let lastSent = '';
+  let pending = null;
+  const send = () => {
+    clearTimeout(timer);
+    const search = pending;
+    pending = null;
+    if (!search) return;
+    try {
+      lastSent = JSON.stringify([search.source, search.query || '', search.filters || {}]);
+      trackSearch(search);
+    } catch { /* never break the page */ }
+  };
   const track = (search) => {
     try {
       const key = JSON.stringify([search.source, search.query || '', search.filters || {}]);
       if (key === lastSent) return;
       clearTimeout(timer);
-      timer = setTimeout(() => {
-        lastSent = key;
-        trackSearch(search);
-      }, delay);
+      pending = search;
+      timer = setTimeout(send, delay);
     } catch { /* tracking must never break search */ }
   };
-  track.cancel = () => clearTimeout(timer);
+  // Send a search still waiting on the debounce right now (e.g. the customer clicked a result
+  // or is leaving the page). Sends nothing if nothing is pending, so it never duplicates.
+  track.flush = () => { if (pending) send(); };
+  track.cancel = () => { clearTimeout(timer); pending = null; };
   return track;
 }

@@ -33,6 +33,13 @@ function SearchResultScreen() {
 
   useEffect(() => { setText(q); }, [q]);
 
+  // Leaving the page (reload / tab close) must not lose a search still waiting on the debounce
+  useEffect(() => {
+    const flush = () => trackerRef.current.flush();
+    window.addEventListener('pagehide', flush);
+    return () => window.removeEventListener('pagehide', flush);
+  }, []);
+
   useEffect(() => {
     let active = true;
     setState(s => ({ ...s, loading: true, error: '' }));
@@ -108,7 +115,8 @@ function SearchResultScreen() {
         <button type="submit">Search</button>
       </form>
 
-      <header className="sr-header">
+      {/* A plain div: a <header> element would pick up the site-wide header bar styles */}
+      <div className="sr-header">
         <h1>{heading}</h1>
         {q && (categoryLabel || applied.area) && <p className="sr-query">“{q}”</p>}
         {d && (
@@ -122,7 +130,7 @@ function SearchResultScreen() {
           </div>
         )}
         {d?.notes?.map(note => <p key={note} className="sr-note">{note}</p>)}
-      </header>
+      </div>
 
       <button type="button" className="sr-filter-toggle" aria-expanded={showFilters}
         aria-controls="sr-filters" onClick={() => setShowFilters(v => !v)}>
@@ -204,7 +212,8 @@ function SearchResultScreen() {
             <>
               <div className="sr-grid">
                 {d.results.map((vendor, i) => (
-                  <VendorResultCard key={vendor._id} vendor={vendor} query={q} position={(d.page - 1) * 12 + i + 1} />
+                  <VendorResultCard key={vendor._id} vendor={vendor} query={q} position={(d.page - 1) * 12 + i + 1}
+                    onOpen={() => trackerRef.current.flush()} />
                 ))}
               </div>
               <Paginate page={d.page} pages={d.pages} handlePageChange={p => { update({ page: String(p) }); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />

@@ -61,6 +61,11 @@ STOP_WORDS = {
 }
 CATEGORY_WORDS = {w for phrases in si.CATEGORY_SYNONYMS.values() for p in phrases for w in p.split()}
 
+# Signals that a word in the query names a place (used only to explain, never to filter).
+LOCATION_PREPOSITIONS = {'in', 'near', 'at', 'around', 'opposite', 'beside', 'nearby'}
+ROAD_ABBREVIATIONS = {'ecr', 'omr', 'gst'}
+LOCALITY_SUFFIXES = ('nagar', 'pakkam', 'bakkam', 'puram', 'pet', 'salai', 'road', 'palayam', 'kottai', 'thangal')
+
 
 def _rupees(value):
     if value >= 100_000:
@@ -75,6 +80,22 @@ def _name_tokens(query, area):
     words = re.findall(r'[a-z]{3,}', si.normalize(query))
     tokens = [w for w in words if w not in STOP_WORDS and w not in CATEGORY_WORDS and w not in area_words]
     return list(dict.fromkeys(tokens))[:3]
+
+
+def _unmatched_location(query, area):
+    """A place the customer named that isn't a known area (e.g. "ECR"), as they typed it."""
+    if area or not query:
+        return None
+    words = re.findall(r'[A-Za-z][A-Za-z.]*', query)
+    lower = [w.lower().strip('.') for w in words]
+    for i, word in enumerate(lower):
+        if word in STOP_WORDS or word in CATEGORY_WORDS or (len(word) < 3 and word not in ROAD_ABBREVIATIONS):
+            continue
+        after_preposition = i > 0 and lower[i - 1] in LOCATION_PREPOSITIONS
+        looks_like_place = word in ROAD_ABBREVIATIONS or word.endswith(LOCALITY_SUFFIXES)
+        if after_preposition or looks_like_place:
+            return words[i].strip('.')
+    return None
 
 
 def _area_q(area):
@@ -136,7 +157,7 @@ def _filtered(category=None, area=None, min_rating=None, keyword_tokens=None):
     return qs
 
 
-def _notes(intent, area_param, area):
+def _notes(intent, area_param, area, unmatched_location=None):
     notes = []
     if intent['budget_min'] or intent['budget_max']:
         if intent['budget_min'] and intent['budget_max']:
@@ -158,6 +179,8 @@ def _notes(intent, area_param, area):
                      f'{"them" if len(unverified) > 1 else "it"}.')
     if area_param and not area:
         notes.append(f'We couldn’t match “{area_param[:50]}” to a Chennai area, so we’re showing all of Chennai.')
+    elif unmatched_location:
+        notes.append(f'“{unmatched_location[:50]}” wasn’t matched to a known area, so location filtering wasn’t applied.')
     return notes
 
 
@@ -237,7 +260,7 @@ def search_vendors(request):
         'interpreted': {**{k: intent[k] for k in si.INTENT_FIELDS if k != 'event_date'},
                         'category_label': CATEGORY_NAMES.get(category)},
         'applied': {'category': category, 'area': area, 'min_rating': min_rating, 'sort': sort},
-        'notes': _notes(intent, area_param, area),
+        'notes': _notes(intent, area_param, area, _unmatched_location(query, area)),
         'suggestions': suggestions,
         'results': [_card(p) for p in page_obj.object_list],
         'options': {

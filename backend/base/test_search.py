@@ -163,3 +163,31 @@ class SearchApiTests(TestCase):
 
     def test_phone_numbers_in_query_are_redacted(self):
         self.assertEqual(self.search(q='photographer 9876543210')['query'], 'photographer [phone]')
+
+
+class UnmatchedLocationNoteTests(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        vendor('ECR Events & Decor', 'Decorators', 'Neelankarai', 'ECR Road, Neelankarai, Chennai', rating=4.4)
+        vendor('Bloom Decorators', 'Decorators', 'Adyar', 'Adyar, Chennai', rating=4.1)
+        vendor('Sri Mahal', 'Halls', 'Tambaram', 'Tambaram, Chennai', rating=4.6)
+        vendor('Kanchi Studio', 'Photographers', 'Adyar', 'Adyar, Chennai', rating=4.3)
+
+    def search(self, q):
+        return self.client.get('/api/search/', {'q': q}).json()
+
+    def test_unknown_place_is_explained_not_applied(self):
+        data = self.search('decorator ECR')
+        self.assertEqual((data['applied']['category'], data['applied']['area']), ('Decorators', None))
+        self.assertIn('“ECR” wasn’t matched to a known area, so location filtering wasn’t applied.', data['notes'])
+        self.assertEqual(data['count'], 2)  # not filtered by an invented location
+
+    def test_misspelt_area_after_preposition_is_explained(self):
+        data = self.search('hall near thambaram')
+        self.assertIsNone(data['applied']['area'])
+        self.assertTrue(any('“thambaram” wasn’t matched' in n for n in data['notes']))
+
+    def test_no_location_note_when_not_needed(self):
+        for q in ('hall in Tambaram', 'hall in chennai', 'photographer kanchi', 'photographer near me', 'decorator'):
+            self.assertFalse(any('wasn’t matched to a known area' in n for n in self.search(q)['notes']), q)
