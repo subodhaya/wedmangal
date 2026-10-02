@@ -87,8 +87,12 @@ class ProfileError(ValueError):
     pass
 
 
+_FIELDS_BY_LOWER = {name.lower(): fields for name, fields in CATEGORY_FIELDS.items()}
+
+
 def fields_for(category):
-    return CATEGORY_FIELDS.get(category or '', [])
+    # Case-insensitive like the category filters: a few listings are stored as 'caterers'/'halls'.
+    return _FIELDS_BY_LOWER.get((category or '').strip().lower(), [])
 
 
 # ── Ownership ────────────────────────────────────────────────────────────────

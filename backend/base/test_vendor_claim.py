@@ -309,6 +309,11 @@ class ProfileTests(ClaimTestCase):
         self.assertEqual([f['key'] for f in form['fields']], ['shoot_type', 'video_included', 'drone'])
         self.assertEqual(self.client.patch(url, {'attributes': {'capacity': 500}}, format='json').status_code, 400)
 
+    def test_category_match_ignores_case(self):
+        Product.objects.filter(pk=self.hall.pk).update(category='halls')
+        self.assertEqual(self.patch(self.owner, {'parking': True}).status_code, 200)
+        self.assertEqual(self.client.get(f'/api/products/{self.hall._id}/').json()['details'][0]['key'], 'parking')
+
     def test_invalid_values_rejected(self):
         for bad in ({'capacity': 0}, {'capacity': 'many'}, {'capacity': True}, {'parking': 'yes'},
                     {'food_type': 'vegan'}, {'is_claimed': True}):
