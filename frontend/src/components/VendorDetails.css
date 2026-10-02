@@ -1,0 +1,16 @@
+.vd-body { width: 100%; }
+.vd-list {
+  margin: 6px 0 0;
+  display: grid;
+  gap: 4px;
+}
+.vd-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  border-bottom: 1px dashed rgba(94, 20, 63, 0.12);
+  padding: 3px 0;
+}
+.vd-row dt { font-weight: 400; color: #7a5a66; }
+.vd-row dd { margin: 0; font-weight: 600; color: #2a0918; text-align: right; }

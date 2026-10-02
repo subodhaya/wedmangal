@@ -9,6 +9,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../utils/api';
 import { useLocation } from 'react-router-dom';
 import ClaimButton from '../components/ClaimButton';
+import VendorDetails from '../components/VendorDetails';
 import SlotPicker from '../components/SlotPicker';
 import QuoteModal from '../components/QuoteModal';
 import { trackEvent, EVENTS } from '../utils/analytics';
@@ -586,6 +587,8 @@ const handleDirectBooking = async (serviceId) => {
                   </div>
                 </div>
               )}
+
+              <VendorDetails details={product.details} />
 
               <div className="ps-info-item ps-claim-row">
                 <ClaimButton product={product} />

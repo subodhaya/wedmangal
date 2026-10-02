@@ -17,9 +17,15 @@ from base.models import VendorEvent, QuoteRequest
 EventType = VendorEvent.EventType
 IST = ZoneInfo('Asia/Kolkata')
 
-# Events the browser may report. GET_QUOTE_SUBMITTED is recorded by the server
-# only, when a quote is actually saved, so it cannot be inflated by the client.
-CLIENT_EVENT_TYPES = set(EventType.values) - {EventType.GET_QUOTE_SUBMITTED}
+# Events only the server records: a quote is actually saved, or a vendor
+# claims / edits a listing. The browser cannot report (or inflate) these.
+SERVER_EVENT_TYPES = {
+    EventType.GET_QUOTE_SUBMITTED, EventType.CLAIM_STARTED, EventType.CLAIM_SUBMITTED,
+    EventType.CLAIM_APPROVED, EventType.PROFILE_UPDATED,
+}
+
+# Events the browser may report.
+CLIENT_EVENT_TYPES = set(EventType.values) - SERVER_EVENT_TYPES
 
 # Events that must name a vendor.
 VENDOR_EVENT_TYPES = {

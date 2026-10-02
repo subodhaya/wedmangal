@@ -87,3 +87,9 @@
 .claim-already {
   margin-top: 1rem;
 }
+/* Claimed (not verified): quieter than the verified chip */
+.claim-verified-chip.claimed {
+  background: #f7eaf0;
+  color: #5e143f;
+  border: 1px solid rgba(94, 20, 63, 0.2);
+}

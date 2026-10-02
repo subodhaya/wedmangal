@@ -369,3 +369,39 @@
   .claim-otp-box { width: 42px; height: 50px; font-size: 1.2rem; }
   .claim-title { font-size: 1.4rem; }
 }
+/* ── Claim by code / request (vendor claim flow) ───────── */
+.claim-code-input,
+.claim-message-input {
+  width: 100%;
+  border: 1.5px solid rgba(94, 20, 63, 0.25);
+  border-radius: 12px;
+  background: #fdf9fb;
+}
+.claim-code-input {
+  font-size: 1.3rem;
+  letter-spacing: 0.4em;
+  text-align: center;
+}
+.claim-message-input {
+  height: auto;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  letter-spacing: 0;
+  resize: vertical;
+}
+.claim-code-input:focus,
+.claim-message-input:focus {
+  border-color: #c9973a;
+  box-shadow: 0 0 0 3px rgba(201, 151, 58, 0.12);
+}
+.claim-hint[for] {
+  font-style: normal;
+  color: #7a5a66;
+  margin-bottom: -6px;
+}
+.claim-link-btn {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
+.claim-link-btn:hover { color: #fff; }

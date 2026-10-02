@@ -19,9 +19,7 @@ urlpatterns = [
     path('profile/phone/send-otp/',     views.link_phone_send_otp,              name='link-phone-send-otp'),
     path('profile/phone/verify-otp/',   views.link_phone_verify_otp,            name='link-phone-verify-otp'),
 
-    # ── Service Owner Claim OTP ──────────────────────────────────────────────
-    path('claim/send-otp/',             views.claim_send_otp,                   name='claim-send-otp'),
-    path('claim/verify-otp/',           views.claim_verify_otp,                 name='claim-verify-otp'),
+    # ── Service Owner Claim (claiming itself: /api/vendors/<id>/claim/) ──────
     path('my-claims/',                  views.my_claimed_listings,              name='my-claimed-listings'),
 
     # ── Admin ────────────────────────────────────────────────────────────────

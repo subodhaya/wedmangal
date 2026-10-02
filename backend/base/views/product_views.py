@@ -50,11 +50,13 @@ from rest_framework.response import Response
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from base.decorators import admin_only, product_manager_only
+from base import analytics, vendor_profile
+from base.models import VendorEvent
 
 
 # Vendor fields that must never appear in public API responses.
 # They stay writable and are still returned to the owner via my_business_view.
-PRIVATE_VENDOR_FIELDS = ('personal_phone',)
+PRIVATE_VENDOR_FIELDS = ('personal_phone', 'claimed_by_id', 'data_sources')
 
 
 def _public(data):
@@ -73,6 +75,15 @@ def _is_admin(user):
 def _is_owner_or_admin(request, user_id):
     # user_id comes from <int:...> or <str:...> URL converters depending on the route
     return str(request.user.id) == str(user_id) or _is_admin(request.user)
+
+
+def _manages(request, product):
+    """Write access to a listing: its owner account, its approved claimant, or an admin."""
+    return product is not None and vendor_profile.can_manage(request.user, product)
+
+
+def _forbidden():
+    return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
 
 
 
@@ -201,9 +212,21 @@ def update_product(request, user_id):
             product_data['image'] = request.FILES['image']
 
         # Serialize and update product data
+        before = {f: getattr(product, f) for f in vendor_profile.BASIC_FIELDS}
         product_serializer = ProductSerializer(product, data=product_data, partial=True)
         if product_serializer.is_valid():
-            product_serializer.save()
+            product = product_serializer.save()
+            changed = [f for f in vendor_profile.BASIC_FIELDS
+                       if str(getattr(product, f) or '') != str(before[f] or '')]
+            if changed:
+                vendor_profile.stamp_sources(product, changed, vendor_profile.editor_source(request.user, product))
+                product.save(update_fields=['data_sources'])
+                try:
+                    analytics.record_event(VendorEvent.EventType.PROFILE_UPDATED, vendor=product, user=request.user,
+                                           source='manage_page', metadata={'label': ','.join(changed)[:100]},
+                                           dedupe=False)
+                except Exception:
+                    logger.exception('Could not record profile_updated for vendor %s', product._id)
             return Response({'detail': 'Product updated successfully'}, status=status.HTTP_200_OK)
         else:
             return Response(product_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -449,6 +472,8 @@ def add_service_images(request, service_id):
     try:
         # Fetch the service object based on the provided service_id
         service = Service.objects.get(_id=service_id)
+        if not _manages(request, service.product):
+            return _forbidden()
         print("inside add image")
 
         # Handle multiple image uploads
@@ -602,6 +627,8 @@ def register_service(request):
         return Response({'detail': 'Valid Product ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
     product_id = int(product_id)  # Convert to integer
+    if not _manages(request, Product.objects.filter(_id=product_id).first()):
+        return _forbidden()
 
     service_data = {
         'name': request.data.get('name', ''),
@@ -752,7 +779,10 @@ def getProduct(request, pk):
     except (Product.DoesNotExist, ValueError, TypeError):
         return Response({'detail': 'Vendor not found'}, status=status.HTTP_404_NOT_FOUND)
     serializer = ProductReviewSerializer(product, many=False)
-    return Response(_public(serializer.data))
+    data = _public(serializer.data)
+    data['listing_status'] = vendor_profile.listing_status(product)   # unclaimed | claimed | verified
+    data['details'] = vendor_profile.public_details(product)          # only questions actually answered
+    return Response(data)
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
@@ -941,6 +971,8 @@ def remove_service_image(request, pk):
     try:
         print("inside try remove_service_image")
         service = Service.objects.get(_id=pk)
+        if not _manages(request, service.product):
+            return _forbidden()
         image_data = request.data.get('image')
         image_id = image_data.get('_id')  # Expecting the ID of the image to remove
 
@@ -970,6 +1002,8 @@ def remove_business_image(request, pk):
     try:
         print("inside try remove_business_image")
         business = Product.objects.get(_id=pk)
+        if not _manages(request, business):
+            return _forbidden()
 
         # Set the image field to None (null)
         business.image = None
@@ -1080,6 +1114,8 @@ def update_service(request, service_id):
     try:
         # Retrieve the service by ID
         service = Service.objects.get(_id=service_id)
+        if not _manages(request, service.product):
+            return _forbidden()
         
         # Serialize and validate the service data
         service_serializer = ServiceSerializer(service, data=request.data, partial=True)
@@ -1360,7 +1396,6 @@ def getProducts(request):
             'is_available_today':product.is_available_today,
             'available_since':   product.available_since,
             'is_claimed':        product.is_claimed,
-            'claimed_by_id':     product.claimed_by_id,
             'attributes':        product.attributes or {},
             'total_num_reviews': total_num_reviews,
             'average_rating':    float(average_rating),

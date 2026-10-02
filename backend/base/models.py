@@ -53,6 +53,10 @@ class Product(models.Model):
     )
     claimed_at = models.DateTimeField(null=True, blank=True)
 
+    # ── Verification (admin-only; a claim alone never makes a listing verified) ──
+    is_verified = models.BooleanField(default=False)
+    verified_at = models.DateTimeField(null=True, blank=True)
+
     # ── Emergency availability ────────────────────────────
     is_available_today = models.BooleanField(default=False)
     available_since    = models.DateTimeField(null=True, blank=True)
@@ -71,7 +75,13 @@ class Product(models.Model):
     # Halls:          { "capacity": "500", "ac": true, "parking": true }
     # DJ_Artist:      { "venue_type": "indoor|outdoor", "equipment_included": true }
     # Mehandi_Artist: { "type": "bridal|regular", "home_visit": true }
+    # Allowed keys per category: base/vendor_profile.py. A missing key means
+    # "unknown" — never store False/0 for information nobody has given.
     attributes = models.JSONField(default=dict, blank=True)
+
+    # Who supplied each profile value: {"description": {"source": "vendor", "at": "..."},
+    # "attributes.parking": {...}}. Values without an entry came from the import.
+    data_sources = models.JSONField(default=dict, blank=True)
 
     def __str__(self):
         return self.name if self.name else 'Unnamed business'
@@ -228,12 +238,21 @@ class UnavailableDate(models.Model):
 
 
 class ServiceOwnerClaim(models.Model):
-    STATUS_CHOICES = [('approved', 'Approved'), ('revoked', 'Revoked')]
+    """A request to take ownership of a listing, and the audit trail of claims."""
+    STATUS_CHOICES = [('pending', 'Pending review'), ('approved', 'Approved'),
+                      ('rejected', 'Rejected'), ('revoked', 'Revoked')]
+    METHOD_CHOICES = [('listed_phone_otp', 'Code sent to the listing\'s phone'),
+                      ('admin_review', 'Reviewed by WedMangal')]
     product    = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='service_owner_claims')
     user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='service_owner_claims')
-    phone      = models.CharField(max_length=15)
-    status     = models.CharField(max_length=20, choices=STATUS_CHOICES, default='approved')
+    phone      = models.CharField(max_length=15)  # number verified, or the claimant's contact number
+    status     = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     claimed_at = models.DateTimeField(auto_now_add=True)
+    method      = models.CharField(max_length=20, choices=METHOD_CHOICES, blank=True, default='')
+    message     = models.TextField(blank=True, default='')  # claimant's explanation, admin review only
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='reviewed_owner_claims')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['-claimed_at']
@@ -313,6 +332,11 @@ class VendorEvent(models.Model):
         FAVORITE               = 'favorite', 'Favorite'
         SHARE                  = 'share', 'Share'
         SESSION_START          = 'session_start', 'Session start'
+        # Vendor-side events, recorded by the server only
+        CLAIM_STARTED          = 'claim_started', 'Claim started'
+        CLAIM_SUBMITTED        = 'claim_submitted', 'Claim submitted'
+        CLAIM_APPROVED         = 'claim_approved', 'Claim approved'
+        PROFILE_UPDATED        = 'profile_updated', 'Profile updated'
 
     class DeviceType(models.TextChoices):
         MOBILE  = 'mobile', 'Mobile'

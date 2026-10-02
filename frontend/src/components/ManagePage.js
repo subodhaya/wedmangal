@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import './ManagePage.css';
 import AvailabilityToggle from './AvailabilityToggle';
 import PerformanceSummary from './PerformanceSummary';
+import ProfileCompletion from './ProfileCompletion';
 
 
 
@@ -236,7 +237,7 @@ function ManagePage() {
     /* ── Approval badge ─────────────────────────────────────── */
     const ApprovalBadge = () => (
         <span className={`mp-badge ${productData.isApproved ? 'mp-badge-approved' : 'mp-badge-pending'}`}>
-            {productData.isApproved ? '✅ Verified Business' : '⏳ Pending Approval'}
+            {productData.isApproved ? '✅ Live on WedMangal' : '⏳ Pending Approval'}
         </span>
     );
 
@@ -303,6 +304,9 @@ function ManagePage() {
 
                 {/* ── WedMangal performance ────────────────────────── */}
                 <PerformanceSummary endpoint="/api/analytics/vendor-summary/" />
+
+                {/* ── Profile completeness + category details ─────────── */}
+                {productData._id && <ProfileCompletion vendorId={productData._id} />}
 
                 {/* ── Form card ────────────────────────────────────── */}
                 <div className="mp-form-card">
