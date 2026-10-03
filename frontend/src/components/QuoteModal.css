@@ -148,3 +148,6 @@
   font-size: 28px;
   line-height: 56px;
 }
+
+.quote-submit:disabled:not([aria-busy]) { opacity: 0.45; cursor: not-allowed; }
+.quote-hint { font-size: 0.8rem; color: #9a7a85; text-align: center; margin: 6px 0 0; }

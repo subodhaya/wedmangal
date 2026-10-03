@@ -18,6 +18,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.utils.html import escape
 
+from base import vendor_profile
 from base.models import Product
 
 SITE = 'https://www.wedmangal.com'
@@ -198,6 +199,8 @@ def product_page(request, pk):
         facts.append(f'<li>Price range: {price}</li>')
     if services:
         facts.append(f'<li>Services: {escape(", ".join(services))}</li>')
+    for detail in vendor_profile.public_details(product):   # only details the business has given
+        facts.append(f'<li>{escape(detail["label"])}: {escape(str(detail["display"]))}</li>')
     if product.website_url:
         facts.append(f'<li>Website: <a href="{escape(product.website_url)}" rel="noopener">{escape(product.website_url)}</a></li>')
     if product.instagram_url:

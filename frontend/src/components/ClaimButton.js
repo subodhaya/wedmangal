@@ -13,7 +13,7 @@ const loggedIn = () => {
   catch { return false; }
 };
 
-export default function ClaimButton({ product }) {
+export default function ClaimButton({ product, hideStatus = false }) {
   const [state, setState] = useState({ listing_status: product?.listing_status || 'unclaimed' });
   const [loaded, setLoaded] = useState(!loggedIn());   // logged-in users wait for their claim state
   const [showModal, setShowModal] = useState(false);
@@ -30,6 +30,13 @@ export default function ClaimButton({ product }) {
     return () => { live = false; };
   }, [vendorId]);
 
+  useEffect(() => {
+    if (loaded && loggedIn() && new URLSearchParams(window.location.search).get('claim') === '1'
+        && state.listing_status === 'unclaimed' && !state.can_manage && !state.claim_pending) {
+      setShowModal(true);
+    }
+  }, [loaded, state.listing_status, state.can_manage, state.claim_pending]);
+
   const status = state.listing_status;
 
   if (state.can_manage) {
@@ -42,6 +49,7 @@ export default function ClaimButton({ product }) {
   }
 
   if (status === 'verified' || status === 'claimed') {
+    if (hideStatus) return null;   // the page already shows the status next to the name
     return (
       <div className="claim-already">
         <span className={`claim-verified-chip ${status === 'claimed' ? 'claimed' : ''}`}
@@ -64,13 +72,7 @@ export default function ClaimButton({ product }) {
 
   if (!loaded) return null;
 
-  const start = () => {
-    if (!loggedIn()) {
-      window.location.href = `/login?redirect=${encodeURIComponent(`/product/${vendorId}`)}`;
-      return;
-    }
-    setShowModal(true);
-  };
+  const start = () => setShowModal(true);   // the dialog explains first, then asks logged-out users to log in
 
   return (
     <>
@@ -83,6 +85,7 @@ export default function ClaimButton({ product }) {
         <ClaimModal
           product={product}
           claimState={state}
+          loggedIn={loggedIn()}
           onClose={() => {
             setShowModal(false);
             if (afterClose) setState(s => ({ ...s, ...afterClose }));

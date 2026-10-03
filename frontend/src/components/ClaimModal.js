@@ -8,9 +8,19 @@ import './ClaimModal.css';
 
 const errorText = (err, fallback) => err.response?.data?.detail || fallback;
 
-export default function ClaimModal({ product, claimState = {}, onClose, onDone }) {
+const BENEFITS = [
+  'Correct your business information',
+  'Add photos and your services',
+  'Add details couples look for — capacity, parking, food and more',
+  'Help customers find accurate information about you',
+  'Receive customer enquiries through WedMangal',
+];
+
+export default function ClaimModal({ product, claimState = {}, loggedIn = true, onClose, onDone }) {
   const smsPossible = !claimState.sms_blocked && !claimState.blocked;
-  const [step, setStep] = useState(claimState.blocked ? 'blocked' : smsPossible ? 'intro' : 'request');
+  const firstStep = claimState.blocked ? 'blocked' : smsPossible ? 'intro' : 'request';
+  const [step, setStep] = useState('explain');
+  const [loginPhone, setLoginPhone] = useState('');
   const [code, setCode] = useState('');
   const [sentTo, setSentTo] = useState(claimState.listed_mobile || '');
   const [phone, setPhone] = useState('');
@@ -43,6 +53,7 @@ export default function ClaimModal({ product, claimState = {}, onClose, onDone }
     run(async () => {
       const { data } = await api.post(`${base}/verify/`, { code });
       if (data.user) localStorage.setItem('userInfo', JSON.stringify(data.user));
+      setLoginPhone(data.login_phone || '');
       setStep('claimed');
       onDone && onDone({ listing_status: data.listing_status, can_manage: true });
     }, 'That code did not work. Please try again.');
@@ -67,6 +78,28 @@ export default function ClaimModal({ product, claimState = {}, onClose, onDone }
           <h2 className="claim-title" id="claim-title">Claim this listing</h2>
           <p className="claim-subtitle"><strong>{product?.name}</strong>{product?.city ? ` · ${product.city}` : ''}</p>
         </div>
+
+        {step === 'explain' && (
+          <div className="claim-body">
+            <p className="claim-lead">Is this your business? Claim your <strong>free</strong> WedMangal listing to:</p>
+            <ul className="claim-benefits">
+              {BENEFITS.map(b => <li key={b}>{b}</li>)}
+            </ul>
+            <p className="claim-hint claim-how">
+              {smsPossible || !loggedIn
+                ? 'To confirm it’s yours, we’ll text a code to the phone number on this listing. Claiming is free.'
+                : 'We’ll check your claim and contact you before giving you access. Claiming is free.'}
+            </p>
+            {loggedIn ? (
+              <button className="claim-btn-primary" onClick={() => setStep(firstStep)}>Continue</button>
+            ) : (
+              <a className="claim-btn-primary claim-link-btn"
+                href={`/login?redirect=${encodeURIComponent(`/product/${product._id}?claim=1`)}`}>
+                Log in or sign up to claim
+              </a>
+            )}
+          </div>
+        )}
 
         {step === 'blocked' && (
           <div className="claim-body">
@@ -148,6 +181,9 @@ export default function ClaimModal({ product, claimState = {}, onClose, onDone }
               Customers will see it as claimed by the business. Add your capacity, prices and other details
               so customers can find you.
             </p>
+            {loginPhone && (
+              <p className="claim-success-msg">You can also log in to this account with {loginPhone}.</p>
+            )}
             <a className="claim-btn-primary claim-link-btn" href="/manage-my-page">Complete your profile →</a>
           </div>
         )}

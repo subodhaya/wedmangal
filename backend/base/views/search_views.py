@@ -98,6 +98,17 @@ def _unmatched_location(query, area):
     return None
 
 
+def _place_word_q(term):
+    """Vendors whose own address contains this place word as a whole word (e.g. "ECR")."""
+    return Q(address__iregex=r'(^|[^a-z])' + re.escape(term.lower()) + r'([^a-z]|$)')
+
+
+def _without_place(query, term):
+    """The query with the unrecognised place (and a preposition before it) removed."""
+    pattern = r'\b(?:(?:' + '|'.join(LOCATION_PREPOSITIONS) + r')\s+)?' + re.escape(term) + r'\b'
+    return re.sub(r'\s+', ' ', re.sub(pattern, ' ', query, flags=re.I)).strip()
+
+
 def _area_q(area):
     """Vendor's stored area, or the area appearing in its Google address ("T Nagar" ~ "T. Nagar")."""
     pattern = r'[ .]*'.join(re.escape(w) for w in re.findall(r'[A-Za-z]+', area))
@@ -143,12 +154,14 @@ def _base_queryset():
     )
 
 
-def _filtered(category=None, area=None, min_rating=None, keyword_tokens=None):
+def _filtered(category=None, area=None, min_rating=None, keyword_tokens=None, place_word=None):
     qs = _base_queryset()
     if category:
         qs = qs.filter(category__iexact=category)
     if area:
         qs = qs.filter(_area_q(area))
+    if place_word:
+        qs = qs.filter(_place_word_q(place_word))
     if min_rating:
         qs = qs.filter(avg_rating__gte=min_rating)
     for token in keyword_tokens or []:  # keyword-only searches: every word must appear somewhere
@@ -157,7 +170,7 @@ def _filtered(category=None, area=None, min_rating=None, keyword_tokens=None):
     return qs
 
 
-def _notes(intent, area_param, area, unmatched_location=None):
+def _notes(intent, area_param, area, unmatched_location=None, place_matches=0):
     notes = []
     if intent['budget_min'] or intent['budget_max']:
         if intent['budget_min'] and intent['budget_max']:
@@ -180,7 +193,13 @@ def _notes(intent, area_param, area, unmatched_location=None):
     if area_param and not area:
         notes.append(f'We couldn’t match “{area_param[:50]}” to a Chennai area, so we’re showing all of Chennai.')
     elif unmatched_location:
-        notes.append(f'“{unmatched_location[:50]}” wasn’t matched to a known area, so location filtering wasn’t applied.')
+        place = unmatched_location[:50]
+        if place_matches:
+            notes.append(f'“{place}” isn’t one of our known areas, so we’re showing only vendors whose '
+                         f'address mentions “{place}”.')
+        else:
+            notes.append(f'“{place}” wasn’t matched to a known area or to any vendor’s address, '
+                         f'so there are no results for it.')
     return notes
 
 
@@ -209,8 +228,12 @@ def search_vendors(request):
     structured = bool(category or area)
     name_tokens = _name_tokens(query, area)
     keyword_tokens = name_tokens if query and not structured else []
+    # A place we don't recognise (e.g. "ECR") must never quietly widen to all of Chennai:
+    # keep only vendors whose address names it. (Keyword-only searches already require it.)
+    unmatched = _unmatched_location(query, area)
+    place_word = unmatched if unmatched and structured else None
 
-    qs = _filtered(category, area, min_rating, keyword_tokens)
+    qs = _filtered(category, area, min_rating, keyword_tokens, place_word)
     if name_tokens:  # vendor-name matches rank first (for name searches and structured ones)
         qs = qs.annotate(name_rank=sum(
             (Case(When(name__icontains=t, then=Value(1)), default=Value(0), output_field=IntegerField())
@@ -237,6 +260,12 @@ def search_vendors(request):
 
     suggestions = []
     if count == 0:
+        if place_word:
+            n = _filtered(category, area, min_rating, keyword_tokens).count()
+            if n:
+                label = CATEGORY_NAMES.get(category, 'vendors')
+                suggestions.append({'label': f'Show all {label} in Chennai', 'remove': 'place',
+                                    'q': _without_place(query, place_word), 'count': n})
         if area:
             n = _filtered(category, None, min_rating, keyword_tokens).count()
             if n:
@@ -259,8 +288,9 @@ def search_vendors(request):
         'pages': paginator.num_pages,
         'interpreted': {**{k: intent[k] for k in si.INTENT_FIELDS if k != 'event_date'},
                         'category_label': CATEGORY_NAMES.get(category)},
-        'applied': {'category': category, 'area': area, 'min_rating': min_rating, 'sort': sort},
-        'notes': _notes(intent, area_param, area, _unmatched_location(query, area)),
+        'applied': {'category': category, 'area': area, 'place_word': place_word, 'min_rating': min_rating,
+                    'sort': sort},
+        'notes': _notes(intent, area_param, area, place_word, count),
         'suggestions': suggestions,
         'results': [_card(p) for p in page_obj.object_list],
         'options': {

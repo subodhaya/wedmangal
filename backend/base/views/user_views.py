@@ -21,6 +21,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from base.serializers import ProductSerializer, UserSerializer, UserSerializerWithToken
 from base.permissions import IsAdmin
 from base.models import Profile, Product, ServiceOwnerClaim
+from base import identity
 
 import os
 
@@ -102,6 +103,10 @@ def getRoutes(request):
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
+        # The login form sends an e-mail; accounts may have a different username.
+        user = identity.user_for_password_login(attrs.get(self.username_field), attrs.get('password'))
+        if user is not None:
+            attrs = {**attrs, self.username_field: user.get_username()}
         data = super().validate(attrs)
         serializer = UserSerializerWithToken(self.user).data
         for k, v in serializer.items():
@@ -243,7 +248,7 @@ def link_phone_send_otp(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    if Profile.objects.exclude(user=request.user).filter(phone=phone).exists():
+    if identity.phone_blocker(request.user, phone):
         return Response(
             {'detail': 'This phone number is already linked to another account.'},
             status=status.HTTP_400_BAD_REQUEST
@@ -292,7 +297,7 @@ def link_phone_verify_otp(request):
     if len(entered) != 6 or not entered.isdigit():
         return Response({'detail': 'OTP must be a 6-digit number.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    if Profile.objects.exclude(user=request.user).filter(phone=phone).exists():
+    if identity.phone_blocker(request.user, phone):
         return Response(
             {'detail': 'This phone number is already linked to another account.'},
             status=status.HTTP_400_BAD_REQUEST
@@ -324,8 +329,9 @@ def link_phone_verify_otp(request):
     cache.delete(_cache_key_tries(phone, 'link'))
     cache.delete(_cache_key_rate(phone, 'link'))
 
-    request.user.profile.phone = phone
-    request.user.profile.save()
+    if not identity.attach_phone(request.user, phone):
+        return Response({'detail': 'This phone number is already linked to another account.'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
     serializer = UserSerializerWithToken(request.user, many=False)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -360,6 +366,9 @@ def wedding_date(request, user_id=None):
 @api_view(['POST'])
 def registerUser(request):
     data = request.data
+    if identity.users_with_email(data.get('email')):
+        return Response({'detail': 'An account with this e-mail already exists. Please log in instead.'},
+                        status=status.HTTP_400_BAD_REQUEST)
     try:
         user = User.objects.create_user(
             username=data['email'],
@@ -381,6 +390,9 @@ def registerUser(request):
 @permission_classes([AllowAny])
 def registerOwner(request):
     data = request.data
+    if identity.users_with_email(data.get('email')):
+        return Response({'detail': 'An account with this e-mail already exists. Please log in instead.'},
+                        status=status.HTTP_400_BAD_REQUEST)
     try:
         user = User.objects.create_user(
             username=data['email'],
@@ -406,7 +418,12 @@ def updateUserProfile(request):
     user = request.user
     try:
         user.first_name = data.get('name', user.first_name)
-        user.email = data.get('email', user.email)
+        email = (data.get('email') or '').strip()
+        if email and email.lower() != (user.email or '').lower():
+            if User.objects.filter(email__iexact=email).exclude(pk=user.pk).exists():
+                return Response({'detail': 'This e-mail address is already used by another account.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            user.email = email
         password = data.get('password')
         if password:
             user.set_password(password)

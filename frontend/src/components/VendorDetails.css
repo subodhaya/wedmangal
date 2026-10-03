@@ -1,16 +1,21 @@
-.vd-body { width: 100%; }
-.vd-list {
-  margin: 6px 0 0;
+.vd-grid {
   display: grid;
-  gap: 4px;
+  grid-template-columns: repeat(auto-fill, minmax(min(190px, 46%), 1fr));
+  gap: 10px;
+  margin: 0;
 }
-.vd-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 14px;
-  border-bottom: 1px dashed rgba(94, 20, 63, 0.12);
-  padding: 3px 0;
+.vd-item {
+  background: #fff;
+  border: 1px solid #efe4ea;
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
 }
-.vd-row dt { font-weight: 400; color: #7a5a66; }
-.vd-row dd { margin: 0; font-weight: 600; color: #2a0918; text-align: right; }
+.vd-icon { grid-row: 1 / 3; font-size: 1.4rem; line-height: 1; }
+.vd-item dt { font-size: 0.75rem; font-weight: 500; color: #8a6f7b; margin: 0; }
+.vd-item dd { font-size: 0.98rem; font-weight: 600; color: #2a0918; margin: 0; overflow-wrap: anywhere; }
+.vd-no dd { color: #6b5a62; font-weight: 500; }

@@ -10,6 +10,9 @@ import api from '../utils/api';
 import { useLocation } from 'react-router-dom';
 import ClaimButton from '../components/ClaimButton';
 import VendorDetails from '../components/VendorDetails';
+import VendorGallery from '../components/vendor/VendorGallery';
+import VendorActions from '../components/vendor/VendorActions';
+import '../components/vendor/VendorProfile.css';
 import SlotPicker from '../components/SlotPicker';
 import QuoteModal from '../components/QuoteModal';
 import { trackEvent, EVENTS } from '../utils/analytics';
@@ -30,6 +33,31 @@ const formatTime = (t) => {
   if (!t || t === 'null' || t === 'undefined') return 'By Appointment';
   return t.slice(0, 5);
 };
+
+const priceRange = (p) => {
+  const fmt = (v) => `₹${Number(v).toLocaleString('en-IN')}`;
+  if (p.min_price && p.max_price) return `${fmt(p.min_price)} – ${fmt(p.max_price)}`;
+  return p.min_price ? `From ${fmt(p.min_price)}` : `Up to ${fmt(p.max_price)}`;
+};
+
+const mapsLink = (p) =>
+  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([p.name, p.address || p.area_name, p.city].filter(Boolean).join(', '))}`;
+
+// Long descriptions are shortened with a "Read more" toggle.
+function ReadMore({ text, limit = 360 }) {
+  const [open, setOpen] = useState(false);
+  const long = text.length > limit;
+  return (
+    <div className="vp-about">
+      <p>{long && !open ? `${text.slice(0, limit).replace(/\s+\S*$/, '')}…` : text}</p>
+      {long && (
+        <button type="button" className="vp-readmore" onClick={() => setOpen(o => !o)} aria-expanded={open}>
+          {open ? 'Show less' : 'Read more'}
+        </button>
+      )}
+    </div>
+  );
+}
 
 export const normalizePhone = (phone) => {
   if (!phone) return '';
@@ -142,6 +170,17 @@ function ProductScreen() {
     if (product?.services)
       product.services.forEach(s => fetchBookedDates(s._id));
   }, [product]);
+
+  // Phone bottom bar: only once the buttons under the vendor name have scrolled away
+  const inlineActionsRef = useRef(null);
+  const [showActionBar, setShowActionBar] = useState(false);
+  useEffect(() => {
+    const el = inlineActionsRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') { setShowActionBar(true); return undefined; }
+    const observer = new IntersectionObserver(([entry]) => setShowActionBar(!entry.isIntersecting && entry.boundingClientRect.top < 0));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [product?._id]);
 
   // ── Customer-intent tracking (fire-and-forget) ────────────────────────────
   const [showQuote, setShowQuote] = useState(false);
@@ -296,7 +335,7 @@ const handleDirectBooking = async (serviceId) => {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     
-   <div className="ps-page">
+   <div className="ps-page vp-page">
       {product && (() => {
         // product.image is already an absolute path (e.g. "/images/foo.jpg" —
         // served from MEDIA_URL), so just prepend the domain. Do NOT insert
@@ -372,8 +411,8 @@ const handleDirectBooking = async (serviceId) => {
         );
       })()}
 
-      <Link to="/" className="ps-back-btn">
-        <i className="fas fa-arrow-left"></i> Go Back
+      <Link to="/" className="vp-back">
+        <i className="fas fa-arrow-left" aria-hidden="true"></i> Back
       </Link>
 
       {errorMessage && <div className="ps-alert ps-alert-danger">{errorMessage}</div>}
@@ -384,10 +423,58 @@ const handleDirectBooking = async (serviceId) => {
         <div className="ps-alert ps-alert-danger">{error}</div>
       ) : product ? (
         <>
+          <VendorGallery product={product} />
 
+          <div className="vp-layout">
+            <div className="vp-main">
+
+              {/* ── Identity ─────────────────────────────────────── */}
+              <div className="vp-identity">
+                {product.category && (
+                  <Link className="vp-category" to={`/category/${product.category}`}>
+                    {product.category.replace(/_/g, ' ')}
+                  </Link>
+                )}
+                <h1 className="vp-name">{product.name}</h1>
+                <div className="vp-meta">
+                  {(product.area_name || product.city) && (
+                    <span className="vp-meta-item">
+                      <i className="fas fa-map-marker-alt" aria-hidden="true"></i>
+                      {[product.area_name, product.city].filter(Boolean).join(', ')}
+                    </span>
+                  )}
+                  {product.google_rating && (
+                    <span className="vp-meta-item vp-rating" title="Rating on Google">
+                      <span aria-hidden="true">★</span> {product.google_rating.rating.toFixed(1)}
+                      <span className="vp-muted">({product.google_rating.reviews.toLocaleString('en-IN')} Google reviews)</span>
+                    </span>
+                  )}
+                  {product.listing_status === 'verified' && (
+                    <span className="vp-status vp-status-verified">✓ Verified by WedMangal</span>
+                  )}
+                  {product.listing_status === 'claimed' && (
+                    <span className="vp-status">Claimed by the business</span>
+                  )}
+                </div>
+              </div>
+
+              <div ref={inlineActionsRef}>
+                <VendorActions product={product} onQuote={openQuote} />
+              </div>
+
+              {/* ── Key details (only what the business has told us) ─ */}
+              <VendorDetails details={product.details} category={product.category} />
+
+              {/* ── About ────────────────────────────────────────── */}
+              {product.about && (
+                <section className="vp-section" aria-labelledby="vp-about">
+                  <h2 className="vp-h2" id="vp-about">About</h2>
+                  <ReadMore text={product.about} />
+                </section>
+              )}
 
           {/* ── Video Player (TikTok style) ──────────────────────── */}
-          {product.videos?.length > 0 && (() => {
+              {product.videos?.length > 0 && (() => {
             const allVideos = product.videos;
             const cur   = allVideos[videoIndex] || allVideos[0];
             const total = allVideos.length;
@@ -473,134 +560,11 @@ const handleDirectBooking = async (serviceId) => {
             );
           })()}
 
-          {/* ── Vendor Info Bar ──────────────────────────────────── */}
-          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '20px 0 8px' }}>
 
-            {/* Avatar + Name + Category */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
-              {product.image ? (
-                <img src={product.image} alt={product.name}
-                  style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid rgba(0,0,0,0.08)' }} />
-              ) : (
-                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#f3e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', flexShrink: 0 }}>🏪</div>
-              )}
-              <div>
-                <h1 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#1a1a1a', lineHeight: 1.2 }}>{product.name}</h1>
-                <div style={{ marginTop: '5px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-                  {product.category && (
-                    <span className="ps-category-badge">🎊 {product.category.replace(/_/g, ' ')}</span>
-                  )}
-                  {product.city && (
-                    <span style={{ fontSize: '12px', color: '#777' }}>📍 {product.city}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Description */}
-            {product.description && (
-              <p style={{ margin: '0 0 16px', fontSize: '14px', color: '#555', lineHeight: 1.6 }}>{product.description}</p>
-            )}
-
-            {/* Phone blocks */}
-            {product.business_phone && (
-              <PhoneBlock label="📞 Business Phone" phone={product.business_phone} businessName={product.name} vendorId={product._id} />
-            )}
-            {product.personal_phone && product.personal_phone !== product.business_phone && (
-              <PhoneBlock label="📱 Personal Phone" phone={product.personal_phone} businessName={product.name} vendorId={product._id} />
-            )}
-
-            {/* Get Quote */}
-            <button type="button" className="ps-quote-btn" onClick={openQuote}>
-              📝 Get a free quote
-            </button>
-
-            {/* Info grid */}
-            <div className="ps-info-grid" style={{ marginTop: '8px' }}>
-
-              {product.area_name && (
-                <div className="ps-info-item">
-                  <span className="ps-info-icon">📍</span>
-                  <div><div className="ps-info-label">Area</div><div className="ps-info-value">{product.area_name}</div></div>
-                </div>
-              )}
-
-              {product.address && (
-                <div className="ps-info-item">
-                  <span className="ps-info-icon">🏠</span>
-                  <div><div className="ps-info-label">Address</div><div className="ps-info-value">{product.address}</div></div>
-                </div>
-              )}
-
-              <div className="ps-info-item">
-                <span className="ps-info-icon">⏰</span>
-                <div>
-                  <div className="ps-info-label">Working Hours</div>
-                  <div className={`ps-info-value ${!product.opening_time ? 'appointment' : ''}`}>
-                    {product.opening_time && product.opening_time !== 'null'
-                      ? `${formatTime(product.opening_time)} – ${formatTime(product.closing_time)}`
-                      : 'By Appointment'}
-                  </div>
-                </div>
-              </div>
-
-              {(product.min_price || product.max_price) && (
-                <div className="ps-info-item">
-                  <span className="ps-info-icon">💰</span>
-                  <div>
-                    <div className="ps-info-label">Price Range</div>
-                    <div className="ps-info-value">
-                      {product.min_price && product.max_price
-                        ? `₹${Number(product.min_price).toLocaleString('en-IN')} – ₹${Number(product.max_price).toLocaleString('en-IN')}`
-                        : product.min_price
-                          ? `From ₹${Number(product.min_price).toLocaleString('en-IN')}`
-                          : `Up to ₹${Number(product.max_price).toLocaleString('en-IN')}`
-                      }
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {(product.instagram_url || product.website_url) && (
-                <div className="ps-info-item">
-                  <span className="ps-info-icon">🔗</span>
-                  <div style={{ width: '100%' }}>
-                    <div className="ps-info-label">Social Media</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
-                      {product.instagram_url && (
-                        <a href={product.instagram_url} target="_blank" rel="noopener noreferrer"
-                          onClick={() => trackExternalContact('instagram', product.instagram_url)}
-                          style={{ color: '#E1306C', fontWeight: 600, textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
-                          <i className="fab fa-instagram"></i>
-                          {(() => { try { return new URL(product.instagram_url).hostname.replace('www.', ''); } catch { return product.instagram_url; } })()}
-                        </a>
-                      )}
-                      {product.website_url && (
-                        <a href={product.website_url} target="_blank" rel="noopener noreferrer"
-                          onClick={() => trackExternalContact('website', product.website_url)}
-                          style={{ color: '#5e143f', fontWeight: 600, textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
-                          <i className="fas fa-globe"></i>
-                          {(() => { try { return new URL(product.website_url).hostname.replace('www.', ''); } catch { return product.website_url; } })()}
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <VendorDetails details={product.details} />
-
-              <div className="ps-info-item ps-claim-row">
-                <ClaimButton product={product} />
-              </div>
-
-            </div>
-          </div>
-
-          {/* ── Services ─────────────────────────────────────────── */}
-          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <h2 className="ps-section-title">✨ Services Offered</h2>
-
+              {/* ── Services ─────────────────────────────────────── */}
+              {product.services?.length > 0 && (
+                <section className="vp-section" aria-labelledby="vp-services">
+                  <h2 className="vp-h2" id="vp-services">Services &amp; packages</h2>
           <Row>
             {product.services?.map((service) => {
               const priceFormatted = formatPrice(service.price);
@@ -616,10 +580,12 @@ const handleDirectBooking = async (serviceId) => {
                     {/* Service Header */}
                     <div className="ps-service-header">
                       <h3 className="ps-service-name">{service.name}</h3>
-                      <div className="ps-service-rating">
-                        ⭐ {Number(service.rating || 0).toFixed(1)}
-                        <span style={{ opacity: 0.7 }}>({service.numReviews})</span>
-                      </div>
+                      {service.reviews?.length > 0 && (
+                        <div className="ps-service-rating">
+                          ⭐ {(service.reviews.reduce((sum, r) => sum + Number(r.rating || 0), 0) / service.reviews.length).toFixed(1)}
+                          <span style={{ opacity: 0.7 }}>({service.reviews.length})</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Images */}
@@ -632,6 +598,7 @@ const handleDirectBooking = async (serviceId) => {
                                 className="d-block w-100"
                                 src={img.image}
                                 alt={service.name}
+                                loading="lazy" decoding="async"
                                 style={{ maxHeight: '260px', objectFit: 'contain' }}
                               />
                             </Carousel.Item>
@@ -822,7 +789,70 @@ const handleDirectBooking = async (serviceId) => {
               );
             })}
           </Row>
+                </section>
+              )}
+
+              {/* ── Location & hours ─────────────────────────────── */}
+              <section className="vp-section" aria-labelledby="vp-location">
+                <h2 className="vp-h2" id="vp-location">Location &amp; contact</h2>
+                <div className="vp-card vp-location">
+                  {product.address && (
+                    <p><i className="fas fa-map-marker-alt" aria-hidden="true"></i> {product.address}</p>
+                  )}
+                  {!product.address && product.area_name && (
+                    <p><i className="fas fa-map-marker-alt" aria-hidden="true"></i> {product.area_name}, {product.city}</p>
+                  )}
+                  {product.business_phone && (
+                    <p><i className="fas fa-phone-alt" aria-hidden="true"></i> {product.business_phone}</p>
+                  )}
+                  {product.opening_time && product.opening_time !== 'null' && (
+                    <p><i className="far fa-clock" aria-hidden="true"></i> {formatTime(product.opening_time)} – {formatTime(product.closing_time)}</p>
+                  )}
+                  {(product.min_price || product.max_price) && (
+                    <p><i className="fas fa-rupee-sign" aria-hidden="true"></i> {priceRange(product)}</p>
+                  )}
+                  <div className="vp-links">
+                    {(product.address || product.area_name) && (
+                      <a href={mapsLink(product)} target="_blank" rel="noopener noreferrer"
+                        onClick={() => trackExternalContact('maps', mapsLink(product))}>Open in Google Maps</a>
+                    )}
+                    {product.website_url && (
+                      <a href={product.website_url} target="_blank" rel="noopener noreferrer"
+                        onClick={() => trackExternalContact('website', product.website_url)}>Website</a>
+                    )}
+                    {product.instagram_url && (
+                      <a href={product.instagram_url} target="_blank" rel="noopener noreferrer"
+                        onClick={() => trackExternalContact('instagram', product.instagram_url)}>Instagram</a>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              {/* ── Enquiry ──────────────────────────────────────── */}
+              <section className="vp-cta">
+                <h2 className="vp-h2">Interested in {product.name}?</h2>
+                <p>Send your date and requirements — WedMangal shares them with the business so they can contact you.</p>
+                <button type="button" className="va-btn va-quote" onClick={openQuote}>Get a free quote</button>
+              </section>
+
+              <div className="vp-owner ps-claim-row">
+                <ClaimButton product={product} hideStatus />
+              </div>
+            </div>
+
+            {/* ── Desktop: contact card stays in view ──────────────── */}
+            <aside className="vp-side" aria-label="Contact">
+              <div className="vp-side-card">
+                <p className="vp-side-name">{product.name}</p>
+                {(product.min_price || product.max_price) && <p className="vp-side-price">{priceRange(product)}</p>}
+                <VendorActions product={product} onQuote={openQuote} variant="stack" />
+                {product.business_phone && <p className="vp-side-phone">{product.business_phone}</p>}
+              </div>
+            </aside>
           </div>
+
+          {/* ── Phone: contact bar stays at the bottom ─────────────── */}
+          <VendorActions product={product} onQuote={openQuote} variant="bar" hidden={!showActionBar} />
         </>
       ) : (
         <div className="ps-alert ps-alert-danger">Product not found</div>

@@ -192,7 +192,8 @@ function SearchResultScreen() {
                   <ul>
                     {d.suggestions.map(s => (
                       <li key={s.remove}>
-                        <button type="button" onClick={() => update({ [s.remove]: '' })}>
+                        <button type="button"
+                          onClick={() => update(s.q !== undefined ? { q: s.q } : { [s.remove]: '' })}>
                           {s.label} ({s.count.toLocaleString('en-IN')})
                         </button>
                       </li>

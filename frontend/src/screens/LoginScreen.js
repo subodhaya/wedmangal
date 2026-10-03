@@ -5,6 +5,7 @@ import Loader from '../components/Loader';
 import api from '../utils/api';
 import { setUserInfo, getUserInfo } from '../components/localStorage';
 import PhoneOtpStep from '../components/PhoneOtpStep';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
@@ -12,6 +13,9 @@ import '../components/ClaimModal.css';
 import './LoginScreen.css';
 
 library.add(faEye, faEyeSlash);
+
+// Same client ID the backend verifies tokens against (base/views/auth_views.py).
+const GOOGLE_CLIENT_ID = '729274233685-h48vkscuohkqt32n8o72ifik06g2cv0d.apps.googleusercontent.com';
 
 function LoginScreen() {
     const location = useLocation();
@@ -38,6 +42,20 @@ function LoginScreen() {
         } else {
             navigate(redirect);
         }
+    };
+
+    // Plain "Continue with Google" button only — no One Tap / auto sign-in, which used to
+    // log people in before they could choose phone or email.
+    const handleGoogle = async ({ credential }) => {
+        setError('');
+        setLoading(true);
+        try {
+            const { data } = await api.post('/api/auth/google-login/', { token: credential });
+            goAfterLogin(data);
+        } catch (err) {
+            setError(err.response?.data?.detail || 'Google login failed. Please try another way.');
+        }
+        setLoading(false);
     };
 
     const submitHandler = async (e) => {
@@ -141,6 +159,25 @@ function LoginScreen() {
                             </button>
                         </form>
                     )}
+
+                    <div className="ls-divider" aria-hidden="true">
+                        <span /><span className="ls-divider-text">or</span><span />
+                    </div>
+                    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+                        <div className="ls-google-wrap">
+                            <GoogleLogin
+                                onSuccess={handleGoogle}
+                                onError={() => setError('Google login failed. Please try another way.')}
+                                text="continue_with"
+                                useOneTap={false}
+                                auto_select={false}
+                            />
+                        </div>
+                    </GoogleOAuthProvider>
+                    <p className="ls-login-note">
+                        Phone, e-mail or Google — use any of them. Once they're on the same account
+                        (add your phone after logging in), each one opens it.
+                    </p>
 
                     <p className="ls-tab-switch">
                         {tab === 'phone' ? (

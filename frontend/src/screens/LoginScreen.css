@@ -341,3 +341,10 @@
 @media (max-width: 420px) {
   .ls-card { padding: 1.2rem 0.8rem; }
 }
+.ls-login-note {
+  font-size: 0.78rem;
+  color: #9a7a85;
+  text-align: center;
+  margin: 10px 0 0;
+  line-height: 1.45;
+}

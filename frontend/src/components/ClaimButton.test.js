@@ -33,6 +33,8 @@ it('claims with a code sent to the listed number — the user never types that n
     ? { listed_mobile: '+91 98••••••10' } : { listing_status: 'claimed', user: { token: 'new' } } }));
   render(<ClaimButton product={product} />);
   fireEvent.click(await screen.findByRole('button', { name: 'Claim this listing' }));
+  expect(screen.getByText(/claim your/i)).toHaveTextContent('Claim your free WedMangal listing');
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
   expect(screen.getByText('+91 98••••••10')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Send code' }));
   fireEvent.change(await screen.findByLabelText('6-digit code'), { target: { value: '123456' } });
@@ -50,6 +52,7 @@ it('offers an admin-reviewed request when the listing has no mobile', async () =
   api.post.mockResolvedValue({ data: { claim_pending: true } });
   render(<ClaimButton product={product} />);
   fireEvent.click(await screen.findByRole('button', { name: 'Claim this listing' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
   expect(screen.queryByRole('button', { name: 'Send code' })).not.toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Your mobile number'), { target: { value: '9111111111' } });
   fireEvent.change(screen.getByLabelText(/how are you connected/i), { target: { value: 'I am the owner of this hall' } });
@@ -68,12 +71,30 @@ it('shows a pending claim instead of the claim button', async () => {
   expect(screen.queryByRole('button', { name: 'Claim this listing' })).not.toBeInTheDocument();
 });
 
-it('sends logged-out visitors to login and back', () => {
+it('explains why to claim before asking a logged-out visitor to log in', () => {
   localStorage.clear();
-  delete window.location;
-  window.location = { href: '' };
   render(<ClaimButton product={product} />);
   fireEvent.click(screen.getByRole('button', { name: 'Claim this listing' }));
-  expect(window.location.href).toBe('/login?redirect=%2Fproduct%2F7');
+  for (const text of ['Correct your business information', 'Add photos and your services',
+    'Receive customer enquiries through WedMangal']) {
+    expect(screen.getByText(text)).toBeInTheDocument();
+  }
+  expect(screen.getByText(/Claiming is free/)).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Log in or sign up to claim' }))
+    .toHaveAttribute('href', '/login?redirect=%2Fproduct%2F7%3Fclaim%3D1');
   expect(api.get).not.toHaveBeenCalled();
+});
+
+it('reopens the claim dialog after logging in', async () => {
+  window.history.pushState({}, '', '/product/7?claim=1');
+  api.get.mockResolvedValue(state());
+  render(<ClaimButton product={product} />);
+  expect(await screen.findByRole('dialog')).toBeInTheDocument();
+  window.history.pushState({}, '', '/');
+});
+
+it('can leave the status to the page header', () => {
+  localStorage.clear();
+  const { container } = render(<ClaimButton product={{ ...product, listing_status: 'claimed' }} hideStatus />);
+  expect(container).toBeEmptyDOMElement();
 });

@@ -405,3 +405,10 @@
   text-decoration: none;
 }
 .claim-link-btn:hover { color: #fff; }
+
+/* ── Why claim (first step) ────────────────────────────── */
+.claim-lead { font-size: 0.95rem; color: #2a0918; margin: 0; }
+.claim-benefits { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 7px; }
+.claim-benefits li { position: relative; padding-left: 24px; font-size: 0.88rem; color: #4a2a36; line-height: 1.4; }
+.claim-benefits li::before { content: '✓'; position: absolute; left: 2px; top: 0; color: #1a6e3a; font-weight: 700; }
+.claim-how { font-style: normal; }

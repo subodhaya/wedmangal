@@ -13,6 +13,8 @@ category filters already read (food_type, capacity, ac, parking, ...).
 Unknown is not No: a question nobody has answered is simply absent from
 attributes — it is never stored as False, 0 or ''.
 """
+import re
+
 from django.utils import timezone
 
 from base.analytics import normalize_indian_mobile
@@ -314,3 +316,24 @@ def owner_profile(product):
         },
         'completeness': completeness(product),
     }
+
+
+# ── Public presentation helpers ──────────────────────────────────────────────
+
+GOOGLE_RATING_RE = re.compile(r'\s*Rated ([\d.]+)★ on Google \(([\d,]+) reviews?\)\.?')
+
+
+def google_rating(description):
+    """The Google rating the import wrote into the description, e.g. "Rated 4.5★ on Google (615 reviews)"."""
+    m = GOOGLE_RATING_RE.search(description or '')
+    if not m:
+        return None
+    try:
+        return {'rating': float(m.group(1)), 'reviews': int(m.group(2).replace(',', ''))}
+    except ValueError:
+        return None
+
+
+def about_text(description):
+    """The description without the Google-rating sentence (shown separately in the header)."""
+    return GOOGLE_RATING_RE.sub(' ', description or '').strip()

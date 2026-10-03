@@ -34,12 +34,24 @@ it('rejects an invalid phone number', () => {
   expect(global.fetch).not.toHaveBeenCalled();
 });
 
-it('requires name and consent', () => {
+it('keeps Send enquiry disabled until consent is given', () => {
   render(<QuoteModal vendor={vendor} onClose={() => {}} />);
-  fill({ name: ' ', consent: false });
+  fill({ consent: false });
+  const button = screen.getByRole('button', { name: /send enquiry/i });
+  expect(button).toBeDisabled();
+  expect(screen.getByText('Tick the box above to send your enquiry.')).toBeInTheDocument();
+  submit();
+  expect(global.fetch).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('checkbox'));
+  expect(button).toBeEnabled();
+  expect(screen.getByText(/share my name, mobile number, event date and message with Lotus Hall/)).toBeInTheDocument();
+});
+
+it('requires a name', () => {
+  render(<QuoteModal vendor={vendor} onClose={() => {}} />);
+  fill({ name: ' ' });
   submit();
   expect(screen.getByText('Please enter your name.')).toBeInTheDocument();
-  expect(screen.getByText(/agree to share your details/i)).toBeInTheDocument();
   expect(global.fetch).not.toHaveBeenCalled();
 });
 

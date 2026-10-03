@@ -114,15 +114,20 @@ export default function QuoteModal({ vendor, onClose }) {
             <label className="quote-consent">
               <input type="checkbox" checked={form.consent} onChange={set('consent')}
                 aria-invalid={!!errors.consent} aria-describedby={errors.consent ? 'quote-consent-error' : undefined} />
-              <span>I agree that WedMangal may share my name and mobile number with {vendor.name} so they can contact me about this enquiry.</span>
+              <span>I agree that WedMangal may share my name, mobile number, event date and message with {vendor.name} so they can contact me about this enquiry.</span>
             </label>
             {fieldError('consent')}
 
             {submitError && <p className="quote-error quote-submit-error" role="alert">{submitError}</p>}
 
-            <button type="submit" className="quote-submit" disabled={step === 'sending'}>
+            <button type="submit" className="quote-submit" disabled={step === 'sending' || !form.consent}
+              aria-busy={step === 'sending' || undefined}
+              aria-describedby={!form.consent ? 'quote-consent-needed' : undefined}>
               {step === 'sending' ? 'Sending…' : 'Send enquiry'}
             </button>
+            {!form.consent && (
+              <p className="quote-hint" id="quote-consent-needed">Tick the box above to send your enquiry.</p>
+            )}
           </form>
         )}
       </div>

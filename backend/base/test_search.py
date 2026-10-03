@@ -177,16 +177,30 @@ class UnmatchedLocationNoteTests(TestCase):
     def search(self, q):
         return self.client.get('/api/search/', {'q': q}).json()
 
-    def test_unknown_place_is_explained_not_applied(self):
+    def test_unknown_place_only_matches_vendor_addresses(self):
         data = self.search('decorator ECR')
-        self.assertEqual((data['applied']['category'], data['applied']['area']), ('Decorators', None))
-        self.assertIn('“ECR” wasn’t matched to a known area, so location filtering wasn’t applied.', data['notes'])
-        self.assertEqual(data['count'], 2)  # not filtered by an invented location
+        self.assertEqual((data['applied']['category'], data['applied']['area'], data['applied']['place_word']),
+                         ('Decorators', None, 'ECR'))
+        self.assertEqual([r['name'] for r in data['results']], ['ECR Events & Decor'])   # its address says ECR
+        self.assertIn('“ECR” isn’t one of our known areas, so we’re showing only vendors whose address '
+                      'mentions “ECR”.', data['notes'])
 
-    def test_misspelt_area_after_preposition_is_explained(self):
+    def test_ecr_halls_never_turns_into_all_halls(self):
+        data = self.search('ECR halls')
+        self.assertEqual((data['count'], data['applied']['place_word']), (0, 'ECR'))
+        self.assertTrue(any('wasn’t matched to a known area or to any vendor’s address' in n for n in data['notes']))
+        self.assertEqual(data['suggestions'], [{'label': 'Show all Wedding Halls & Venues in Chennai', 'remove': 'place',
+                                                'q': 'halls', 'count': 1}])
+
+    def test_misspelt_area_after_preposition_is_not_widened(self):
         data = self.search('hall near thambaram')
         self.assertIsNone(data['applied']['area'])
-        self.assertTrue(any('“thambaram” wasn’t matched' in n for n in data['notes']))
+        self.assertEqual(data['count'], 0)
+        self.assertEqual(data['suggestions'][0]['q'], 'hall')
+
+    def test_recognised_area_is_unchanged(self):
+        data = self.search('hall in Tambaram')
+        self.assertEqual((data['applied']['area'], data['applied']['place_word'], data['count']), ('Tambaram', None, 1))
 
     def test_no_location_note_when_not_needed(self):
         for q in ('hall in Tambaram', 'hall in chennai', 'photographer kanchi', 'photographer near me', 'decorator'):

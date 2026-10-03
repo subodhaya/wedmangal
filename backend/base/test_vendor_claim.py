@@ -75,6 +75,23 @@ class ClaimFlowTests(ClaimTestCase):
         self.assertEqual((self.events('claim_submitted'), self.events('claim_approved')), (1, 1))
         self.assertIn('token', response.json()['user'])
 
+    def test_claim_lets_the_business_phone_log_in_to_the_owner_account(self):
+        response = self.claim(self.owner)
+        self.assertEqual(response.json()['login_phone'], '+91 98••••••10')
+        self.assertEqual(User.objects.get(pk=self.owner.pk).profile.phone, '9876543210')
+
+    def test_claim_keeps_an_existing_login_phone(self):
+        from base.models import Profile
+        Profile.objects.filter(user=self.owner).update(phone='9000000001')
+        self.assertEqual(self.claim(self.owner).json()['login_phone'], '')
+        self.assertEqual(User.objects.get(pk=self.owner.pk).profile.phone, '9000000001')
+
+    def test_claim_does_not_take_the_phone_from_a_real_account(self):
+        from base.models import Profile
+        Profile.objects.filter(user=self.other).update(phone='9876543210')
+        self.assertEqual(self.claim(self.owner).json()['login_phone'], '')
+        self.assertEqual(User.objects.get(pk=self.other.pk).profile.phone, '9876543210')
+
     def test_wrong_code_is_rejected_and_attempts_are_limited(self):
         self.send_code(self.owner)
         wrong = '000000' if self.sent_code() != '000000' else '111111'

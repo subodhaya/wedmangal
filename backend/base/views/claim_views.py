@@ -25,7 +25,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from base import analytics, notifications, vendor_profile as vp
+from base import analytics, identity, notifications, vendor_profile as vp
 from base.analytics import normalize_indian_mobile
 from base.models import Product, Profile, ServiceOwnerClaim, VendorEvent
 
@@ -202,12 +202,19 @@ def claim_verify(request, pk):
         reason = vp.sms_claim_blocker(user, product)   # re-check under the lock
         if reason:
             return _blocked(reason)
-        take_ownership(product, user, method='listed_phone_otp', phone=vp.listed_mobile(product))
+        mobile = vp.listed_mobile(product)
+        take_ownership(product, user, method='listed_phone_otp', phone=mobile)
+        # The code proved this person holds the business phone, so let it log in to this
+        # account too — only if the account has no phone yet and the number isn't someone else's.
+        login_phone = ''
+        current_phone = Profile.objects.filter(user=user).values_list('phone', flat=True).first()
+        if not current_phone and not identity.phone_blocker(user, mobile):
+            login_phone = vp.mask_mobile(mobile) if identity.attach_phone(user, mobile) else ''
 
     _event(EventType.CLAIM_SUBMITTED, request, product, {'channel': 'sms'})
     _event(EventType.CLAIM_APPROVED, request, product, {'channel': 'sms'})
     return Response({'detail': 'You now manage this listing.', 'listing_status': vp.listing_status(product),
-                     'user': UserSerializerWithToken(user).data})
+                     'login_phone': login_phone, 'user': UserSerializerWithToken(user).data})
 
 
 @api_view(['POST'])
