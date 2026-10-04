@@ -155,7 +155,8 @@ class SeoPageTests(TestCase):
     def test_vendor_page_preloads_the_hero_photo(self):
         Product.objects.filter(pk=self.vendor.pk).update(image='Lotus_Studio.jpg')
         html = self.get_html(f'/product/{self.vendor._id}')
-        self.assertIn('<link rel="preload" as="image" href="/images/Lotus_Studio.jpg" fetchpriority="high"/></head>', html)
+        from django.conf import settings
+        self.assertIn(f'<link rel="preload" as="image" href="{settings.MEDIA_URL}Lotus_Studio.jpg" fetchpriority="high"/></head>', html)
 
     def test_no_preload_for_the_placeholder_image(self):
         self.assertNotIn('rel="preload" as="image"', self.get_html(f'/product/{self.vendor._id}'))
