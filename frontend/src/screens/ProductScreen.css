@@ -3,7 +3,7 @@
    Brand: #5e143f (deep plum) + #f9e79f (champagne gold)
 ═══════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+/* fonts: loaded once from public/index.html */
 
 :root {
   --plum:        #5e143f;

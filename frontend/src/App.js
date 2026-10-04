@@ -1,50 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import SplashScreen from './screens/SplashScreen';
-import HomeScreen from './screens/HomeScreen';
-import LoginScreen from './screens/LoginScreen';
-import AddPhoneScreen from './screens/AddPhoneScreen';
-import ProfileScreen from './screens/ProfileScreen';
-import RegisterScreen from './screens/RegisterScreen';
-import OwnerRegisterScreen from './screens/OwnerRegisterScreen';
 import PrivateRoute from './components/PrivateRoute';
+// The vendor page is where most visitors land from Google, so it stays in the main bundle.
 import ProductScreen from './screens/ProductScreen';
-import CartScreen from './screens/CartScreen';
-import WishlistScreen from './screens/WishlistScreen';
-import ShippingScreen from './screens/ShippingScreen';
-import PaymentScreen from './screens/PaymentScreen';
-import PlaceOrderScreen from './screens/PlaceOrderScreen';
-import OrderScreen from './screens/OrderScreen';
-import InviteForm from './components/InviteForm';
-import NotFoundScreen from './screens/NotFoundScreen';
-import SearchResultScreen from './screens/SearchResultScreen';
-import BudgetScreen from './screens/BudgetScreen';
-import UserListScreen from './screens/UserListScreen';
-import UserEditScreen from './screens/UserEditScreen';
-import ProductListScreen from './screens/ProductListScreen';
-import ProductEditScreen from './screens/ProductEditScreen';
-import OrderListScreen from './screens/OrderListScreen';
-import ProductApprovalScreen from './screens/ProductApprovalScreen';
-import ManagePage from './components/ManagePage';
-import ServicePage from './components/ServicePage';
-import ServiceScreen from './screens/ServiceScreen';
-import TermsAndCondition from './screens/TermsAndCondition';
-import RefundAndCancellation from './screens/RefundAndCancellation';
-import ContactUs from './screens/ContactUs';
-import PaymentSuccessScreen from './screens/PaymentSuccessScreen';
-import PlanScreen from './screens/PlanScreen';
-import GoogleLoginCallback from './screens/GoogleLoginCallback';
-import MyAppointmentScreen from './screens/MyAppointmentScreen';
-import AvailableTodayScreen from './screens/AvailableTodayScreen';
-import CategoryScreen from './screens/CategoryScreen';
-import FAQScreen from './screens/FAQScreen';
-import BlogListScreen from './screens/BlogListScreen';
-import BlogPostScreen from './screens/BlogPostScreen';
+import lazyRoute from './utils/lazyRoute';
+import RouteFallback from './components/RouteFallback';
 import { HelmetProvider } from 'react-helmet-async';
 import { trackSessionStart } from './utils/analytics';
+
+// Every other screen is loaded on first visit.
+const SplashScreen = lazyRoute(() => import('./screens/SplashScreen'));
+const HomeScreen = lazyRoute(() => import('./screens/HomeScreen'));
+const LoginScreen = lazyRoute(() => import('./screens/LoginScreen'));
+const AddPhoneScreen = lazyRoute(() => import('./screens/AddPhoneScreen'));
+const ProfileScreen = lazyRoute(() => import('./screens/ProfileScreen'));
+const RegisterScreen = lazyRoute(() => import('./screens/RegisterScreen'));
+const OwnerRegisterScreen = lazyRoute(() => import('./screens/OwnerRegisterScreen'));
+const CartScreen = lazyRoute(() => import('./screens/CartScreen'));
+const WishlistScreen = lazyRoute(() => import('./screens/WishlistScreen'));
+const ShippingScreen = lazyRoute(() => import('./screens/ShippingScreen'));
+const PaymentScreen = lazyRoute(() => import('./screens/PaymentScreen'));
+const PlaceOrderScreen = lazyRoute(() => import('./screens/PlaceOrderScreen'));
+const OrderScreen = lazyRoute(() => import('./screens/OrderScreen'));
+const InviteForm = lazyRoute(() => import('./components/InviteForm'));
+const NotFoundScreen = lazyRoute(() => import('./screens/NotFoundScreen'));
+const SearchResultScreen = lazyRoute(() => import('./screens/SearchResultScreen'));
+const BudgetScreen = lazyRoute(() => import('./screens/BudgetScreen'));
+const UserListScreen = lazyRoute(() => import('./screens/UserListScreen'));
+const UserEditScreen = lazyRoute(() => import('./screens/UserEditScreen'));
+const ProductListScreen = lazyRoute(() => import('./screens/ProductListScreen'));
+const ProductEditScreen = lazyRoute(() => import('./screens/ProductEditScreen'));
+const OrderListScreen = lazyRoute(() => import('./screens/OrderListScreen'));
+const ProductApprovalScreen = lazyRoute(() => import('./screens/ProductApprovalScreen'));
+const ManagePage = lazyRoute(() => import('./components/ManagePage'));
+const ServicePage = lazyRoute(() => import('./components/ServicePage'));
+const ServiceScreen = lazyRoute(() => import('./screens/ServiceScreen'));
+const TermsAndCondition = lazyRoute(() => import('./screens/TermsAndCondition'));
+const RefundAndCancellation = lazyRoute(() => import('./screens/RefundAndCancellation'));
+const ContactUs = lazyRoute(() => import('./screens/ContactUs'));
+const PaymentSuccessScreen = lazyRoute(() => import('./screens/PaymentSuccessScreen'));
+const PlanScreen = lazyRoute(() => import('./screens/PlanScreen'));
+const GoogleLoginCallback = lazyRoute(() => import('./screens/GoogleLoginCallback'));
+const MyAppointmentScreen = lazyRoute(() => import('./screens/MyAppointmentScreen'));
+const AvailableTodayScreen = lazyRoute(() => import('./screens/AvailableTodayScreen'));
+const CategoryScreen = lazyRoute(() => import('./screens/CategoryScreen'));
+const FAQScreen = lazyRoute(() => import('./screens/FAQScreen'));
+const BlogListScreen = lazyRoute(() => import('./screens/BlogListScreen'));
+const BlogPostScreen = lazyRoute(() => import('./screens/BlogPostScreen'));
 
 // Only show splash when launched as installed PWA
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
@@ -55,7 +60,7 @@ function App() {
   useEffect(() => { trackSessionStart(); }, []);
 
   if (showSplash) {
-    return <SplashScreen onDone={() => setShowSplash(false)} />;
+    return <Suspense fallback={null}><SplashScreen onDone={() => setShowSplash(false)} /></Suspense>;
   }
 
   return (
@@ -64,6 +69,7 @@ function App() {
       <Header />
       <main className="py-0">
         <Container fluid>
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<HomeScreen />} />
             <Route path="/plan" element={<PlanScreen />} />
@@ -104,6 +110,7 @@ function App() {
             <Route path="/my-appointment/" element={<MyAppointmentScreen />} />
             <Route path="*" element={<NotFoundScreen />} />
           </Routes>
+          </Suspense>
         </Container>
       </main>
       <Footer />

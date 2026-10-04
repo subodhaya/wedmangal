@@ -152,6 +152,14 @@ class SeoPageTests(TestCase):
         self.assertRegex(html, r'<script defer="defer" src="/static/js/main\.[0-9a-f]+\.js">')
         self.assertIn('<div id="root"><main class="seo-summary">', html)
 
+    def test_vendor_page_preloads_the_hero_photo(self):
+        Product.objects.filter(pk=self.vendor.pk).update(image='Lotus_Studio.jpg')
+        html = self.get_html(f'/product/{self.vendor._id}')
+        self.assertIn('<link rel="preload" as="image" href="/images/Lotus_Studio.jpg" fetchpriority="high"/></head>', html)
+
+    def test_no_preload_for_the_placeholder_image(self):
+        self.assertNotIn('rel="preload" as="image"', self.get_html(f'/product/{self.vendor._id}'))
+
     def test_vendor_title_and_description(self):
         html = self.get_html(f'/product/{self.vendor._id}')
         self.assertIn('<title>Lotus Studio | Photographers in Adyar, Chennai | WedMangal</title>', html)

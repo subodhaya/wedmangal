@@ -75,7 +75,7 @@ def _json_ld(data):
     return f'<script type="application/ld+json">{text}</script>'
 
 
-def _render(title, description, canonical, body_html, json_ld=None, image=None, noindex=False):
+def _render(title, description, canonical, body_html, json_ld=None, image=None, noindex=False, preload_image=None):
     html = _load_index()
     t, d, c = escape(title), escape(description), escape(canonical)
 
@@ -95,6 +95,10 @@ def _render(title, description, canonical, body_html, json_ld=None, image=None, 
         html = _replace_or_insert(html, _meta_name('robots'), '<meta name="robots" content="noindex, follow"/>')
     if json_ld:
         html = html.replace('</head>', _json_ld(json_ld) + '</head>', 1)
+    if preload_image:
+        # Start the hero photo download with the HTML instead of after the app has loaded.
+        # Same relative URL the vendor page's <img> uses, so the browser reuses this download.
+        html = html.replace('</head>', f'<link rel="preload" as="image" href="{escape(preload_image)}" fetchpriority="high"/></head>', 1)
 
     html = html.replace('<div id="root"></div>', f'<div id="root">{body_html}</div>', 1)
     return HttpResponse(html)
@@ -252,7 +256,8 @@ def product_page(request, pk):
             (name, url),
         ))
 
-    return _render(title, description, url, ''.join(body), json_ld=json_ld, image=image)
+    hero = product.image.url if image else None   # the first photo of the vendor page's hero
+    return _render(title, description, url, ''.join(body), json_ld=json_ld, image=image, preload_image=hero)
 
 
 def category_page(request, category):

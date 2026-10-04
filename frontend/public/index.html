@@ -182,13 +182,24 @@
   <meta name="twitter:description" content="Tamil Nadu's #1 wedding vendor booking platform. Book photographers, caterers, makeup artists and more." />
   <meta name="twitter:image"       content="https://www.wedmangal.com/og-image-1200x630.jpg" />
 
-  <!-- ── FontAwesome ── -->
+  <!-- ── FontAwesome (icons only — loaded without blocking the first paint) ── -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
     crossorigin="anonymous"
     referrerpolicy="no-referrer"
+    media="print"
+    onload="this.media='all'"
   />
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" /></noscript>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Fonts used on every page (previously @imported one after another inside the CSS bundle).
+       Non-blocking: text shows straight away in a fallback font, then switches. -->
+  <link rel="stylesheet" media="print" onload="this.media='all'"
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@300;400;500;600&family=Nunito+Sans:wght@200;300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@300;400;500;600&family=Nunito+Sans:wght@200;300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" /></noscript>
 </head>
 <body>
   <noscript>
@@ -200,8 +211,8 @@
   <!-- React root -->
   <div id="root"></div>
 
-  <!-- Cashfree SDK -->
-  <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+  <!-- Cashfree SDK removed: nothing in the app calls it, and as a blocking script it delayed
+       every page. If online checkout is enabled, load it on the payment screen only. -->
 
 </body>
 </html>

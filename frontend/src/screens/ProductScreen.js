@@ -2,10 +2,8 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Row, Col, Carousel } from 'react-bootstrap';
 import Rating from '../components/Rating';
 import Loader from '../components/Loader';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
 import './ProductScreen.css';
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useCallback, useRef } from 'react';
 import api from '../utils/api';
 import { useLocation } from 'react-router-dom';
 import ClaimButton from '../components/ClaimButton';
@@ -17,6 +15,9 @@ import SlotPicker from '../components/SlotPicker';
 import QuoteModal from '../components/QuoteModal';
 import { trackEvent, EVENTS } from '../utils/analytics';
 import { Helmet } from 'react-helmet-async'; 
+
+// Only needed once someone opens a booking calendar
+const Calendar = lazy(() => import('../components/BookingCalendar'));
 
 const debounce = (func, delay) => {
   let t;
@@ -649,6 +650,7 @@ const handleDirectBooking = async (serviceId) => {
                                 <div className="ps-legend-dot available"></div> Available
                               </div>
                             </div>
+                            <Suspense fallback={<div className="ps-cal-loading">Loading calendar…</div>}>
                             <Calendar
                               onChange={(date) => {
                                 handleDateChange(service._id, date);
@@ -663,6 +665,7 @@ const handleDirectBooking = async (serviceId) => {
                                 ) || date < new Date()
                               }
                             />
+                            </Suspense>
                           </>
                         )}
 
