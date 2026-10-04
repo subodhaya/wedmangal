@@ -20,7 +20,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from base import search_intent as si
+from base import discovery, search_intent as si
 from base.models import Product
 
 PAGE_SIZE = 12
@@ -170,6 +170,31 @@ def _filtered(category=None, area=None, min_rating=None, keyword_tokens=None, pl
     return qs
 
 
+def _int_param(params, name, upper):
+    try:
+        value = int(params.get(name) or 0)
+    except (TypeError, ValueError):
+        return None
+    return value if 0 < value <= upper else None
+
+
+# Requirements the intent notes above already explain (parking, AC, food)
+_EXPLAINED = {'parking', 'ac', 'veg_food', 'nonveg_food'}
+
+
+def _requirement_notes(must, avoid):
+    other = [discovery.REQUIREMENT_KEYS[k]['label'].lower() for k in must if k not in _EXPLAINED]
+    notes = []
+    if other:
+        notes.append(f"Most vendors haven’t told us about {', '.join(other)} yet, so we show everyone and list "
+                     f'vendors who have confirmed it first.')
+    if avoid:
+        labels = ', '.join(discovery.REQUIREMENT_KEYS[k]['label'].lower() for k in avoid)
+        notes.append(f'We left out vendors we know are a {labels}; vendors who haven’t told us their venue type '
+                     f'are still shown.')
+    return notes
+
+
 def _notes(intent, area_param, area, unmatched_location=None, place_matches=0):
     notes = []
     if intent['budget_min'] or intent['budget_max']:
@@ -222,8 +247,14 @@ def search_vendors(request):
     except ValueError:
         page = 1
 
+    # Discovery answers (structured, from the quick questions) arrive as explicit parameters.
+    guests_min, guests_max = _int_param(params, 'guests_min', discovery.MAX_GUESTS), _int_param(params, 'guests_max', discovery.MAX_GUESTS)
+    budget_min, budget_max = _int_param(params, 'budget_min', discovery.MAX_BUDGET), _int_param(params, 'budget_max', discovery.MAX_BUDGET)
+    must, avoid = discovery.parse_key_list(params.get('must')), discovery.parse_key_list(params.get('avoid'))
+    requirement_filters = discovery.search_filters(guests_min, guests_max, budget_min, budget_max, must)
+
     # Understand the query; explicit filter choices win over words in the query.
-    intent = si.combine_intent(query, {'category': category_param, 'area_name': area_param})
+    intent = si.combine_intent(query, {'category': category_param, 'area_name': area_param, **requirement_filters})
     category, area = intent['category'], intent['area']
     structured = bool(category or area)
     name_tokens = _name_tokens(query, area)
@@ -234,6 +265,8 @@ def search_vendors(request):
     place_word = unmatched if unmatched and structured else None
 
     qs = _filtered(category, area, min_rating, keyword_tokens, place_word)
+    # Must-haves / avoids: exclude only known contradictions, rank known matches first (Unknown ≠ No)
+    qs = discovery.apply_to_queryset(qs, must, avoid)
     if name_tokens:  # vendor-name matches rank first (for name searches and structured ones)
         qs = qs.annotate(name_rank=sum(
             (Case(When(name__icontains=t, then=Value(1)), default=Value(0), output_field=IntegerField())
@@ -252,7 +285,7 @@ def search_vendors(request):
     elif sort == 'newest':
         qs = qs.order_by('-createdAt', '_id')
     else:
-        qs = qs.order_by('-name_rank', '-area_rank', rating_desc, '_id')
+        qs = qs.order_by('-name_rank', '-area_rank', '-requirement_rank', rating_desc, '_id')
 
     paginator = Paginator(qs, PAGE_SIZE)
     page_obj = paginator.get_page(page)
@@ -290,7 +323,9 @@ def search_vendors(request):
                         'category_label': CATEGORY_NAMES.get(category)},
         'applied': {'category': category, 'area': area, 'place_word': place_word, 'min_rating': min_rating,
                     'sort': sort},
-        'notes': _notes(intent, area_param, area, place_word, count),
+        'notes': _notes(intent, area_param, area, place_word, count) + _requirement_notes(must, avoid),
+        'requirements': {'guests_min': guests_min, 'guests_max': guests_max, 'budget_min': budget_min,
+                         'budget_max': budget_max, 'must': must, 'avoid': avoid},
         'suggestions': suggestions,
         'results': [_card(p) for p in page_obj.object_list],
         'options': {

@@ -84,6 +84,16 @@ it('shows known hall details as a scannable list and leaves unknown ones out', a
   expect(within(section).queryByText(/food|rooms/i)).not.toBeInTheDocument();  // never answered → not shown
 });
 
+it('offers discovery only after the vendor’s own information', async () => {
+  show(vendor());
+  const prompt = await screen.findByRole('region', { name: 'Looking for a wedding venue?' });
+  const about = screen.getByRole('region', { name: 'About' });
+  expect(about.compareDocumentPosition(prompt) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.getByRole('heading', { level: 1 }).compareDocumentPosition(prompt) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Help me find venues' })).toBeInTheDocument();
+  expect(screen.queryByText(/Question 1/)).not.toBeInTheDocument();   // nothing pops up by itself
+});
+
 it('shows no details section when nothing is known', async () => {
   show(vendor());
   await screen.findByRole('heading', { level: 1 });

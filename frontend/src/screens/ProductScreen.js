@@ -10,6 +10,7 @@ import ClaimButton from '../components/ClaimButton';
 import VendorDetails from '../components/VendorDetails';
 import VendorGallery from '../components/vendor/VendorGallery';
 import VendorActions from '../components/vendor/VendorActions';
+import DiscoveryPrompt from '../discovery/DiscoveryPrompt';
 import '../components/vendor/VendorProfile.css';
 import SlotPicker from '../components/SlotPicker';
 import QuoteModal from '../components/QuoteModal';
@@ -187,13 +188,14 @@ function ProductScreen() {
   const [showQuote, setShowQuote] = useState(false);
   const trackedViewRef = useRef(null);
   // Opened from search results? (/product/<id>?ref=search) — read once; canonical URL is unaffected
-  const fromSearchRef = useRef(new URLSearchParams(window.location.search).get('ref') === 'search');
+  const refParam = new URLSearchParams(window.location.search).get('ref');
+  const fromSearchRef = useRef(refParam === 'search' ? 'search_results' : refParam === 'discovery' ? 'discovery_results' : null);
   useEffect(() => {
     // Once per vendor, not on every re-render
     if (product?._id && trackedViewRef.current !== product._id) {
       trackedViewRef.current = product._id;
       trackEvent(EVENTS.VENDOR_PAGE_VIEW, {
-        vendorId: product._id, source: fromSearchRef.current ? 'search_results' : 'vendor_page',
+        vendorId: product._id, source: fromSearchRef.current || 'vendor_page',
       });
     }
   }, [product?._id]);
@@ -473,6 +475,9 @@ const handleDirectBooking = async (serviceId) => {
                   <ReadMore text={product.about} />
                 </section>
               )}
+
+              {/* ── Discovery: after the vendor's own information, never before it ── */}
+              <DiscoveryPrompt vendor={product} />
 
           {/* ── Video Player (TikTok style) ──────────────────────── */}
               {product.videos?.length > 0 && (() => {

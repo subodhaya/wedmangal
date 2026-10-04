@@ -21,7 +21,7 @@ IST = ZoneInfo('Asia/Kolkata')
 # claims / edits a listing. The browser cannot report (or inflate) these.
 SERVER_EVENT_TYPES = {
     EventType.GET_QUOTE_SUBMITTED, EventType.CLAIM_STARTED, EventType.CLAIM_SUBMITTED,
-    EventType.CLAIM_APPROVED, EventType.PROFILE_UPDATED,
+    EventType.CLAIM_APPROVED, EventType.PROFILE_UPDATED, EventType.DISCOVERY_CONTACT_SUBMITTED,
 }
 
 # Events the browser may report.
@@ -45,9 +45,18 @@ DEDUPE_WINDOWS = {
     EventType.WHATSAPP_CLICK:         timedelta(seconds=10),
     EventType.EXTERNAL_CONTACT_CLICK: timedelta(seconds=10),
     EventType.EXTERNAL_BOOKING_CLICK: timedelta(seconds=10),
+    EventType.DISCOVERY_PROMPT_VIEWED: timedelta(minutes=30),
+    EventType.DISCOVERY_STARTED:       timedelta(seconds=30),
 }
 
-METADATA_KEYS = {'channel', 'host', 'query', 'city', 'position', 'label'}
+METADATA_KEYS = {'channel', 'host', 'query', 'city', 'position', 'label', 'question', 'answer', 'category', 'step'}
+
+# Discovery events may name the vendor page the journey started from (optional).
+OPTIONAL_VENDOR_EVENT_TYPES = {
+    EventType.DISCOVERY_PROMPT_VIEWED, EventType.DISCOVERY_STARTED, EventType.DISCOVERY_QUESTION_ANSWERED,
+    EventType.DISCOVERY_COMPLETED, EventType.DISCOVERY_MATCHING_RESULTS, EventType.DISCOVERY_CONTACT_OPENED,
+    EventType.DISCOVERY_CONTACT_SUBMITTED,
+}
 MAX_METADATA_VALUE = 100
 
 SESSION_ID_RE = re.compile(r'^[A-Za-z0-9-]{8,64}$')

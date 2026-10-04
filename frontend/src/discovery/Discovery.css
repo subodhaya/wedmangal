@@ -1,0 +1,46 @@
+/* Discovery journey (questions + contact). Loaded with the flow, not with the vendor page. */
+.dsc-flow { margin-top: 14px; background: #fff; border: 1px solid #ead6df; border-radius: 16px; padding: 16px; }
+.dsc-top { display: flex; justify-content: space-between; align-items: center; }
+.dsc-progress-text { font-size: 0.8rem; font-weight: 600; color: #8a6f7b; letter-spacing: 0.02em; }
+.dsc-progress { height: 6px; background: #f3e6ec; border-radius: 999px; overflow: hidden; margin: 8px 0 14px; }
+.dsc-progress span { display: block; height: 100%; background: #5e143f; transition: width 0.2s ease; }
+.dsc-q { border: 0; padding: 0; margin: 0; min-width: 0; }
+.dsc-q legend, .dsc-summary-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600;
+  color: #3d0d29; margin: 0 0 12px; float: none; width: auto; text-transform: none; letter-spacing: normal; }
+.dsc-hint { font-size: 0.85rem; color: #8a6f7b; margin: -6px 0 12px; }
+.dsc-sub { font-size: 0.85rem; font-weight: 600; color: #4a2a36; margin: 14px 0 8px; }
+.dsc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.dsc-chip { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1.5px solid #d9c3cd; background: #fdf9fb;
+  color: #3d0d29; font-size: 0.92rem; font-weight: 500; cursor: pointer; }
+.dsc-chip:hover { border-color: #5e143f; }
+.dsc-chip-on { background: #5e143f; border-color: #5e143f; color: #fff; }
+.dsc-chip:focus-visible, .dsc-primary:focus-visible, .dsc-link:focus-visible { outline: 3px solid #d4a843; outline-offset: 2px; }
+.dsc-other { margin-top: 14px; }
+.dsc-other label { display: block; font-size: 0.85rem; color: #8a6f7b; margin-bottom: 6px; }
+.dsc-other div { display: flex; gap: 8px; }
+.dsc-other input { flex: 1; min-width: 0; min-height: 44px; border: 1.5px solid #d9c3cd; border-radius: 12px; padding: 0 12px; font-size: 1rem; }
+.dsc-small { min-height: 44px; padding: 0 16px; border-radius: 12px; border: 0; background: #5e143f; color: #fff; font-weight: 600; }
+.dsc-small:disabled { opacity: 0.4; }
+.dsc-primary { display: block; width: 100%; min-height: 48px; margin-top: 16px; border: 0; border-radius: 999px;
+  background: #5e143f; color: #f0c96a; font-size: 1rem; font-weight: 600; cursor: pointer; }
+.dsc-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.dsc-nav { display: flex; justify-content: space-between; margin-top: 12px; min-height: 24px; }
+.dsc-link { background: none; border: 0; padding: 6px 0; color: #5e143f; font-weight: 600; cursor: pointer; font-size: 0.92rem; }
+.dsc-skip { margin-left: auto; color: #8a6f7b; }
+.dsc-summary { margin-bottom: 4px; }
+.dsc-tag { background: #f7eaf0; color: #3d0d29; border-radius: 999px; padding: 6px 12px; font-size: 0.85rem; }
+
+/* Contact (results page) */
+.dsc-contact { background: #fff; border: 1px solid #ead6df; border-radius: 16px; padding: 18px; margin: 20px 0; }
+.dsc-contact h2 { font-family: 'Playfair Display', serif; font-size: 1.25rem; color: #3d0d29; margin: 0 0 6px;
+  text-transform: none; letter-spacing: normal; }
+.dsc-contact p { color: #6b5a62; margin: 0 0 14px; font-size: 0.92rem; }
+.dsc-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.dsc-field label { font-size: 0.85rem; font-weight: 600; color: #2a0918; }
+.dsc-field input, .dsc-field textarea { min-height: 44px; border: 1.5px solid #d9c3cd; border-radius: 12px; padding: 8px 12px;
+  font-size: 1rem; background: #fdf9fb; width: 100%; }
+.dsc-field textarea { min-height: 72px; resize: vertical; }
+.dsc-error { color: #b3261e; font-size: 0.82rem; margin: 0; }
+.dsc-consent { display: flex; gap: 10px; align-items: flex-start; font-size: 0.9rem; color: #3d0d29; cursor: pointer; }
+.dsc-consent input { width: 20px; height: 20px; margin-top: 2px; flex-shrink: 0; }
+.dsc-done { text-align: center; }

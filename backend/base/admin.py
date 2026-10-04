@@ -1,10 +1,11 @@
 # base/admin.py
 from django.contrib import admin
 from django.contrib.auth.models import User
-from .models import Profile, Product, Service, Review, Order, OrderItem, Budget, ShippingAddress, ServiceImage, CartItem, Wishlist, BlogPost, VendorEvent, QuoteRequest, ServiceOwnerClaim
+from .models import Profile, Product, Service, Review, Order, OrderItem, Budget, ShippingAddress, ServiceImage, CartItem, Wishlist, BlogPost, VendorEvent, QuoteRequest, ServiceOwnerClaim, DiscoveryLead
 from django.db import transaction
 from django.utils import timezone
-from . import analytics, vendor_profile
+from . import analytics, discovery, vendor_profile
+from django.utils.html import format_html_join
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 class ProfileInline(admin.StackedInline):
@@ -186,3 +187,47 @@ class VendorEventAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+
+@admin.register(DiscoveryLead)
+class DiscoveryLeadAdmin(admin.ModelAdmin):
+    """Visitors who asked WedMangal to help them find vendors (with consent to be called)."""
+    list_display = ('id', 'created_at', 'name', 'phone', 'looking_for', 'location', 'guests', 'budget', 'status')
+    list_display_links = ('id', 'name')
+    list_editable = ('status',)
+    list_filter = ('status', 'category', 'created_at')
+    search_fields = ('name', 'phone', 'message', 'notes')
+    readonly_fields = ('requirement_summary', 'source_vendor', 'session_id', 'consent', 'created_at', 'updated_at',
+                       'requirements')
+    fields = ('status', 'notes', 'requirement_summary', 'name', 'phone', 'event_date', 'message', 'consent',
+              'source_vendor', 'created_at', 'updated_at', 'session_id', 'requirements')
+
+    def has_add_permission(self, request):
+        return False
+
+    def _req(self, obj, key):
+        return (obj.requirements or {}).get(key) or {}
+
+    @admin.display(description='Looking for')
+    def looking_for(self, obj):
+        return obj.category.replace('_', ' ') or '—'
+
+    @admin.display(description='Location')
+    def location(self, obj):
+        loc = self._req(obj, 'location')
+        return 'Anywhere' if loc.get('anywhere') else loc.get('area') or loc.get('other') or '—'
+
+    @admin.display(description='Guests')
+    def guests(self, obj):
+        g = self._req(obj, 'guest_count')
+        return discovery._range(g) if g else '—'
+
+    @admin.display(description='Budget')
+    def budget(self, obj):
+        b = self._req(obj, 'budget')
+        return 'Not sure' if b.get('unsure') else (discovery._range(b, '₹') if b else '—')
+
+    @admin.display(description='Requirement')
+    def requirement_summary(self, obj):
+        lines = discovery.summary_lines(obj.requirements, obj.source_vendor)
+        return format_html_join('', '<div>{}</div>', ((line,) for line in lines)) or '—'

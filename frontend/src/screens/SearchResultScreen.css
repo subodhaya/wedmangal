@@ -121,3 +121,7 @@
   .sr-filters--open { display: block; }
   .sr-header h1 { font-size: 1.3rem; }
 }
+
+/* Discovery: the visitor's requirement, editable */
+.sr-requirements { margin-top: 10px; }
+.sr-edit-req { margin-top: 10px; background: none; border: 0; padding: 4px 0; color: #5e143f; font-weight: 600; cursor: pointer; text-decoration: underline; }

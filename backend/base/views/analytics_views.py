@@ -79,6 +79,8 @@ def log_event(request):
         vendor = _approved_vendor(data.get('vendor_id'))
         if vendor is None:
             return Response({'detail': 'Vendor not found.'}, status=status.HTTP_404_NOT_FOUND)
+    elif event_type in analytics.OPTIONAL_VENDOR_EVENT_TYPES and data.get('vendor_id') is not None:
+        vendor = _approved_vendor(data.get('vendor_id'))   # where the journey started; ignored if unknown
 
     event = analytics.record_event(
         event_type, vendor=vendor, user=user, session_id=session_id,

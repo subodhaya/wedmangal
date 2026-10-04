@@ -337,6 +337,14 @@ class VendorEvent(models.Model):
         CLAIM_SUBMITTED        = 'claim_submitted', 'Claim submitted'
         CLAIM_APPROVED         = 'claim_approved', 'Claim approved'
         PROFILE_UPDATED        = 'profile_updated', 'Profile updated'
+        # Discovery journey (vendor page → questions → matching vendors → optional contact)
+        DISCOVERY_PROMPT_VIEWED      = 'discovery_prompt_viewed', 'Discovery prompt viewed'
+        DISCOVERY_STARTED            = 'discovery_started', 'Discovery started'
+        DISCOVERY_QUESTION_ANSWERED  = 'discovery_question_answered', 'Discovery question answered'
+        DISCOVERY_COMPLETED          = 'discovery_requirements_completed', 'Discovery requirements completed'
+        DISCOVERY_MATCHING_RESULTS   = 'discovery_matching_results', 'Discovery matching results'
+        DISCOVERY_CONTACT_OPENED     = 'discovery_contact_opened', 'Discovery contact opened'
+        DISCOVERY_CONTACT_SUBMITTED  = 'discovery_contact_submitted', 'Discovery contact submitted'
 
     class DeviceType(models.TextChoices):
         MOBILE  = 'mobile', 'Mobile'
@@ -419,6 +427,7 @@ class SearchQuery(models.Model):
         FILTERS     = 'filters', 'Filter bar'
         CATEGORY    = 'category', 'Category page filters'
         SEARCH_PAGE = 'search_page', 'Search page'
+        DISCOVERY   = 'discovery', 'Discovery questions'
 
     # Same values as Product.attributes["food_type"] and the food_type filter
     class Food(models.TextChoices):
@@ -457,3 +466,38 @@ class SearchQuery(models.Model):
 
     def __str__(self):
         return f'{self.get_source_display()}: {self.query or self.filters} ({self.created_at:%Y-%m-%d})'
+
+
+class DiscoveryLead(models.Model):
+    """A visitor's wedding requirement, left with consent for WedMangal (not a vendor) to call them.
+
+    Created from the discovery journey. No user account is created. `requirements` follows
+    base/discovery.py: location, guest_count, budget, must_have, prefer, avoid, dont_care, ...
+    """
+
+    class Status(models.TextChoices):
+        NEW       = 'new', 'New'
+        CONTACTED = 'contacted', 'Contacted'
+        MATCHED   = 'matched', 'Matched with vendors'
+        CLOSED    = 'closed', 'Closed'
+
+    session_id    = models.CharField(max_length=64, blank=True, default='')
+    source_vendor = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True,
+                                      related_name='discovery_leads')
+    category      = models.CharField(max_length=32, blank=True, default='')
+    requirements  = models.JSONField(default=dict, blank=True)
+    name          = models.CharField(max_length=100)
+    phone         = models.CharField(max_length=10)        # normalised 10-digit Indian mobile
+    event_date    = models.DateField(null=True, blank=True)
+    message       = models.TextField(blank=True, default='')
+    consent       = models.BooleanField(default=False)     # agreed to be contacted by WedMangal
+    status        = models.CharField(max_length=12, choices=Status.choices, default=Status.NEW)
+    notes         = models.TextField(blank=True, default='')  # founder's call notes (admin only)
+    created_at    = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Lead #{self.pk} – {self.name} ({self.get_status_display()})'

@@ -16,10 +16,10 @@ export const imageSrc = (image) => {
 };
 
 // One search result. Uses only the public search fields (no personal_phone).
-export default function VendorResultCard({ vendor, position, query = '', onOpen }) {
+export default function VendorResultCard({ vendor, position, query = '', onOpen, fromDiscovery = false }) {
   const phone = normalizePhone(vendor.business_phone);
-  const profile = `/product/${vendor._id}?ref=search`;
-  const source = 'search_results';
+  const profile = `/product/${vendor._id}?ref=${fromDiscovery ? 'discovery' : 'search'}`;
+  const source = fromDiscovery ? 'discovery_results' : 'search_results';
   const message = encodeURIComponent(
     `Hi, I found you on WedMangal! I'm interested in your ${vendor.name || ''} services. Can you please share more details?`
   );

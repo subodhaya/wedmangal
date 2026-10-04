@@ -19,6 +19,13 @@ export const EVENTS = Object.freeze({
   FAVORITE:               'favorite',
   SHARE:                  'share',
   SESSION_START:          'session_start',
+  DISCOVERY_PROMPT_VIEWED:     'discovery_prompt_viewed',
+  DISCOVERY_STARTED:           'discovery_started',
+  DISCOVERY_QUESTION_ANSWERED: 'discovery_question_answered',
+  DISCOVERY_COMPLETED:         'discovery_requirements_completed',
+  DISCOVERY_MATCHING_RESULTS:  'discovery_matching_results',
+  DISCOVERY_CONTACT_OPENED:    'discovery_contact_opened',
+  // discovery_contact_submitted is recorded by the server when a lead is saved.
   // get_quote_submitted is recorded by the server when a quote is saved.
 });
 
