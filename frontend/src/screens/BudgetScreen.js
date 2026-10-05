@@ -42,7 +42,7 @@ const BudgetScreen = () => {
     let userInfo = null;
     try { userInfo = JSON.parse(localStorage.getItem('userInfo')); } catch {}
     const pk = userInfo?.id;
-    if (!pk) { navigate(loginRedirect); return; }
+    if (!pk) { navigate(loginRedirect, { replace: true }); return; }   // replace: Back must not bounce into login again
     const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
     setLoading(true);
     api.get(`/api/orders/get-budget/${pk}/`, config)
@@ -71,7 +71,7 @@ const BudgetScreen = () => {
     let userInfo = null;
     try { userInfo = JSON.parse(localStorage.getItem('userInfo')); } catch {}
     const pk = userInfo?.id;
-    if (!pk) { navigate(loginRedirect); return; }
+    if (!pk) { navigate(loginRedirect, { replace: true }); return; }   // replace: Back must not bounce into login again
     const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
     api.post(`/api/orders/update-budget/${pk}/`, { total_budget: totalBudget, expenses, ...(fromDiscovery && { source: 'discovery' }) }, config)
       .then(() => { setSuccessMessage('Budget saved successfully!'); setErrorMessage(''); })

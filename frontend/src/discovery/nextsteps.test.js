@@ -1,6 +1,6 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import DiscoveryNextSteps from './DiscoveryNextSteps';
 import SavedRequirements from './SavedRequirements';
@@ -12,6 +12,7 @@ jest.mock('react-chartjs-2', () => ({ Pie: () => null }));
 
 const REQ = answersToRequirement('Halls', { location: { area: 'Tambaram' }, guests: '500_1000', budget: '2_5l', important: ['parking'] });
 const RESULTS = `/search/?${requirementToParams(REQ, 42).toString()}`;
+const BackButton = () => { const n = useNavigate(); return <button type="button" onClick={() => n(-1)}>back</button>; };
 const ShowLocation = () => { const l = useLocation(); return <p data-testid="loc">{l.pathname}{l.search}</p>; };
 const sentEvents = () => global.fetch.mock.calls.map(([, o]) => JSON.parse(o.body)).map(b => b.event_type);
 const login = () => localStorage.setItem('userInfo', JSON.stringify({ id: 5, token: 't' }));
@@ -97,6 +98,19 @@ describe('Budget Planner opened from discovery', () => {
     api.get.mockResolvedValue({ data: { total_budget: 2000000, expenses: { venue: 300000 } } });
     renderBudget('/budget/?from=discovery&line=venue&amount=500000');
     expect(await screen.findByText(/Your saved plan has ₹3,00,000 — we haven’t changed it/)).toBeInTheDocument();
+  });
+
+  it('does not trap the Back button in a login redirect', () => {
+    render(
+      <MemoryRouter initialEntries={['/search/?from=discovery', '/budget/?from=discovery']} initialIndex={1}>
+        <Routes><Route path="/budget/" element={<BudgetScreen />} /><Route path="/login" element={<ShowLocation />} />
+          <Route path="/search/" element={<ShowLocation />} /></Routes>
+        <BackButton />
+      </MemoryRouter>
+    );
+    expect(screen.getByTestId('loc').textContent.startsWith('/login')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'back' }));
+    expect(screen.getByTestId('loc')).toHaveTextContent('/search/?from=discovery');
   });
 
   it('keeps the discovery context through login', () => {
