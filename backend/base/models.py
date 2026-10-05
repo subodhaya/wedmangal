@@ -345,6 +345,9 @@ class VendorEvent(models.Model):
         DISCOVERY_MATCHING_RESULTS   = 'discovery_matching_results', 'Discovery matching results'
         DISCOVERY_CONTACT_OPENED     = 'discovery_contact_opened', 'Discovery contact opened'
         DISCOVERY_CONTACT_SUBMITTED  = 'discovery_contact_submitted', 'Discovery contact submitted'
+        DISCOVERY_BUDGET_OPENED      = 'discovery_budget_opened', 'Discovery budget planner opened'
+        DISCOVERY_SAVE_STARTED       = 'discovery_save_started', 'Discovery save requirements started'
+        BUDGET_SAVED                 = 'budget_saved', 'Budget saved'
 
     class DeviceType(models.TextChoices):
         MOBILE  = 'mobile', 'Mobile'
@@ -501,3 +504,22 @@ class DiscoveryLead(models.Model):
 
     def __str__(self):
         return f'Lead #{self.pk} – {self.name} ({self.get_status_display()})'
+
+
+class SavedRequirement(models.Model):
+    """A logged-in visitor's discovery requirement, saved so they can come back to it.
+
+    Saving is NOT consent to be contacted — only DiscoveryLead carries that.
+    """
+    user          = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_requirements')
+    category      = models.CharField(max_length=32, blank=True, default='')
+    requirements  = models.JSONField(default=dict, blank=True)   # same structure as DiscoveryLead.requirements
+    source_vendor = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True,
+                                      related_name='saved_requirements')
+    created_at    = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user} – {self.category or "requirement"} ({self.created_at:%Y-%m-%d})'

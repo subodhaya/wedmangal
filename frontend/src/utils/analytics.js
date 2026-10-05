@@ -25,6 +25,8 @@ export const EVENTS = Object.freeze({
   DISCOVERY_COMPLETED:         'discovery_requirements_completed',
   DISCOVERY_MATCHING_RESULTS:  'discovery_matching_results',
   DISCOVERY_CONTACT_OPENED:    'discovery_contact_opened',
+  DISCOVERY_BUDGET_OPENED:     'discovery_budget_opened',
+  DISCOVERY_SAVE_STARTED:      'discovery_save_started',
   // discovery_contact_submitted is recorded by the server when a lead is saved.
   // get_quote_submitted is recorded by the server when a quote is saved.
 });

@@ -604,6 +604,14 @@ def update_budget(request, pk):
         if serializer.is_valid():
             print("Valid budget data:", serializer.validated_data)
             serializer.save()
+            try:   # "Budget saved" metric; source=discovery when opened from discovery results
+                from base import analytics
+                from base.models import VendorEvent
+                analytics.record_event(VendorEvent.EventType.BUDGET_SAVED, user=request.user,
+                                       source='discovery' if request.data.get('source') == 'discovery' else 'budget_planner',
+                                       user_agent=request.META.get('HTTP_USER_AGENT', ''), dedupe=False)
+            except Exception:
+                pass
             return Response(
                 serializer.data,
                 status=status.HTTP_201_CREATED if created else status.HTTP_200_OK

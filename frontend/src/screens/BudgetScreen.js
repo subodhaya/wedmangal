@@ -1,13 +1,25 @@
 // src/screens/BudgetScreen.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Pie } from 'react-chartjs-2';
 import { Row, Col, Form, Button } from 'react-bootstrap';
 import api from '../utils/api';
 import './BudgetScreen.css';
 
+// Opened from discovery results: /budget/?from=discovery&line=venue&amount=500000
+const LAST_SEARCH_KEY = 'wm_discovery_last';
+const inr = (n) => `₹${Number(n).toLocaleString('en-IN')}`;
+
 const BudgetScreen = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const fromDiscovery = query.get('from') === 'discovery';
+  const discoveryLine = query.get('line') || '';
+  const discoveryAmount = Math.max(0, Math.min(100000000, Number(query.get('amount')) || 0));
+  const [discoveryNote, setDiscoveryNote] = useState('');
+  const backToResults = (() => { try { return sessionStorage.getItem(LAST_SEARCH_KEY); } catch { return null; } })();
+  const loginRedirect = `/login?redirect=${encodeURIComponent('/budget/' + location.search)}`;
   const [totalBudget, setTotalBudget] = useState(0);
   const [expenses, setExpenses] = useState({
     venue: 0,
@@ -30,14 +42,24 @@ const BudgetScreen = () => {
     let userInfo = null;
     try { userInfo = JSON.parse(localStorage.getItem('userInfo')); } catch {}
     const pk = userInfo?.id;
-    if (!pk) { navigate('/login?redirect=/budget/'); return; }
+    if (!pk) { navigate(loginRedirect); return; }
     const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
     setLoading(true);
     api.get(`/api/orders/get-budget/${pk}/`, config)
       .then((response) => {
         if (response.data) {
           setTotalBudget(response.data.total_budget || 0);
-          setExpenses({ ...defaultExpenses, ...(response.data.expenses || {}) });
+          const saved = { ...defaultExpenses, ...(response.data.expenses || {}) };
+          // From discovery: suggest the amount they chose, but never overwrite a figure they saved
+          if (fromDiscovery && discoveryLine && discoveryAmount) {
+            if (!Number(saved[discoveryLine])) {
+              saved[discoveryLine] = discoveryAmount;
+              setDiscoveryNote(`We’ve added your ${discoveryLine} budget (${inr(discoveryAmount)}) from your search. Adjust anything, then press Save.`);
+            } else {
+              setDiscoveryNote(`From your search: ${discoveryLine} budget ${inr(discoveryAmount)}. Your saved plan has ${inr(saved[discoveryLine])} — we haven’t changed it.`);
+            }
+          }
+          setExpenses(saved);
           setErrorMessage('');
         }
       })
@@ -49,9 +71,9 @@ const BudgetScreen = () => {
     let userInfo = null;
     try { userInfo = JSON.parse(localStorage.getItem('userInfo')); } catch {}
     const pk = userInfo?.id;
-    if (!pk) { navigate('/login?redirect=/budget/'); return; }
+    if (!pk) { navigate(loginRedirect); return; }
     const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-    api.post(`/api/orders/update-budget/${pk}/`, { total_budget: totalBudget, expenses }, config)
+    api.post(`/api/orders/update-budget/${pk}/`, { total_budget: totalBudget, expenses, ...(fromDiscovery && { source: 'discovery' }) }, config)
       .then(() => { setSuccessMessage('Budget saved successfully!'); setErrorMessage(''); })
       .catch(() => { setErrorMessage('Failed to save budget. Please try again.'); setSuccessMessage(''); });
   };
@@ -100,6 +122,13 @@ const BudgetScreen = () => {
         <h2 className="budget-page-title">💰 Budget Planner</h2>
         <p className="budget-page-sub">Plan and track your wedding expenses in one place</p>
       </div>
+
+      {fromDiscovery && (
+        <div className="budget-discovery-note" role="status">
+          {discoveryNote && <p>{discoveryNote}</p>}
+          {backToResults && <Link to={backToResults}>← Back to your matching vendors</Link>}
+        </div>
+      )}
 
       {/* ── Summary cards ── */}
       <div className="budget-summary-row">

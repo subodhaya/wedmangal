@@ -9,6 +9,8 @@ import VendorResultCard from '../components/VendorResultCard';
 import { createSearchTracker, trackEvent, EVENTS } from '../utils/analytics';
 import { paramsToRequirement, requirementChips, requirementToAnswers, requirementToFilters } from '../discovery/requirements';
 import DiscoveryContact from '../discovery/DiscoveryContact';
+import DiscoveryNextSteps from '../discovery/DiscoveryNextSteps';
+import '../discovery/Discovery.css';
 import './SearchResultScreen.css';
 
 // Only needed when the visitor taps "Edit requirements"
@@ -154,6 +156,7 @@ function SearchResultScreen() {
             <div className="sr-chips" aria-label="Your requirements">
               {requirementChips(requirement).map(chip => <span key={chip} className="sr-chip">{chip}</span>)}
             </div>
+            <DiscoveryNextSteps requirement={requirement} sourceVendorId={sourceVendorId} />
             <button type="button" className="sr-edit-req" onClick={() => setEditing(v => !v)} aria-expanded={editing}>
               {editing ? 'Close' : 'Edit requirements'}
             </button>

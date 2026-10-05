@@ -44,3 +44,23 @@
 .dsc-consent { display: flex; gap: 10px; align-items: flex-start; font-size: 0.9rem; color: #3d0d29; cursor: pointer; }
 .dsc-consent input { width: 20px; height: 20px; margin-top: 2px; flex-shrink: 0; }
 .dsc-done { text-align: center; }
+
+/* Next steps on discovery results (save / budget) */
+.dsc-next { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+.dsc-next-btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px;
+  border: 1.5px solid #5e143f; background: #fff; color: #5e143f; font-weight: 600; font-size: 0.92rem;
+  text-decoration: none; cursor: pointer; }
+.dsc-next-btn:hover { background: #f7eaf0; color: #3d0d29; text-decoration: none; }
+.dsc-next-btn:disabled { opacity: 0.6; cursor: wait; }
+.dsc-next-done { color: #1a6e3a; font-weight: 600; font-size: 0.92rem; min-height: 44px; display: inline-flex; align-items: center; }
+@media (max-width: 480px) { .dsc-next-btn { flex: 1 1 100%; justify-content: center; } }
+
+/* Profile: saved requirements */
+.dsc-saved { background: #fff; border: 1px solid #ead6df; border-radius: 16px; padding: 16px 18px; margin-bottom: 20px; }
+.dsc-saved h3 { font-size: 1.05rem; color: #3d0d29; margin: 0 0 10px; text-transform: none; letter-spacing: normal; }
+.dsc-saved ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.dsc-saved li { display: flex; flex-direction: column; gap: 2px; border-top: 1px solid #f3e6ec; padding-top: 10px; }
+.dsc-saved li:first-child { border-top: 0; padding-top: 0; }
+.dsc-saved-cat { font-weight: 600; color: #3d0d29; }
+.dsc-saved-chips { font-size: 0.88rem; color: #6b5a62; overflow-wrap: anywhere; }
+.dsc-saved a { color: #5e143f; font-weight: 600; font-size: 0.9rem; }

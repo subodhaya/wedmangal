@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
 import api from '../utils/api';
+import SavedRequirements from '../discovery/SavedRequirements';
 
 const s = {
   page: { fontFamily: "'DM Sans', sans-serif", background: "#fdf8f0", minHeight: "100vh", padding: "0 0 60px" },
@@ -273,6 +274,8 @@ function ProfileScreen() {
                 <p style={s.statLabel}>Total Spent</p>
               </div>
             </div>
+
+            <SavedRequirements />
 
             {/* Orders card */}
             <div style={s.card}>

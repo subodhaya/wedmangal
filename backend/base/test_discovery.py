@@ -194,3 +194,68 @@ class DiscoveryEventTests(TestCase):
 
     def test_contact_submitted_cannot_be_faked_by_the_browser(self):
         self.assertEqual(self.event('discovery_contact_submitted').status_code, 400)
+
+
+class SavedRequirementTests(TestCase):
+
+    def setUp(self):
+        self.client = APIClient(HTTP_USER_AGENT=UA)
+        self.user = User.objects.create_user(username='9876543210')
+        self.source = hall('Sri Mahal')
+
+    def save(self, user=None, **extra):
+        if user is not None:
+            self.client.force_authenticate(user)
+        return self.client.post('/api/discovery/saved/', {'requirements': REQ, 'source_vendor_id': self.source._id, **extra},
+                                format='json')
+
+    def test_saving_needs_an_account(self):
+        self.assertEqual(self.save().status_code, 401)
+
+    def test_save_and_list_without_creating_a_lead(self):
+        response = self.save(self.user)
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual(self.save(self.user).status_code, 200)                 # saving again after login: one copy
+        from base.models import SavedRequirement
+        saved = SavedRequirement.objects.get()
+        self.assertEqual((saved.user, saved.category, saved.source_vendor), (self.user, 'Halls', self.source))
+        listing = self.client.get('/api/discovery/saved/').json()
+        self.assertEqual(len(listing), 1)
+        self.assertIn('Location: Tambaram', listing[0]['summary'])
+        self.assertEqual(DiscoveryLead.objects.count(), 0)                      # saving is not consent to be called
+
+    def test_others_cannot_see_saved_requirements(self):
+        self.save(self.user)
+        other = User.objects.create_user(username='other')
+        self.client.force_authenticate(other)
+        self.assertEqual(self.client.get('/api/discovery/saved/').json(), [])
+
+    def test_invalid_requirement_rejected(self):
+        self.assertEqual(self.save(self.user, requirements={'must_have': ['jacuzzi']}).status_code, 400)
+
+
+class BudgetAndNewEventTests(TestCase):
+
+    def setUp(self):
+        self.client = APIClient(HTTP_USER_AGENT=UA)
+        self.user = User.objects.create_user(username='u')
+
+    def test_budget_saved_is_recorded_with_its_source(self):
+        self.client.force_authenticate(self.user)
+        for source in ('discovery', None):
+            body = {'total_budget': 1500000, 'expenses': {'venue': 500000}, **({'source': source} if source else {})}
+            self.assertIn(self.client.post(f'/api/orders/update-budget/{self.user.id}/', body, format='json').status_code, (200, 201))
+        self.assertEqual(sorted(VendorEvent.objects.filter(event_type='budget_saved').values_list('source', flat=True)),
+                         ['budget_planner', 'discovery'])
+
+    def test_budget_saved_cannot_be_sent_by_the_browser(self):
+        r = self.client.post('/api/analytics/events/', {'event_type': 'budget_saved', 'session_id': SESSION}, format='json')
+        self.assertEqual(r.status_code, 400)
+
+    def test_budget_opened_and_save_started_events(self):
+        source = hall('Sri Mahal')
+        for t in ('discovery_budget_opened', 'discovery_save_started'):
+            r = self.client.post('/api/analytics/events/', {'event_type': t, 'session_id': SESSION, 'vendor_id': source._id,
+                                                            'metadata': {'category': 'Halls'}}, format='json')
+            self.assertEqual(r.status_code, 201, t)
+        self.assertEqual(VendorEvent.objects.filter(vendor=source, event_type__startswith='discovery_').count(), 2)

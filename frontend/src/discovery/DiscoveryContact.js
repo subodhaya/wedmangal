@@ -47,8 +47,8 @@ export default function DiscoveryContact({ requirement, sourceVendorId }) {
 
   return (
     <section className="dsc-contact" aria-labelledby="dsc-contact-title">
-      <h2 id="dsc-contact-title">Want us to help you find the right vendors?</h2>
-      <p>A WedMangal team member can call you, understand your wedding plans and suggest suitable vendors. It’s free, and you don’t need it to keep browsing.</p>
+      <h2 id="dsc-contact-title">Want help finding the right vendors?</h2>
+      <p>Share your details and a WedMangal team member can call you about these requirements — they’ll already know what you’re looking for. It’s free, and you don’t need it to keep browsing.</p>
       {!open ? (
         <button type="button" className="dsc-primary" onClick={openForm}>Get help from WedMangal</button>
       ) : (

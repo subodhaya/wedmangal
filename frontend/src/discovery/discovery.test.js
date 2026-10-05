@@ -10,7 +10,7 @@ import DiscoveryContact from './DiscoveryContact';
 import { answersToRequirement, paramsToRequirement, requirementChips, requirementToAnswers,
   requirementToFilters, requirementToParams } from './requirements';
 
-jest.mock('../utils/api', () => ({ __esModule: true, default: { get: jest.fn() }, BASE_URL: '' }));
+jest.mock('../utils/api', () => ({ __esModule: true, default: { get: jest.fn(), post: jest.fn() }, BASE_URL: '' }));
 
 const HALL_ANSWERS = { location: { area: 'Tambaram' }, guests: '500_1000', budget: '2_5l', important: ['parking', 'veg_food', 'budget_friendly', 'hotel'], timeframe: '6_months' };
 const sent = (type) => global.fetch.mock.calls.map(([url, o]) => [url, JSON.parse(o.body)])
@@ -191,7 +191,7 @@ describe('matching results', () => {
     for (const chip of ['Tambaram', '500–1,000 guests', 'Must have: Parking', 'Avoid: Hotel']) expect(within(chips).getByText(chip)).toBeInTheDocument();
     expect(screen.getByText(/capacities aren’t available yet/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Sri Mahal' })).toHaveAttribute('href', '/product/5?ref=discovery');
-    expect(screen.getByRole('heading', { name: 'Want us to help you find the right vendors?' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Want help finding the right vendors?' })).toBeInTheDocument();
     await waitFor(() => expect(sent('discovery_matching_results')).toHaveLength(1));
     expect(sent('discovery_matching_results')[0][1]).toMatchObject({ vendor_id: '42', metadata: { label: '1 results' } });
   });
@@ -200,7 +200,7 @@ describe('matching results', () => {
     api.get.mockResolvedValue({ data: data(0) });
     renderResults();
     expect(await screen.findByText('No exact matches found')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Want us to help you find the right vendors?' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Want help finding the right vendors?' })).toBeInTheDocument();
   });
 
   it('lets the visitor edit the requirement', async () => {

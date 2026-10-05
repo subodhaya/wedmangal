@@ -13,12 +13,12 @@ from datetime import timedelta
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 from base import analytics, discovery
-from base.models import DiscoveryLead, Product, VendorEvent
+from base.models import DiscoveryLead, Product, SavedRequirement, VendorEvent
 
 logger = logging.getLogger(__name__)
 RETRY_WINDOW = timedelta(minutes=10)
@@ -93,3 +93,35 @@ def create_lead(request):
         logger.exception('Could not record discovery_contact_submitted for lead %s', lead.id)
     logger.info('Discovery lead %s saved', lead.id)
     return Response({'id': lead.id}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def saved_requirements(request):
+    """GET: this account's saved requirements. POST {requirements, source_vendor_id?}: save one.
+
+    Saving is for the visitor's own convenience — it is not consent to be contacted.
+    """
+    if request.method == 'GET':
+        items = SavedRequirement.objects.filter(user=request.user)[:10]
+        return Response([{'id': s.id, 'category': s.category, 'requirements': s.requirements,
+                          'summary': discovery.summary_lines(s.requirements), 'created_at': s.created_at} for s in items])
+
+    data = request.data if isinstance(request.data, dict) else {}
+    try:
+        requirements = discovery.clean_requirements(data.get('requirements') or {})
+    except discovery.RequirementError as exc:
+        return Response({'errors': {'requirements': str(exc)}}, status=status.HTTP_400_BAD_REQUEST)
+    source_vendor = None
+    if data.get('source_vendor_id') not in (None, '') and not isinstance(data.get('source_vendor_id'), bool):
+        try:
+            source_vendor = Product.objects.filter(_id=int(data['source_vendor_id']), is_approved=True).first()
+        except (TypeError, ValueError):
+            source_vendor = None
+    # Saving the same requirement twice (e.g. after logging in) keeps one copy
+    existing = SavedRequirement.objects.filter(user=request.user, requirements=requirements).first()
+    if existing:
+        return Response({'id': existing.id, 'saved': True}, status=status.HTTP_200_OK)
+    saved = SavedRequirement.objects.create(user=request.user, category=requirements.get('category') or '',
+                                            requirements=requirements, source_vendor=source_vendor)
+    return Response({'id': saved.id, 'saved': True}, status=status.HTTP_201_CREATED)

@@ -1,7 +1,7 @@
 # base/admin.py
 from django.contrib import admin
 from django.contrib.auth.models import User
-from .models import Profile, Product, Service, Review, Order, OrderItem, Budget, ShippingAddress, ServiceImage, CartItem, Wishlist, BlogPost, VendorEvent, QuoteRequest, ServiceOwnerClaim, DiscoveryLead
+from .models import Profile, Product, Service, Review, Order, OrderItem, Budget, ShippingAddress, ServiceImage, CartItem, Wishlist, BlogPost, VendorEvent, QuoteRequest, ServiceOwnerClaim, DiscoveryLead, SavedRequirement
 from django.db import transaction
 from django.utils import timezone
 from . import analytics, discovery, vendor_profile
@@ -231,3 +231,18 @@ class DiscoveryLeadAdmin(admin.ModelAdmin):
     def requirement_summary(self, obj):
         lines = discovery.summary_lines(obj.requirements, obj.source_vendor)
         return format_html_join('', '<div>{}</div>', ((line,) for line in lines)) or '—'
+
+
+@admin.register(SavedRequirement)
+class SavedRequirementAdmin(admin.ModelAdmin):
+    """Requirements visitors saved for themselves. Not consent to be contacted — see Discovery leads."""
+    list_display = ('id', 'created_at', 'user', 'category', 'summary')
+    list_filter = ('category', 'created_at')
+    readonly_fields = ('user', 'category', 'requirements', 'source_vendor', 'created_at')
+
+    def has_add_permission(self, request):
+        return False
+
+    @admin.display(description='Requirement')
+    def summary(self, obj):
+        return ' · '.join(discovery.summary_lines(obj.requirements)[1:4])

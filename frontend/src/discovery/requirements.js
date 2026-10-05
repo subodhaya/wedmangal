@@ -218,3 +218,27 @@ export function requirementToFilters(req) {
     ...(!req.must_have.includes('veg_food') && req.must_have.includes('nonveg_food') && { food_type: 'nonveg' }),
   };
 }
+
+// ── Budget Planner (existing /budget/ screen) ────────────────────────────────
+// Discovery category → the planner's expense line. Categories without a line just open the planner.
+export const BUDGET_LINES = { Halls: 'venue', Caterers: 'catering', Decorators: 'decoration', Photographers: 'photography' };
+const LINE_LABELS = { venue: 'venue', catering: 'catering', decoration: 'decoration', photography: 'photography' };
+
+// The amount the visitor chose (their upper limit where they gave a range). Per-plate budgets are not
+// converted into a total — that would need a guest count we don't know.
+export function plannerAmount(req) {
+  const b = req?.budget;
+  if (!b || b.unsure || b.per === 'plate') return null;
+  return b.max || b.min || null;
+}
+
+export function budgetPlannerLink(req) {
+  const p = new URLSearchParams({ from: 'discovery' });
+  const line = BUDGET_LINES[req?.category];
+  const amount = plannerAmount(req);
+  if (line) p.set('line', line);
+  if (line && amount) p.set('amount', amount);
+  return `/budget/?${p.toString()}`;
+}
+
+export const budgetLineLabel = (line) => LINE_LABELS[line] || '';
