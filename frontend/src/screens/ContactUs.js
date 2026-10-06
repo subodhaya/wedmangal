@@ -239,6 +239,10 @@ const ContactUs = () => {
                 <a href="tel:+917200152906" style={s.contactCardLink}>
                   +91 72001 52906
                 </a>
+                <br />
+                <a href="tel:+918825783382" style={s.contactCardLink}>
+                  +91 88257 83382
+                </a>
                 <p style={{ ...s.contactCardValue, fontSize: "0.78rem", color: "#9a7a85", marginTop: "3px" }}>
                   Mon–Sat, 9 AM – 7 PM
                 </p>
