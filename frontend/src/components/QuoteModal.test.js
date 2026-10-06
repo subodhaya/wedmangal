@@ -83,3 +83,27 @@ it('keeps the form and explains when the network fails', async () => {
   await waitFor(() => expect(screen.getByRole('button', { name: /send enquiry/i })).toBeEnabled());
   expect(screen.getByLabelText(/^mobile number/i)).toHaveValue('98765 43210');
 });
+
+describe('requirements from the discovery questions', () => {
+  const req = { version: 1, category: 'Halls', location: { area: 'Tambaram' }, guest_count: { min: 500, max: 1000 },
+    budget: null, timeframe: null, event_date: null, must_have: ['parking'], prefer: [], avoid: [], dont_care: [] };
+  afterEach(() => sessionStorage.clear());
+
+  it('includes them for a vendor of the same category and says so in the consent', async () => {
+    sessionStorage.setItem('wm_discovery_requirement', JSON.stringify(req));
+    render(<QuoteModal vendor={{ ...vendor, category: 'halls' }} onClose={() => {}} />);
+    expect(screen.getByText(/event date, message and the requirements I chose with Lotus Hall/)).toBeInTheDocument();
+    fill(); submit();
+    expect(await screen.findByText('Enquiry received')).toBeInTheDocument();
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body).requirements).toEqual(req);
+  });
+
+  it('leaves them out for a different category', async () => {
+    sessionStorage.setItem('wm_discovery_requirement', JSON.stringify(req));
+    render(<QuoteModal vendor={{ ...vendor, category: 'Photographers' }} onClose={() => {}} />);
+    expect(screen.getByText(/event date and message with Lotus Hall/)).toBeInTheDocument();
+    fill(); submit();
+    expect(await screen.findByText('Enquiry received')).toBeInTheDocument();
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body).requirements).toBeUndefined();
+  });
+});

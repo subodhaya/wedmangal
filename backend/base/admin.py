@@ -168,12 +168,14 @@ class BlogPostAdmin(admin.ModelAdmin):
 
 @admin.register(QuoteRequest)
 class QuoteRequestAdmin(admin.ModelAdmin):
-    list_display = ('name', 'phone', 'vendor', 'event_date', 'status', 'sms_status', 'email_status', 'created_at')
+    list_display = ('id', 'name', 'phone', 'vendor', 'event_date', 'status', 'whatsapp_status', 'sms_status',
+                    'email_status', 'created_at')
     list_editable = ('status',)
-    list_filter = ('status', 'sms_status', 'email_status', 'created_at')
+    list_filter = ('status', 'whatsapp_status', 'sms_status', 'email_status', 'created_at')
     search_fields = ('name', 'phone', 'vendor__name')
     readonly_fields = ('vendor', 'user', 'session_id', 'consent', 'source', 'created_at', 'updated_at',
-                       'notified_at', 'sms_status', 'email_status', 'notification_error')
+                       'notified_at', 'whatsapp_status', 'whatsapp_request_id', 'whatsapp_updated_at',
+                       'sms_status', 'sms_fallback_at', 'email_status', 'notification_error', 'requirements')
 
 
 @admin.register(VendorEvent)

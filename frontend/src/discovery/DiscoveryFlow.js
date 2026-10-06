@@ -48,6 +48,8 @@ export default function DiscoveryFlow({ category, sourceVendorId, sourceArea, in
 
   const requirement = answersToRequirement(category, answers);
   const findVendors = () => {
+    // Kept for this browser session so a Get Quote to a vendor of the same category can include it
+    try { sessionStorage.setItem('wm_discovery_requirement', JSON.stringify(requirement)); } catch { /* ignore */ }
     const params = requirementToParams(requirement, sourceVendorId);
     if (onDone) onDone(params);
     else navigate(`/search/?${params.toString()}`);

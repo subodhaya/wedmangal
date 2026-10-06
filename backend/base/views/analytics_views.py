@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
-from base import analytics, notifications, search_intent
+from base import analytics, discovery, notifications, search_intent
 from base.models import Product, QuoteRequest, SearchQuery
 from base.views.product_views import _is_admin
 
@@ -142,6 +142,16 @@ def create_quote_request(request):
     if errors:
         return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
 
+    # Discovery answers the customer chose to include (same category as this vendor only).
+    requirements = {}
+    if isinstance(data.get('requirements'), dict):
+        try:
+            cleaned = discovery.clean_requirements(data['requirements'])
+            if cleaned.get('category') and cleaned['category'].lower() == (vendor.category or '').lower():
+                requirements = cleaned
+        except discovery.RequirementError:
+            requirements = {}
+
     # A retried/double-submitted identical enquiry returns the existing quote:
     # no second lead, no second vendor notification.
     recent = QuoteRequest.objects.filter(
@@ -155,7 +165,7 @@ def create_quote_request(request):
     user, session_id = _visitor(request, data)
     quote = QuoteRequest.objects.create(
         vendor=vendor, user=user, session_id=session_id, name=name, phone=phone,
-        event_date=event_date, message=message, consent=True,
+        event_date=event_date, message=message, consent=True, requirements=requirements,
     )
     try:
         analytics.record_event(

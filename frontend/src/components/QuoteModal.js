@@ -14,8 +14,17 @@ export function validateQuote(form) {
   return errors;
 }
 
+// Requirements the visitor chose in the discovery questions this session (same category only)
+const discoveryRequirement = (vendor) => {
+  try {
+    const req = JSON.parse(sessionStorage.getItem('wm_discovery_requirement'));
+    return req && req.category && req.category.toLowerCase() === String(vendor.category || '').toLowerCase() ? req : null;
+  } catch { return null; }
+};
+
 export default function QuoteModal({ vendor, onClose }) {
   const [form, setForm] = useState({ name: '', phone: '', event_date: '', message: '', consent: false });
+  const [requirement] = useState(() => discoveryRequirement(vendor));
   const [errors, setErrors] = useState({});
   const [step, setStep] = useState('form'); // 'form' | 'sending' | 'done'
   const [submitError, setSubmitError] = useState('');
@@ -55,6 +64,7 @@ export default function QuoteModal({ vendor, onClose }) {
       event_date: form.event_date || null,
       message: form.message.trim(),
       consent: form.consent,
+      ...(requirement && { requirements: requirement }),
     });
     if (ok) {
       setStep('done');
@@ -114,7 +124,7 @@ export default function QuoteModal({ vendor, onClose }) {
             <label className="quote-consent">
               <input type="checkbox" checked={form.consent} onChange={set('consent')}
                 aria-invalid={!!errors.consent} aria-describedby={errors.consent ? 'quote-consent-error' : undefined} />
-              <span>I agree that WedMangal may share my name, mobile number, event date and message with {vendor.name} so they can contact me about this enquiry.</span>
+              <span>I agree that WedMangal may share my name, mobile number, event date{requirement ? ', message and the requirements I chose' : ' and message'} with {vendor.name} so they can contact me about this enquiry.</span>
             </label>
             {fieldError('consent')}
 

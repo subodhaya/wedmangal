@@ -57,6 +57,7 @@ urlpatterns = [
     path('api/search/', include('base.urls.search_urls')),
     path('api/vendors/', include('base.urls.vendor_urls')),
     path('api/discovery/', include('base.urls.discovery_urls')),
+    path('api/notifications/', include('base.urls.notification_urls')),
 ]
 
 # Add static and media file serving

@@ -410,6 +410,23 @@ class QuoteRequest(models.Model):
     email_status       = models.CharField(max_length=8, choices=NotifyStatus.choices, blank=True, default='')
     notification_error = models.CharField(max_length=255, blank=True, default='')
 
+    # WhatsApp (preferred channel). Statuses follow the provider: accepted is not delivered.
+    class WhatsAppStatus(models.TextChoices):
+        ACCEPTED  = 'accepted', 'Accepted by provider'
+        SENT      = 'sent', 'Sent'
+        DELIVERED = 'delivered', 'Delivered'
+        READ      = 'read', 'Read'
+        FAILED    = 'failed', 'Failed'
+        SKIPPED   = 'skipped', 'Skipped'
+
+    whatsapp_status     = models.CharField(max_length=10, choices=WhatsAppStatus.choices, blank=True, default='')
+    whatsapp_request_id = models.CharField(max_length=64, blank=True, default='', db_index=True)
+    whatsapp_updated_at = models.DateTimeField(null=True, blank=True)
+    sms_fallback_at     = models.DateTimeField(null=True, blank=True)   # claim for one late SMS after a WhatsApp failure
+
+    # Discovery answers the customer chose to send with this enquiry (base/discovery.py structure)
+    requirements        = models.JSONField(default=dict, blank=True)
+
     class Meta:
         ordering = ['-created_at']
         indexes = [models.Index(fields=['vendor', 'created_at'], name='quoterequest_vendor_time')]
