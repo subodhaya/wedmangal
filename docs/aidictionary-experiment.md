@@ -23,7 +23,7 @@ Implementation: `backend/base/aidictionary.py` (hand-checked fixture + server-re
 
 - Baseline round 1: **2026-10-08**, before the page was publicly reachable (see §9).
 - Baseline round 2: run again ~7 days later, still before/at publication if possible, to measure normal variation.
-- Publication date: record here when the page first returns HTTP 200 publicly: `____`.
+- Publication date: **2026-10-08** (first public HTTP 200 after the nginx route was added; commit ecc5bcf).
 
 ## 4. Facts included (with status)
 
