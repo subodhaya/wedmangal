@@ -14,6 +14,7 @@ NS = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
 
 # Public (non-login) routes from frontend/src/App.js. Keep in sync if routes change.
 PUBLIC_ROUTE_PATTERNS = [
+    r'/AIDictionary/[a-z0-9-]+',          # Django-rendered knowledge record (docs/aidictionary-experiment.md)
     r'/',
     r'/plan',
     r'/login',

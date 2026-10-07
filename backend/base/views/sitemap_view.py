@@ -53,6 +53,15 @@ def sitemap_xml(request):
     <priority>0.7</priority>
   </url>""")
 
+    # AI Dictionary experiment: exactly one record (docs/aidictionary-experiment.md)
+    from base import aidictionary
+    urls.append(f"""  <url>
+    <loc>{aidictionary.page_url(aidictionary.RECORD)}</loc>
+    <lastmod>{aidictionary.VERIFIED_ON}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>""")
+
     # Blog posts
     try:
         posts = BlogPost.objects.filter(published=True).values('slug', 'updated_at')

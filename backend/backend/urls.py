@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
+from base.views.aidictionary_views import aidictionary_page
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
@@ -67,6 +68,7 @@ urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 # Server-rendered SEO for public React pages (must come before the index.html fallback)
 urlpatterns += [
     re_path(r'^product/(?P<pk>\d+)/?$', product_page, name='seo-product'),
+    re_path(r'^AIDictionary/(?P<slug>[^/]+)/?$', aidictionary_page, name='aidictionary'),  # any other slug → real 404
     re_path(r'^category/(?P<category>[^/]+)/?$', category_page, name='seo-category'),
 ]
 
