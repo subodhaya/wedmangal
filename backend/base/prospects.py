@@ -195,6 +195,11 @@ def normalize_name(name):
     return re.sub(r'\s+', ' ', n).strip()
 
 
+def compact_name(name):
+    """Name key that ignores spacing: "Siva Sakthi" and "Sivasakthi" are the same name."""
+    return normalize_name(name).replace(' ', '')
+
+
 def meaningful_address(address):
     """A street-level address: something beyond area + city, and a PIN code."""
     if not re.search(r'\b6\d{5}\b', address or ''):
@@ -233,12 +238,14 @@ def find_duplicate(p):
             hit = others.filter(**{field: value}).order_by('pk').first()
             if hit:
                 return hit, f'same {label} as prospect #{hit.pk}'
-    same_name = others.filter(normalized_name=p.normalized_name).order_by('pk')
+    key = compact_name(p.business_name)
+    same_name = [o for o in others.filter(normalized_name__startswith=p.normalized_name[:1]).order_by('pk')
+                 if compact_name(o.business_name) == key]
     for hit in same_name:
         if _same_address(hit.address, p.address):
             return hit, f'same name and address as prospect #{hit.pk}'
-    if same_name.exists():
-        return None, f'possible branch: same name as prospect #{same_name.first().pk}, different address'
+    if same_name:
+        return None, f'possible branch: same name as prospect #{same_name[0].pk}, different address'
     return None, None
 
 
@@ -261,7 +268,7 @@ class ProductIndex:
             dom = website_domain(pr.website_url or '')
             if dom:
                 self.by_domain.setdefault(dom, pr)
-            self.by_name.setdefault(normalize_name(pr.name), []).append(pr)
+            self.by_name.setdefault(compact_name(pr.name), []).append(pr)
 
     def match(self, p):
         """→ (product, strong: bool, reason)."""
@@ -271,7 +278,7 @@ class ProductIndex:
         if p.website_domain and p.website_domain in self.by_domain:
             pr = self.by_domain[p.website_domain]
             return pr, True, f'same website as existing listing #{pr._id}'
-        for pr in self.by_name.get(p.normalized_name, []):
+        for pr in self.by_name.get(compact_name(p.business_name), []):
             same_area = p.business_area and p.business_area.lower() in ((pr.address or '') + ' ' + (pr.area_name or '')).lower()
             if same_area or _same_address(pr.address, p.address):
                 return pr, True, f'same name in the same area as existing listing #{pr._id}'

@@ -96,6 +96,15 @@ class ProspectImportTests(TestCase):
         self.assertEqual((p.matches_product_id, p.decision), (pr.pk, D.DUPLICATE))
         self.assertEqual(Product.objects.filter(pk=pr.pk).values().get(), before)
 
+    def test_existing_product_match_ignores_spacing_in_the_name(self):
+        pr = Product.objects.create(name='Sivasakthi Thirumana Mandapam', category='Halls', area_name='Tambaram',
+                                    address='National Highway 45, Tambaram, Chennai 600045', personal_phone='9566189888',
+                                    is_approved=True)
+        load(record(name='Siva Sakthi Thirumana Mandapam',
+                    address='No. 5/36, G.S.T. Road, Tambaram West, Chennai - 600045'))
+        p = VendorProspect.objects.get()
+        self.assertEqual((p.matches_product_id, p.quality_passed), (pr.pk, False))
+
     def test_unknown_attributes_stay_unknown(self):
         load(record(attributes={'ac': True, 'parking': None, 'rooms': 'unknown', 'veg_food': {'value': False}}))
         attrs = VendorProspect.objects.get().attributes
