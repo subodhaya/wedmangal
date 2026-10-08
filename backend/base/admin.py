@@ -1,7 +1,7 @@
 # base/admin.py
 from django.contrib import admin
 from django.contrib.auth.models import User
-from .models import Profile, Product, Service, Review, Order, OrderItem, Budget, ShippingAddress, ServiceImage, CartItem, Wishlist, BlogPost, VendorEvent, QuoteRequest, ServiceOwnerClaim, DiscoveryLead, SavedRequirement
+from .models import Profile, Product, Service, Review, Order, OrderItem, Budget, ShippingAddress, ServiceImage, CartItem, Wishlist, BlogPost, VendorEvent, QuoteRequest, ServiceOwnerClaim, DiscoveryLead, SavedRequirement, VendorProspect
 from django.db import transaction
 from django.utils import timezone
 from . import analytics, discovery, vendor_profile
@@ -248,3 +248,73 @@ class SavedRequirementAdmin(admin.ModelAdmin):
     @admin.display(description='Requirement')
     def summary(self, obj):
         return ' · '.join(discovery.summary_lines(obj.requirements)[1:4])
+
+
+@admin.register(VendorProspect)
+class VendorProspectAdmin(admin.ModelAdmin):
+    """Internal research records — NOT vendors. Nothing here is public, and no action creates a listing."""
+    list_display = ('business_name', 'category_list', 'business_area', 'area_status', 'phone', 'website_domain',
+                    'quality_score', 'quality_passed', 'decision', 'source_name', 'duplicate_of', 'matches_product',
+                    'failures')
+    list_filter = ('decision', 'quality_passed', 'area_status', 'research_category', 'research_area',
+                   'business_area', 'source_name', 'data_source', 'verification_status')
+    search_fields = ('business_name', 'normalized_name', 'address', 'phone', 'website_domain', 'source_listing_url')
+    list_per_page = 50
+    actions = ('mark_keep', 'mark_needs_review', 'mark_reject', 'mark_duplicate', 'mark_ready_for_outreach')
+    readonly_fields = ('normalized_name', 'website_domain', 'business_area', 'area_status', 'area_evidence',
+                       'quality_passed', 'quality_score', 'quality_failures', 'missing_fields', 'duplicate_of',
+                       'matches_product', 'scraped_at', 'created_at', 'updated_at', 'decision_by')
+    fieldsets = (
+        ('Decision', {'fields': ('decision', 'decision_by', 'verification_status', 'notes')}),
+        ('Quality', {'fields': ('quality_passed', 'quality_score', 'quality_failures', 'missing_fields',
+                                'duplicate_of', 'matches_product')}),
+        ('Business', {'fields': ('business_name', 'normalized_name', 'categories', 'category_evidence',
+                                 'phone', 'website_url', 'website_domain', 'description', 'services')}),
+        ('Location', {'fields': ('address', 'pincode', 'business_area', 'area_status', 'area_evidence',
+                                 'service_area', 'city')}),
+        ('Facts (only what a source states)', {'fields': ('rating', 'review_count', 'rating_source', 'attributes',
+                                                         'capacity', 'pricing')}),
+        ('Sources', {'fields': ('source_name', 'source_url', 'source_listing_url', 'sources', 'data_source',
+                                'google_place_id', 'research_category', 'research_area', 'scraped_at',
+                                'created_at', 'updated_at')}),
+    )
+
+    def has_add_permission(self, request):
+        return False                                  # prospects come from `import_prospects`, with sources
+
+    @admin.display(description='Categories')
+    def category_list(self, obj):
+        return ', '.join(obj.categories or []) or '—'
+
+    @admin.display(description='Failures / review notes')
+    def failures(self, obj):
+        return '; '.join(obj.quality_failures or [])[:160] or '—'
+
+    def save_model(self, request, obj, form, change):
+        if change and 'decision' in form.changed_data:
+            obj.decision_by = 'person'
+        super().save_model(request, obj, form, change)
+
+    def _decide(self, request, queryset, decision):
+        n = queryset.update(decision=decision, decision_by='person')
+        self.message_user(request, f'{n} prospect(s) marked "{VendorProspect.Decision(decision).label}".')
+
+    @admin.action(description='Mark as KEEP')
+    def mark_keep(self, request, queryset):
+        self._decide(request, queryset, VendorProspect.Decision.KEEP)
+
+    @admin.action(description='Mark as NEEDS REVIEW')
+    def mark_needs_review(self, request, queryset):
+        self._decide(request, queryset, VendorProspect.Decision.NEEDS_REVIEW)
+
+    @admin.action(description='Mark as REJECT')
+    def mark_reject(self, request, queryset):
+        self._decide(request, queryset, VendorProspect.Decision.REJECT)
+
+    @admin.action(description='Mark as DUPLICATE')
+    def mark_duplicate(self, request, queryset):
+        self._decide(request, queryset, VendorProspect.Decision.DUPLICATE)
+
+    @admin.action(description='Mark as READY FOR OUTREACH (no message is sent)')
+    def mark_ready_for_outreach(self, request, queryset):
+        self._decide(request, queryset, VendorProspect.Decision.READY_FOR_OUTREACH)

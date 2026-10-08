@@ -1,8 +1,9 @@
+raise SystemExit("RETIRED: this scraper wrote unreviewed data straight into production Product/Service/Review/User tables and must not be run. New vendor data goes into VendorProspect via `manage.py import_prospects` (docs/prospects.md).")  # noqa: E501 -- hard guard, first statement on purpose
 import requests
 from products.models import Product
 from django.contrib.auth.models import User
 
-API_KEY = "AIzaSyA0d-tpFtfSFM7S2TZhCOodTM7g4BdkLho"
+API_KEY = "REMOVED-see-docs/prospects.md"  # leaked key removed; it must be revoked in Google Cloud
 
 def import_vendors():
     query = "wedding decorators in Chennai"

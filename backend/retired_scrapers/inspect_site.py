@@ -1,3 +1,4 @@
+raise SystemExit("RETIRED: this scraper wrote unreviewed data straight into production Product/Service/Review/User tables and must not be run. New vendor data goes into VendorProspect via `manage.py import_prospects` (docs/prospects.md).")  # noqa: E501 -- hard guard, first statement on purpose
 """
 Site Inspector — Run this FIRST before the main scraper
 =========================================================

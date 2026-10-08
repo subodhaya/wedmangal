@@ -540,3 +540,101 @@ class SavedRequirement(models.Model):
 
     def __str__(self):
         return f'{self.user} – {self.category or "requirement"} ({self.created_at:%Y-%m-%d})'
+
+
+# ── Vendor prospects (internal research only) ────────────────────────────────
+
+class VendorProspect(models.Model):
+    """A business found during research. NOT a WedMangal vendor.
+
+    Isolated on purpose: no public view, serializer, search, sitemap or vendor page reads this table,
+    and nothing here creates a User, Product, Service or Review. See docs/prospects.md and base/prospects.py.
+    `attributes` uses the Product.attributes keys and rule: a missing key means unknown, never False.
+    """
+
+    class AreaStatus(models.TextChoices):
+        LOCATED_IN = 'located_in', 'Located in the area'
+        SERVES     = 'serves', 'Serves the area'
+        UNKNOWN    = 'unknown', 'Unknown'
+
+    class DataSource(models.TextChoices):
+        OFFICIAL  = 'official', 'Official website'
+        DIRECTORY = 'directory', 'Directory'
+        GOOGLE    = 'google', 'Google'
+        OTHER     = 'other', 'Other'
+
+    class Decision(models.TextChoices):
+        NEW                = 'new', 'New'                              # passed the gates, awaiting a person
+        NEEDS_REVIEW       = 'needs_review', 'Needs review'
+        KEEP               = 'keep', 'Keep'
+        REJECT             = 'reject', 'Reject'
+        DUPLICATE          = 'duplicate', 'Duplicate'
+        READY_FOR_OUTREACH = 'ready_for_outreach', 'Ready for outreach'
+
+    class Verification(models.TextChoices):
+        UNVERIFIED      = 'unverified', 'Unverified'
+        SOURCE_CHECKED  = 'source_checked', 'Source page fetched and parsed'
+        MANUALLY_CHECKED = 'manually_checked', 'Checked by a person'
+
+    # Identity
+    business_name     = models.CharField(max_length=200)
+    normalized_name   = models.CharField(max_length=200, db_index=True)
+    categories        = models.JSONField(default=list, blank=True)      # CUSTOMER_CATEGORIES keys
+    category_evidence = models.JSONField(default=list, blank=True)      # [{"category", "source_url", "quote"}]
+
+    # Location
+    business_area = models.CharField(max_length=150, blank=True, default='')   # one of CHENNAI_AREAS, or blank
+    area_status   = models.CharField(max_length=12, choices=AreaStatus.choices, default=AreaStatus.UNKNOWN)
+    service_area  = models.CharField(max_length=150, blank=True, default='')
+    city          = models.CharField(max_length=100, blank=True, default='')
+    address       = models.TextField(blank=True, default='')
+    pincode       = models.CharField(max_length=6, blank=True, default='')
+    area_evidence = models.JSONField(default=list, blank=True)          # [{"source_url", "quote"}]
+
+    # Contact (public business details only)
+    phone       = models.CharField(max_length=15, blank=True, default='', db_index=True)   # 10-digit, validated
+    website_url = models.URLField(max_length=300, blank=True, default='')
+    website_domain = models.CharField(max_length=200, blank=True, default='', db_index=True)
+
+    # Sources
+    source_name        = models.CharField(max_length=100, blank=True, default='')
+    source_url         = models.URLField(max_length=500, blank=True, default='')       # page where it was found
+    source_listing_url = models.URLField(max_length=500, blank=True, default='', db_index=True)  # its own page
+    sources            = models.JSONField(default=list, blank=True)    # [{"url", "name", "fetched_at", "status"}]
+    data_source        = models.CharField(max_length=10, choices=DataSource.choices, default=DataSource.DIRECTORY)
+    google_place_id    = models.CharField(max_length=200, blank=True, default='', db_index=True)
+    research_category  = models.CharField(max_length=32, blank=True, default='')       # what we searched for
+    research_area      = models.CharField(max_length=150, blank=True, default='')
+
+    # Facts — only what a source states
+    rating        = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True)
+    review_count  = models.PositiveIntegerField(null=True, blank=True)
+    rating_source = models.CharField(max_length=300, blank=True, default='')
+    description   = models.TextField(blank=True, default='')
+    services      = models.JSONField(default=list, blank=True)
+    attributes    = models.JSONField(default=dict, blank=True)          # Product.attributes keys; missing = unknown
+    capacity      = models.JSONField(null=True, blank=True)             # {"value", "source_url", "quote"} if stated
+    pricing       = models.JSONField(null=True, blank=True)             # {"value", "source_url", "quote"} if stated
+
+    # Workflow
+    scraped_at          = models.DateTimeField(null=True, blank=True)
+    verification_status = models.CharField(max_length=20, choices=Verification.choices, default=Verification.UNVERIFIED)
+    decision            = models.CharField(max_length=20, choices=Decision.choices, default=Decision.NEW, db_index=True)
+    decision_by         = models.CharField(max_length=10, default='auto')   # 'auto' (import rules) or 'person'
+    quality_passed      = models.BooleanField(default=False, db_index=True)
+    quality_score       = models.PositiveSmallIntegerField(default=0)
+    quality_failures    = models.JSONField(default=list, blank=True)
+    missing_fields      = models.JSONField(default=list, blank=True)
+    duplicate_of        = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True,
+                                            related_name='duplicates')
+    matches_product     = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True,
+                                            related_name='+')   # recorded only; the Product is never changed
+    notes               = models.TextField(blank=True, default='')
+    created_at          = models.DateTimeField(auto_now_add=True)
+    updated_at          = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-quality_score', 'business_name']
+
+    def __str__(self):
+        return f'{self.business_name} ({", ".join(self.categories) or "no category"}, {self.business_area or "area unknown"})'
