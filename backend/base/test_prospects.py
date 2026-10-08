@@ -131,6 +131,17 @@ class ProspectImportTests(TestCase):
         self.assertEqual(VendorProspect.objects.get(business_name='Kalyan Hometel').decision, D.NEEDS_REVIEW)
         self.assertTrue(VendorProspect.objects.get(business_name__endswith='Maaligai').quality_passed)
 
+    def test_listing_text_alone_does_not_make_a_restaurant_a_hall(self):
+        load(record(name='Truly Herbivore', url='https://e.org/r', category_evidence=[
+            {'category': 'Halls', 'kind': 'business_text', 'quote': 'restaurant with a party hall for 80 guests'}]))
+        p = VendorProspect.objects.get()
+        self.assertEqual(p.decision, D.NEEDS_REVIEW)
+        self.assertTrue(any('only the listing text' in f for f in p.quality_failures))
+
+    def test_generic_name_is_not_an_identifiable_business(self):
+        load(record(name='Party hall', url='https://e.org/g'))
+        self.assertEqual(VendorProspect.objects.get().decision, D.NEEDS_REVIEW)
+
     def test_directory_label_alone_is_not_enough(self):
         load(record(name='Sri Lakshmi', evidence_kind='directory_label'))
         p = VendorProspect.objects.get()

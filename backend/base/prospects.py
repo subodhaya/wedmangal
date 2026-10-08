@@ -31,7 +31,7 @@ CATEGORY_WORDS = {
     'Halls': (r'kalyana\s*mahal|kalyana\s*mandapam|thirumana\s*(mandapam|mahal|arangam|nilayam)|marriage\s*hall|'
               r'wedding\s*hall|wedding\s*venue|banquet|convention\s*(centre|center|hall)|mandapam|mandapa|mahal|'
               r'\bhall\b|community\s*hall|mini\s*hall|party\s*hall|arangam|maaligai'),
-    'Photographers': r'photograph|wedding\s*films?|candid|cinematograph|\bclicks?\b|\bphotos?\b',
+    'Photographers': r'photograph|wedding\s*(films?|stories|gallery)|candid|cinematograph|\bclicks?\b',
     'Caterers': r'cater(er|ers|ing)|\bsamayal\b',
     'Decorators': r'decorat|\bdecor\b|flower\s*works|\bstage\s*designers?',
     'Makeup_Artist': r'make\s*-?\s*up|makeover|\bmua\b|bridal\s*(studio|beauty|salon|lounge)',
@@ -40,13 +40,25 @@ CATEGORY_WORDS = {
 }
 # Names that say the business is something else, whatever a directory filed it under.
 NOT_CATEGORY = {
-    'Photographers': r'colou?r\s*lab|photo\s*express|xerox|printing|\blab\b|frames?\b|digital\s*print',
+    'Photographers': (r'colou?r|photo\s*express|xerox|printing|\blab\b|frames?\b|digital\s*print|\bshop\b|stores?\b|'
+                      r'album|manufactur|\bfilms?\s+manufactur'),
     'Halls': (r'\bhotels?\b|hometel|\binn\b|\bresorts?\b|\bresidency\b|\blodge\b|\bsuites\b|apartments|'
               r'restaurant|biri?yani|briyani|theatre|entertainments?|\bschool\b|\bchurch\b|\btemple\b'),  # review
     'Makeup_Artist': r'\bacademy\b|\binstitute\b|\btraining\b',
+    'Caterers': r'institute|college|academy|technology|training|hotel\s*management|equipments?|industrial|matrimony',
 }
 EVIDENCE_KINDS = {'name', 'business_text', 'official_site', 'directory_label'}
-STRONG_KINDS = EVIDENCE_KINDS - {'directory_label'}
+# Proof that a business IS in a category: its name or its official site. Listing text is kept as evidence for
+# the reviewer but is not enough on its own — restaurants mention a "party hall", event companies mention
+# "decoration", studios mention "wedding photography" (seen in the 2026-10-09 data).
+STRONG_KINDS = {'name', 'official_site'}
+STRONG_KINDS_FOR = {}
+# A name made only of these words doesn't identify a business ("Party hall", "Mini Hall AC").
+GENERIC_NAME_WORDS = {'party', 'hall', 'halls', 'mini', 'ac', 'a', 'c', 'marriage', 'mahal', 'function', 'banquet',
+                      'banquets', 'community', 'wedding', 'kalyana', 'mandapam', 'thirumana', 'the', 'and', 'photo',
+                      'photography', 'studio', 'catering', 'caterers', 'decorators', 'events', 'makeup', 'artist',
+                      'bridal', 'mehndi', 'mehendi', 'dj', 'services', 'service', 'professional', 'chennai', 'air', 'condition',
+                      'conditioned', 'contractors', 'contractor'}
 
 
 def category_signals(category, name, business_text=''):
@@ -86,11 +98,14 @@ def check_categories(name, categories, evidence):
         pattern = CATEGORY_WORDS.get(key)
         mine = [e for e in mine if e['kind'] != 'name' or e['quote'].strip().lower() == (name or '').strip().lower()]
         mine = [e for e in mine if e['kind'] == 'directory_label' or (pattern and re.search(pattern, e['quote'], re.I))]
-        strong = [e for e in mine if e['kind'] in STRONG_KINDS]
+        strong = [e for e in mine if e['kind'] in STRONG_KINDS_FOR.get(key, STRONG_KINDS)]
         if not mine:
             failures.append(f'no evidence for category {key}')
         elif not strong:
-            review.append(f'{key}: only a directory label, nothing from the business itself')
+            if any(e['kind'] == 'business_text' for e in mine):
+                review.append(f'{key}: only the listing text mentions it, not the name or official site')
+            else:
+                review.append(f'{key}: only a directory label, nothing from the business itself')
         not_pattern = NOT_CATEGORY.get(key)
         if not_pattern and re.search(not_pattern, name or '', re.I):
             review.append(f'{key}: name suggests a different kind of business ("{name}")')
@@ -295,6 +310,8 @@ def evaluate(p, products):
     failures, review = [], []
     if not (p.business_name or '').strip():
         failures.append('no business name')
+    elif set(normalize_name(p.business_name).split()) <= GENERIC_NAME_WORDS:
+        review.append(f'name "{p.business_name}" is generic — not enough to identify the business')
     p.categories, cat_fail, cat_review = check_categories(p.business_name, p.categories, p.category_evidence)
     failures += cat_fail
     review += cat_review
