@@ -778,6 +778,9 @@ def getProduct(request, pk):
         product = Product.objects.get(_id=pk)
     except (Product.DoesNotExist, ValueError, TypeError):
         return Response({'detail': 'Vendor not found'}, status=status.HTTP_404_NOT_FOUND)
+    if not product.is_approved and not vendor_profile.can_manage(request.user, product):
+        # Hidden listings (awaiting review, or taken down) exist only for their owner and staff.
+        return Response({'detail': 'Vendor not found'}, status=status.HTTP_404_NOT_FOUND)
     serializer = ProductReviewSerializer(product, many=False)
     data = _public(serializer.data)
     data['listing_status'] = vendor_profile.listing_status(product)   # unclaimed | claimed | verified
