@@ -28,6 +28,7 @@ function SearchResultScreen() {
   const q = params.get('q') || '';
   const category = params.get('category') || params.get('vendor') || '';  // ?vendor= is the old URL format
   const area = params.get('area') || '';
+  const onlyArea = params.get('only_area') === '1';
   const minRating = params.get('min_rating') || '';
   const sort = params.get('sort') || 'relevance';
   const page = Number(params.get('page') || 1);
@@ -60,7 +61,7 @@ function SearchResultScreen() {
       budget_min: params.get('budget_min') || undefined, budget_max: params.get('budget_max') || undefined,
       must: params.get('must') || undefined, avoid: params.get('avoid') || undefined, from: 'discovery',
     } : {};
-    api.get('/api/search/', { params: { q, category, area: area || (fromDiscovery ? params.get('near') || '' : ''), min_rating: minRating, sort, page, ...requirementParams } })
+    api.get('/api/search/', { params: { q, category, area: area || (fromDiscovery ? params.get('near') || '' : ''), min_rating: minRating, sort, page, ...(onlyArea && { only_area: '1' }), ...requirementParams } })
       .then(({ data }) => {
         if (!active) return;
         setState({ loading: false, error: '', data });
@@ -86,7 +87,7 @@ function SearchResultScreen() {
       })
       .catch(() => active && setState({ loading: false, error: 'Search is unavailable right now. Please try again.', data: null }));
     return () => { active = false; };
-  }, [q, category, area, minRating, sort, page, fromDiscovery, params, requirement, sourceVendorId]);
+  }, [q, category, area, onlyArea, minRating, sort, page, fromDiscovery, params, requirement, sourceVendorId]);
 
   // Change filters in the URL. Any filter change goes back to page 1.
   const update = (changes) => {
@@ -146,11 +147,21 @@ function SearchResultScreen() {
       <div className="sr-header">
         <h1>{heading}</h1>
         {q && (categoryLabel || applied.area) && <p className="sr-query">“{q}”</p>}
-        {d && (
+        {d && (d.area_results ? (
+          <p className="sr-count">
+            <strong>{d.area_results.in_area.toLocaleString('en-IN')}</strong> in {d.area_results.area}
+            {d.area_results.nearby > 0 && <> · <strong>{d.area_results.nearby.toLocaleString('en-IN')}</strong> nearby</>}
+            {(d.area_results.nearby > 0 || onlyArea) && (
+              <button type="button" className="sr-area-toggle" onClick={() => update({ only_area: onlyArea ? '' : '1' })}>
+                {onlyArea ? 'Include nearby areas' : `Only ${d.area_results.area}`}
+              </button>
+            )}
+          </p>
+        ) : (
           <p className="sr-count">
             <strong>{d.count.toLocaleString('en-IN')}</strong> {d.count === 1 ? 'vendor' : 'vendors'} found
           </p>
-        )}
+        ))}
         {fromDiscovery && (
           <div className="sr-requirements">
             <div className="sr-chips" aria-label="Your requirements">
@@ -257,12 +268,24 @@ function SearchResultScreen() {
             </div>
           ) : d && (
             <>
+              {d.area_results && d.area_results.in_area === 0 && (
+                <p className="sr-note">No vendors listed in {d.area_results.area} yet — showing vendors in nearby areas.</p>
+              )}
+              {[d.results.filter(v => !v.nearby), d.results.filter(v => v.nearby)].map((group, g) => group.length > 0 && (
+              <React.Fragment key={g}>
+              {g === 1 && d.area_results && (
+                <h2 className="sr-nearby-heading">
+                  Nearby{d.area_results.nearby_areas.length > 0 && ` — ${d.area_results.nearby_areas.slice(0, 5).join(', ')}`}
+                </h2>
+              )}
               <div className="sr-grid">
-                {d.results.map((vendor, i) => (
-                  <VendorResultCard key={vendor._id} vendor={vendor} query={q} position={(d.page - 1) * 12 + i + 1}
+                {group.map(vendor => (
+                  <VendorResultCard key={vendor._id} vendor={vendor} query={q} position={(d.page - 1) * 12 + d.results.indexOf(vendor) + 1}
                     onOpen={() => trackerRef.current.flush()} fromDiscovery={fromDiscovery} />
                 ))}
               </div>
+              </React.Fragment>
+              ))}
               {fromDiscovery && <DiscoveryContact requirement={requirement} sourceVendorId={sourceVendorId} />}
               <Paginate page={d.page} pages={d.pages} handlePageChange={p => { update({ page: String(p) }); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
             </>

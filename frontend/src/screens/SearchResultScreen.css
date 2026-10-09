@@ -125,3 +125,8 @@
 /* Discovery: the visitor's requirement, editable */
 .sr-requirements { margin-top: 10px; }
 .sr-edit-req { margin-top: 10px; background: none; border: 0; padding: 4px 0; color: #5e143f; font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+/* Area results: "in {area}" first, then a labelled nearby group */
+.sr-area-toggle { margin-left: 10px; background: none; border: 1px solid currentColor; border-radius: 999px;
+  padding: 2px 10px; font-size: 0.85rem; color: var(--plum, #6b2d5c); cursor: pointer; }
+.sr-nearby-heading { font-size: 1.05rem; font-weight: 600; margin: 24px 0 12px; color: var(--plum-dark, #4a1f40); }

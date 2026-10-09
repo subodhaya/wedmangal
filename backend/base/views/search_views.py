@@ -20,7 +20,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from base import discovery, search_intent as si
+from base import areas, discovery, search_intent as si
 from base.models import Product
 
 PAGE_SIZE = 12
@@ -110,9 +110,8 @@ def _without_place(query, term):
 
 
 def _area_q(area):
-    """Vendor's stored area, or the area appearing in its Google address ("T Nagar" ~ "T. Nagar")."""
-    pattern = r'[ .]*'.join(re.escape(w) for w in re.findall(r'[A-Za-z]+', area))
-    return Q(area_name__iexact=area) | Q(address__iregex=pattern)
+    """Vendors located in the area (stored area, or an address part that IS the area) — base/areas.py."""
+    return areas.in_area_q(area)
 
 
 def _category_label(category):
@@ -154,12 +153,12 @@ def _base_queryset():
     )
 
 
-def _filtered(category=None, area=None, min_rating=None, keyword_tokens=None, place_word=None):
+def _filtered(category=None, area=None, min_rating=None, keyword_tokens=None, place_word=None, nearby=False):
     qs = _base_queryset()
     if category:
         qs = qs.filter(category__iexact=category)
-    if area:
-        qs = qs.filter(_area_q(area))
+    if area:   # in the area (area_rank 3/2), plus its neighbours (area_rank 1) when nearby=True
+        qs = areas.with_area_rank(qs, area, include_nearby=nearby)
     if place_word:
         qs = qs.filter(_place_word_q(place_word))
     if min_rating:
@@ -264,7 +263,8 @@ def search_vendors(request):
     unmatched = _unmatched_location(query, area)
     place_word = unmatched if unmatched and structured else None
 
-    qs = _filtered(category, area, min_rating, keyword_tokens, place_word)
+    only_area = params.get('only_area') == '1'
+    qs = _filtered(category, area, min_rating, keyword_tokens, place_word, nearby=not only_area)
     # Must-haves / avoids: exclude only known contradictions, rank known matches first (Unknown ≠ No)
     qs = discovery.apply_to_queryset(qs, must, avoid)
     if name_tokens:  # vendor-name matches rank first (for name searches and structured ones)
@@ -273,23 +273,22 @@ def search_vendors(request):
              for t in name_tokens), Value(0)))
     else:
         qs = qs.annotate(name_rank=Value(0, output_field=IntegerField()))
-    if area:
-        qs = qs.annotate(area_rank=Case(When(area_name__iexact=area, then=Value(2)), default=Value(1),
-                                        output_field=IntegerField()))
-    else:
+    if not area:
         qs = qs.annotate(area_rank=Value(0, output_field=IntegerField()))
 
     rating_desc = F('avg_rating').desc(nulls_last=True)
+    # In-area results always come before nearby ones, whatever the sort (area_rank is 0 without an area)
     if sort == 'rating':
-        qs = qs.order_by(rating_desc, '_id')
+        qs = qs.order_by('-area_rank', rating_desc, '_id')
     elif sort == 'newest':
-        qs = qs.order_by('-createdAt', '_id')
+        qs = qs.order_by('-area_rank', '-createdAt', '_id')
     else:
-        qs = qs.order_by('-name_rank', '-area_rank', '-requirement_rank', rating_desc, '_id')
+        qs = qs.order_by('-area_rank', '-name_rank', '-requirement_rank', rating_desc, '_id')
 
     paginator = Paginator(qs, PAGE_SIZE)
     page_obj = paginator.get_page(page)
     count = paginator.count
+    in_area_count = qs.filter(area_rank__gte=2).count() if area else None
 
     suggestions = []
     if count == 0:
@@ -327,7 +326,10 @@ def search_vendors(request):
         'requirements': {'guests_min': guests_min, 'guests_max': guests_max, 'budget_min': budget_min,
                          'budget_max': budget_max, 'must': must, 'avoid': avoid},
         'suggestions': suggestions,
-        'results': [_card(p) for p in page_obj.object_list],
+        # "In {area}" first, then a labelled nearby group (neighbour map in base/areas.py)
+        'area_results': ({'area': area, 'in_area': in_area_count, 'nearby': count - in_area_count,
+                          'nearby_areas': areas.nearby(area), 'only_area': only_area} if area else None),
+        'results': [{**_card(p), 'nearby': bool(area) and p.area_rank == 1} for p in page_obj.object_list],
         'options': {
             'categories': [{'key': k, 'label': v} for k, v in CUSTOMER_CATEGORIES],
             'ratings': list(RATING_OPTIONS),

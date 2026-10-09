@@ -1284,8 +1284,10 @@ def getProducts(request):
 
     if city:
         qs = qs.filter(city__icontains=city)
-    if area_name:
-        qs = qs.filter(area_name__icontains=area_name)
+    if area_name:   # same matcher as search: in the area first, then its neighbours (base/areas.py)
+        from base import areas
+        qs = areas.with_area_rank(qs, areas.canonical(area_name) or area_name.strip(),
+                                  include_nearby=request.query_params.get('only_area') != '1')
 
     if available == 'true':
         qs = qs.filter(is_available_today=True)
@@ -1357,15 +1359,16 @@ def getProducts(request):
         paginator = None
 
     else:
-        # 📊 Normal sorting (with pagination)
+        # 📊 Normal sorting (with pagination); with an area, vendors in it come before nearby ones
+        area_first = ('-area_rank',) if area_name else ()
         if sort == 'price_asc':
-            qs = qs.order_by('min_price_val')
+            qs = qs.order_by(*area_first, 'min_price_val')
         elif sort == 'price_desc':
-            qs = qs.order_by('-min_price_val')
+            qs = qs.order_by(*area_first, '-min_price_val')
         elif sort == 'rating':
-            qs = qs.order_by('-avg_rating')
+            qs = qs.order_by(*area_first, '-avg_rating')
         else:
-            qs = qs.order_by('-createdAt')
+            qs = qs.order_by(*area_first, '-createdAt')
 
         # Prefetch here too
         qs = qs.prefetch_related('services')
@@ -1404,6 +1407,7 @@ def getProducts(request):
             'attributes':        product.attributes or {},
             'total_num_reviews': total_num_reviews,
             'average_rating':    float(average_rating),
+            'nearby':            bool(area_name) and getattr(product, 'area_rank', 2) == 1,
         })
 
     return Response({
