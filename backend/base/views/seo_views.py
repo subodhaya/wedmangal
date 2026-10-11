@@ -41,6 +41,17 @@ CATEGORY_LABELS = {
 }
 
 
+# What customers search for, per category (singular) — used in vendor page titles and descriptions
+SEARCH_NOUNS = {
+    'Halls': 'Wedding Hall', 'Photographers': 'Wedding Photographer', 'Caterers': 'Wedding Caterer',
+    'Decorators': 'Wedding Decorator', 'Makeup_Artist': 'Bridal Makeup Artist', 'Mehandi_Artist': 'Mehendi Artist',
+    'DJ_Artist': 'Wedding DJ', 'Planners': 'Wedding Planner', 'Jewellery': 'Bridal Jewellery',
+    'Invitation': 'Wedding Invitations', 'Entertainment': 'Wedding Music & Entertainment',
+    'Travel_Transport': 'Wedding Cars & Travel', 'Pandit': 'Wedding Pandit',
+}
+GOOGLE_RATING_RE = re.compile(r'Rated ([\d.]+)★ on Google \((\d+) reviews?\)')
+
+
 # ── index.html handling ──────────────────────────────────────────────────────
 
 def _index_path():
@@ -171,7 +182,7 @@ def product_page(request, pk):
 
     name = (product.name or '').strip() or 'Wedding vendor'
     key = _category_key(product.category)
-    category_text = (product.category or '').replace('_', ' ').strip()
+    category_text = SEARCH_NOUNS.get(key) or (product.category or '').replace('_', ' ').strip()
     city = (product.city or '').strip().title()
     area = (product.area_name or '').strip()
     place = ', '.join(p for p in (area, city) if p)
@@ -179,8 +190,17 @@ def product_page(request, pk):
 
     url = f'{SITE}/product/{product._id}'
     title = f'{name} | {kind} | WedMangal' if kind else f'{name} | WedMangal'
-    description = _truncate(product.description) or _truncate(
-        f'{name}{" — " + kind if kind else ""}. See services and contact details on WedMangal.')
+    # A listing without its own words (e.g. imported from Google) gets a factual summary instead of
+    # just the rating line: what and where it is, its Google rating, and what the page offers.
+    own_text = (product.description or '').strip()
+    rating = GOOGLE_RATING_RE.search(own_text)
+    has_own_words = bool(own_text) and not GOOGLE_RATING_RE.fullmatch(own_text.rstrip('.'))
+    if has_own_words:
+        description = _truncate(own_text)
+    else:
+        rated = f' Rated {rating.group(1)}★ on Google ({int(rating.group(2)):,} reviews).' if rating else ''
+        description = _truncate(f'{name}{" — " + kind if kind else ""}.{rated} '
+                                f'See address, phone and photos, and get a free quote on WedMangal.')
     image = _image_url(product)
     tel = _tel(product.business_phone)
     services = [s.name.strip() for s in product.services.all() if (s.name or '').strip()]
@@ -216,16 +236,31 @@ def product_page(request, pk):
     body.append(f'<h1>{escape(name)}</h1>')
     if kind:
         body.append(f'<p>{escape(kind)}</p>')
+    if image:
+        body.append(f'<img src="{escape(image)}" alt="{escape(name)}{escape(" — " + kind) if kind else ""}" '
+                    f'width="600" loading="lazy"/>')
+    if not has_own_words and kind:
+        body.append(f'<p>{escape(name)} is a {escape(category_text.lower())}'
+                    f'{" in " + escape(place) if place else ""}.</p>')
     if product.description:
         body.append(f'<p>{escape(product.description.strip())}</p>')
     if facts:
         body.append('<ul>' + ''.join(facts) + '</ul>')
+    if key and area:   # other vendors of the same kind in and near this area (internal links for crawlers)
+        from base import areas
+        others = (areas.with_area_rank(Product.objects.filter(is_approved=True, category__iexact=product.category)
+                                       .exclude(_id=product._id), areas.canonical(area) or area)
+                  .order_by('-area_rank', '-createdAt').values('_id', 'name')[:8])
+        if others:
+            links = ''.join(f'<li><a href="/product/{o["_id"]}">{escape(o["name"])}</a></li>' for o in others)
+            body.append(f'<h2>Other {escape(category_text.lower())}s in and near {escape(area)}</h2><ul>{links}</ul>')
     if key:
         body.append(f'<p><a href="/category/{key}">More {escape(CATEGORY_LABELS[key].lower())} in Chennai</a></p>')
     body.append('</main>')
 
     # Structured data — only fields present on the record
-    business = {'@context': 'https://schema.org', '@type': 'LocalBusiness', 'name': name, 'url': url}
+    business = {'@context': 'https://schema.org', '@type': ['LocalBusiness', 'EventVenue'] if key == 'Halls' else 'LocalBusiness',
+                'name': name, 'url': url}
     if product.description:
         business['description'] = ' '.join(product.description.split())
     if image:
@@ -239,6 +274,9 @@ def product_page(request, pk):
         address['streetAddress'] = area
     if city:
         address['addressLocality'] = city
+    pin = re.search(r'\b6\d{5}\b', product.address or '')
+    if pin:
+        address['postalCode'] = pin.group(0)
     if city.lower() == 'chennai':
         address['addressRegion'] = 'Tamil Nadu'
     business['address'] = address

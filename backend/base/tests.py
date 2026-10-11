@@ -164,7 +164,7 @@ class SeoPageTests(TestCase):
 
     def test_vendor_title_and_description(self):
         html = self.get_html(f'/product/{self.vendor._id}')
-        self.assertIn('<title>Lotus Studio | Photographers in Adyar, Chennai | WedMangal</title>', html)
+        self.assertIn('<title>Lotus Studio | Wedding Photographer in Adyar, Chennai | WedMangal</title>', html)
         self.assertIn('<meta name="description" content="Lotus Studio is a Photographer based in Adyar, Chennai."/>', html)
         self.assertIn(f'<link rel="canonical" href="{SITE}/product/{self.vendor._id}"/>', html)
         self.assert_single_head_tags(html)
