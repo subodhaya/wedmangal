@@ -759,6 +759,20 @@ def getTopProducts(request):
             break
 
 
+    # Not enough WedMangal-rated vendors in this city yet (e.g. new cities)? Top up with the city's
+    # best Google-rated vendors that have a photo — the rating line stored on the listing.
+    if len(unique_product_ids) < 12:
+        import re as _re
+        rated = []
+        for p in (Product.objects.filter(areas.city_q(areas.request_city(request.query_params)), is_approved=True,
+                                         description__contains='on Google')
+                  .exclude(_id__in=unique_product_ids).exclude(image__icontains='placeholder')
+                  .only('_id', 'description')):
+            m = _re.search(r'Rated ([\d.]+)★ on Google \((\d+) reviews?\)', p.description or '')
+            if m and float(m.group(1)) >= 4.0:
+                rated.append((int(m.group(2)), float(m.group(1)), p._id))
+        unique_product_ids += [pid for _, _, pid in sorted(rated, reverse=True)[:12 - len(unique_product_ids)]]
+
     # Fetch products and preserve rating order
     products = Product.objects.filter(_id__in=unique_product_ids)
     

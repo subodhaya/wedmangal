@@ -81,3 +81,16 @@ class CityTests(TestCase):
         self.assertEqual(sorted(get(category='Halls', city='Bangalore')), ['HSR Hall', 'Koramangala Hall'])
         self.assertIn('Koramangala Hall', get(keyword='Koramangala', city='Bangalore'))
         self.assertNotIn('Koramangala Hall', get(keyword='Koramangala'))   # name lookups stay in the visitor's city
+
+
+class TopCarouselCityTests(TestCase):
+
+    def test_new_city_carousel_uses_google_rated_vendors_with_photos(self):
+        p = vendor('Hyd Hall', 'Halls', 'Madhapur', 'Madhapur, Hyderabad 500081',
+                   description='Rated 4.6★ on Google (900 reviews).', image='hyd.jpg')
+        p.city = 'Hyderabad'
+        p.save()
+        vendor('Chennai Hall', 'Halls', 'Velachery', 'Velachery, Chennai', description='Rated 4.9★ on Google (50 reviews).',
+               image='chn.jpg')
+        names = [x['name'] for x in APIClient().get('/api/products/all/top/', {'city': 'Hyderabad'}).json()]
+        self.assertEqual(names, ['Hyd Hall'])
