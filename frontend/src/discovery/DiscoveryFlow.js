@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { trackEvent, EVENTS } from '../utils/analytics';
+import { CITY_AREAS } from '../components/AreaDropdown';
 import { AREA_CHOICES, answersToRequirement, questionSet, requirementChips, requirementToParams } from './requirements';
 import './Discovery.css';
 
@@ -55,7 +56,10 @@ export default function DiscoveryFlow({ category, sourceVendorId, sourceArea, in
     else navigate(`/search/?${params.toString()}`);
   };
 
-  const areas = sourceArea && !AREA_CHOICES.includes(sourceArea) ? [sourceArea, ...AREA_CHOICES] : AREA_CHOICES;
+  // Area choices from the vendor's own city (Bangalore/Hyderabad vendor pages offer that city's areas)
+  const cityAreas = Object.entries(CITY_AREAS).find(([c, list]) => c !== 'Chennai' && list.includes(sourceArea))?.[1];
+  const choices = cityAreas ? cityAreas.slice(0, 8) : AREA_CHOICES;
+  const areas = sourceArea && !choices.includes(sourceArea) ? [sourceArea, ...choices] : choices;
   const chip = (selected, label, onClick, key) => (
     <button type="button" key={key || label} className={`dsc-chip${selected ? ' dsc-chip-on' : ''}`} aria-pressed={selected} onClick={onClick}>
       {label}

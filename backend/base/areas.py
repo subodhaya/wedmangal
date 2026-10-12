@@ -141,7 +141,68 @@ NEIGHBOURS = {
     'Wimco Nagar': ['Thiruvottiyur', 'Manali'],
 }
 
+# Other cities (added 2026-10-12): the areas we cover, and nearby areas within each city.
+NEIGHBOURS.update({
+    # Bangalore
+    'Jayanagar': ['JP Nagar', 'Koramangala'],
+    'JP Nagar': ['Jayanagar'],
+    'Koramangala': ['HSR Layout', 'Indiranagar', 'Jayanagar'],
+    'HSR Layout': ['Koramangala'],
+    'Indiranagar': ['Koramangala', 'Marathahalli'],
+    'Marathahalli': ['Whitefield', 'Indiranagar'],
+    'Whitefield': ['Marathahalli'],
+    'Malleshwaram': ['Rajajinagar', 'Yelahanka'],
+    'Rajajinagar': ['Malleshwaram'],
+    'Yelahanka': ['Malleshwaram'],
+    # Hyderabad
+    'Banjara Hills': ['Jubilee Hills', 'Ameerpet'],
+    'Jubilee Hills': ['Banjara Hills', 'Madhapur'],
+    'Ameerpet': ['Banjara Hills', 'Secunderabad', 'Kukatpally'],
+    'Secunderabad': ['Ameerpet'],
+    'Kukatpally': ['Ameerpet', 'Kondapur'],
+    'Madhapur': ['Jubilee Hills', 'Gachibowli', 'Kondapur'],
+    'Gachibowli': ['Madhapur', 'Kondapur'],
+    'Kondapur': ['Madhapur', 'Gachibowli', 'Kukatpally'],
+    'Dilsukhnagar': ['LB Nagar'],
+    'LB Nagar': ['Dilsukhnagar'],
+})
+
+CITY_AREAS = {
+    'Chennai': [],   # filled below: every other supported area
+    'Bangalore': ['HSR Layout', 'Indiranagar', 'JP Nagar', 'Jayanagar', 'Koramangala', 'Malleshwaram',
+                  'Marathahalli', 'Rajajinagar', 'Whitefield', 'Yelahanka'],
+    'Hyderabad': ['Ameerpet', 'Banjara Hills', 'Dilsukhnagar', 'Gachibowli', 'Jubilee Hills', 'Kondapur',
+                  'Kukatpally', 'LB Nagar', 'Madhapur', 'Secunderabad'],
+}
+CITY_AREAS['Chennai'] = sorted(set(NEIGHBOURS) - set(CITY_AREAS['Bangalore']) - set(CITY_AREAS['Hyderabad']))
+AREA_CITY = {a: city for city, names in CITY_AREAS.items() for a in names}
+CITIES = list(CITY_AREAS)                    # display order; Chennai is the default city
+CITY_ALIASES = {'chennai': 'Chennai', 'madras': 'Chennai', 'bangalore': 'Bangalore', 'bengaluru': 'Bangalore',
+                'bengalooru': 'Bangalore', 'hyderabad': 'Hyderabad'}
+
+
+def city_q(city):
+    """Vendors in this city. Older Chennai listings may have no city stored; they count as Chennai."""
+    names = [alias for alias, c in CITY_ALIASES.items() if c == city] or [city]
+    q = Q(pk__in=[])
+    for name in names:
+        q |= Q(city__iexact=name)
+    if city == 'Chennai':
+        q |= Q(city__isnull=True) | Q(city='')
+    return q
+
+
+def city_of(area):
+    return AREA_CITY.get(canonical(area) or '')
+
+
+def canonical_city(text):
+    return CITY_ALIASES.get(_key(text))
+
+
 _DIRECTIONS = r'(east|west|north|south|new|old)'
+# "4th Block Koramangala", "JP Nagar 2nd Phase", "HSR Layout Sector 2" — the block/phase is still the area
+_DESIGNATOR = r'(\d+\s*(st|nd|rd|th)?\s*(block|phase|stage|sector|main|cross)|(block|phase|stage|sector)\s*\d+)'
 
 
 def _key(text):
@@ -166,7 +227,8 @@ def in_area_q(area):
     words = r'[ .]*'.join(re.escape(w) for w in re.findall(r'[A-Za-z]+', area or ''))
     if not words:
         return Q(pk__in=[])
-    part = (r'(^|,)\s*(' + _DIRECTIONS + r'\s+)?' + words + r'(\s+' + _DIRECTIONS + r')?\s*(,|-|[0-9]|$)')
+    part = (r'(^|,)\s*((' + _DIRECTIONS + r'|' + _DESIGNATOR + r')\s+)?' + words +
+            r'(\s+(' + _DIRECTIONS + r'|' + _DESIGNATOR + r'))?\s*(,|-|[0-9]|$)')
     return Q(area_name__iexact=area) | Q(address__iregex=part)
 
 

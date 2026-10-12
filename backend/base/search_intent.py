@@ -46,7 +46,9 @@ CHENNAI_AREAS = [
     'Vichoor', 'Virugambakkam', 'West Mambalam', 'Wimco Nagar',
 ]
 
-CITIES = {'chennai': 'Chennai'}
+# City words → city (base/areas.py CITY_ALIASES). Chennai is the default city.
+CITIES = {'chennai': 'Chennai', 'madras': 'Chennai', 'bangalore': 'Bangalore', 'bengaluru': 'Bangalore',
+          'bengalooru': 'Bangalore', 'hyderabad': 'Hyderabad'}
 
 # Phrases → CATEGORY_LABELS key. Matched on word boundaries; longer phrases first.
 CATEGORY_SYNONYMS = {
@@ -239,7 +241,8 @@ def known_areas():
         names = Counter(n.strip() for n in Product.objects.filter(is_approved=True)
                         .values_list('area_name', flat=True) if n and n.strip())
         areas = {}
-        for name in CHENNAI_AREAS:
+        from base.areas import NEIGHBOURS   # every city's supported areas (Chennai, Bangalore, Hyderabad)
+        for name in NEIGHBOURS:
             areas[_key(name)] = name
         for name, _ in names.most_common():
             k = _key(name)

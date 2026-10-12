@@ -1282,10 +1282,16 @@ def getProducts(request):
     if category:
         qs = qs.filter(category__iexact=category)
 
-    if city:
+    from base import areas
+    # One city at a time: the area's city, else the chosen city, else Chennai. A vendor-name lookup
+    # (keyword only, e.g. the search box suggestions) still searches every city.
+    city_name = (areas.city_of(area_name) if area_name else None) or areas.canonical_city(city) or (
+        None if (keyword and not city) else 'Chennai')
+    if city_name:
+        qs = qs.filter(areas.city_q(city_name))
+    elif city:
         qs = qs.filter(city__icontains=city)
     if area_name:   # same matcher as search: in the area first, then its neighbours (base/areas.py)
-        from base import areas
         qs = areas.with_area_rank(qs, areas.canonical(area_name) or area_name.strip(),
                                   include_nearby=request.query_params.get('only_area') != '1')
 

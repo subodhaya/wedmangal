@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import api from '../utils/api';
 import Loader from '../components/Loader';
 import Paginate from '../components/Paginate';
-import AreaDropdown from '../components/AreaDropdown';
+import AreaDropdown, { CITIES } from '../components/AreaDropdown';
 import VendorResultCard from '../components/VendorResultCard';
 import { createSearchTracker, trackEvent, EVENTS } from '../utils/analytics';
 import { paramsToRequirement, requirementChips, requirementToAnswers, requirementToFilters } from '../discovery/requirements';
@@ -28,6 +28,7 @@ function SearchResultScreen() {
   const q = params.get('q') || '';
   const category = params.get('category') || params.get('vendor') || '';  // ?vendor= is the old URL format
   const area = params.get('area') || '';
+  const city = params.get('city') || '';
   const onlyArea = params.get('only_area') === '1';
   const minRating = params.get('min_rating') || '';
   const sort = params.get('sort') || 'relevance';
@@ -61,7 +62,7 @@ function SearchResultScreen() {
       budget_min: params.get('budget_min') || undefined, budget_max: params.get('budget_max') || undefined,
       must: params.get('must') || undefined, avoid: params.get('avoid') || undefined, from: 'discovery',
     } : {};
-    api.get('/api/search/', { params: { q, category, area: area || (fromDiscovery ? params.get('near') || '' : ''), min_rating: minRating, sort, page, ...(onlyArea && { only_area: '1' }), ...requirementParams } })
+    api.get('/api/search/', { params: { q, category, area: area || (fromDiscovery ? params.get('near') || '' : ''), min_rating: minRating, sort, page, ...(onlyArea && { only_area: '1' }), ...(city && { city }), ...requirementParams } })
       .then(({ data }) => {
         if (!active) return;
         setState({ loading: false, error: '', data });
@@ -87,7 +88,7 @@ function SearchResultScreen() {
       })
       .catch(() => active && setState({ loading: false, error: 'Search is unavailable right now. Please try again.', data: null }));
     return () => { active = false; };
-  }, [q, category, area, onlyArea, minRating, sort, page, fromDiscovery, params, requirement, sourceVendorId]);
+  }, [q, category, area, city, onlyArea, minRating, sort, page, fromDiscovery, params, requirement, sourceVendorId]);
 
   // Change filters in the URL. Any filter change goes back to page 1.
   const update = (changes) => {
@@ -114,8 +115,8 @@ function SearchResultScreen() {
   const heading = fromDiscovery
     ? `${categoryLabel || 'Wedding vendors'} matching your requirements`
     : categoryLabel
-    ? `${categoryLabel} in ${applied.area || 'Chennai'}`
-    : applied.area ? `Wedding vendors in ${applied.area}` : q ? `Results for “${q}”` : 'Wedding vendors in Chennai';
+    ? `${categoryLabel} in ${applied.area || applied.city || 'Chennai'}`
+    : applied.area ? `Wedding vendors in ${applied.area}` : q ? `Results for “${q}”` : `Wedding vendors in ${applied.city || 'Chennai'}`;
   const activeFilters = [category, area, minRating].filter(Boolean).length + (sort !== 'relevance' ? 1 : 0);
 
   const understood = [
@@ -204,8 +205,17 @@ function SearchResultScreen() {
           </div>
 
           <div className="sr-filter-group">
+            <label htmlFor="sr-city">City</label>
+            <select id="sr-city" value={applied.city || city || 'Chennai'}
+              onChange={e => update({ city: e.target.value === 'Chennai' ? '' : e.target.value, area: '' })}>
+              {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+
+          <div className="sr-filter-group">
             <span className="sr-filter-label">Area</span>
-            <AreaDropdown value={applied.area || area} onChange={value => update({ area: value })} />
+            <AreaDropdown value={applied.area || area} city={applied.city || city || 'Chennai'}
+              onChange={value => update({ area: value })} />
           </div>
 
           <fieldset className="sr-filter-group">
@@ -227,7 +237,7 @@ function SearchResultScreen() {
           </div>
 
           {activeFilters > 0 && (
-            <button type="button" className="sr-clear" onClick={() => update({ category: '', area: '', min_rating: '', sort: '' })}>
+            <button type="button" className="sr-clear" onClick={() => update({ category: '', area: '', city: '', min_rating: '', sort: '' })}>
               Clear filters
             </button>
           )}

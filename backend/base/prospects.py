@@ -22,7 +22,8 @@ Decision = VendorProspect.Decision
 AreaStatus = VendorProspect.AreaStatus
 
 CATEGORIES = tuple(CATEGORY_LABELS)                       # the existing taxonomy, unchanged
-AREAS = {si._key(a): a for a in si.CHENNAI_AREAS}          # the 127 supported areas
+from base import areas as city_areas
+AREAS = {si._key(a): a for a in city_areas.NEIGHBOURS}     # supported areas in every city (Chennai: 127)
 
 # ── Category evidence ────────────────────────────────────────────────────────
 # Strong = the business's own name or own words say it. A directory filing a business under a
@@ -30,7 +31,7 @@ AREAS = {si._key(a): a for a in si.CHENNAI_AREAS}          # the 127 supported a
 CATEGORY_WORDS = {
     'Halls': (r'kalyana\s*mahal|kalyana\s*mandapam|thirumana\s*(mandapam|mahal|arangam|nilayam)|marriage\s*hall|'
               r'wedding\s*hall|wedding\s*venue|banquet|convention\s*(centre|center|hall)|mandapam|mandapa|mahal|'
-              r'\bhall\b|community\s*hall|mini\s*hall|party\s*hall|arangam|maaligai'),
+              r'\bhall\b|community\s*hall|mini\s*hall|party\s*hall|arangam|maaligai|mantapa|mantap'),
     'Photographers': r'photograph|wedding\s*(films?|stories|gallery)|candid|cinematograph|\bclicks?\b',
     'Caterers': r'cater(er|ers|ing)|\bsamayal\b',
     'Decorators': r'decorat|\bdecor\b|flower\s*works|\bstage\s*designers?',
@@ -123,7 +124,7 @@ def _components(address):
     out = []
     for part in parts:
         p = re.sub(r'\b\d{6}\b', ' ', part)                       # PIN code
-        p = re.sub(r'\bchennai\b|\btamil\s*nadu\b|\bindia\b', ' ', p, flags=re.I)
+        p = re.sub(r'\b(chennai|tamil\s*nadu|india|bengaluru|bangalore|karnataka|hyderabad|telangana)\b', ' ', p, flags=re.I)
         p = re.sub(r'[^\w\s]', ' ', p)
         p = re.sub(r'\s+', ' ', p).strip()
         if p:
@@ -139,6 +140,7 @@ def _area_of_component(component):
     if key in AREAS:
         return AREAS[key]
     stripped = re.sub(rf'^{_DIRECTIONS}\s+|\s+{_DIRECTIONS}$', '', component, flags=re.I).strip()
+    stripped = re.sub(rf'^{city_areas._DESIGNATOR}\s+|\s+{city_areas._DESIGNATOR}$', '', stripped, flags=re.I).strip()
     key = si._key(stripped)
     return AREAS.get(key) if key and key in AREAS else None
 

@@ -153,8 +153,9 @@ def _base_queryset():
     )
 
 
-def _filtered(category=None, area=None, min_rating=None, keyword_tokens=None, place_word=None, nearby=False):
-    qs = _base_queryset()
+def _filtered(category=None, area=None, min_rating=None, keyword_tokens=None, place_word=None, nearby=False,
+              city='Chennai'):
+    qs = _base_queryset().filter(areas.city_q(city))   # one city at a time (Chennai, Bangalore, Hyderabad)
     if category:
         qs = qs.filter(category__iexact=category)
     if area:   # in the area (area_rank 3/2), plus its neighbours (area_rank 1) when nearby=True
@@ -194,7 +195,7 @@ def _requirement_notes(must, avoid):
     return notes
 
 
-def _notes(intent, area_param, area, unmatched_location=None, place_matches=0):
+def _notes(intent, area_param, area, unmatched_location=None, place_matches=0, city='Chennai'):
     notes = []
     if intent['budget_min'] or intent['budget_max']:
         if intent['budget_min'] and intent['budget_max']:
@@ -215,7 +216,7 @@ def _notes(intent, area_param, area, unmatched_location=None, place_matches=0):
         notes.append(f"Vendors’ {', '.join(unverified)} details aren’t verified yet, so results aren’t filtered by "
                      f'{"them" if len(unverified) > 1 else "it"}.')
     if area_param and not area:
-        notes.append(f'We couldn’t match “{area_param[:50]}” to a Chennai area, so we’re showing all of Chennai.')
+        notes.append(f'We couldn’t match “{area_param[:50]}” to a {city} area, so we’re showing all of {city}.')
     elif unmatched_location:
         place = unmatched_location[:50]
         if place_matches:
@@ -255,6 +256,9 @@ def search_vendors(request):
     # Understand the query; explicit filter choices win over words in the query.
     intent = si.combine_intent(query, {'category': category_param, 'area_name': area_param, **requirement_filters})
     category, area = intent['category'], intent['area']
+    # City: the area's own city wins, then an explicit choice, then a city named in the query; default Chennai.
+    city = ((areas.city_of(area) if area else None) or areas.canonical_city(params.get('city') or '')
+            or intent.get('city') or 'Chennai')
     structured = bool(category or area)
     name_tokens = _name_tokens(query, area)
     keyword_tokens = name_tokens if query and not structured else []
@@ -264,7 +268,7 @@ def search_vendors(request):
     place_word = unmatched if unmatched and structured else None
 
     only_area = params.get('only_area') == '1'
-    qs = _filtered(category, area, min_rating, keyword_tokens, place_word, nearby=not only_area)
+    qs = _filtered(category, area, min_rating, keyword_tokens, place_word, nearby=not only_area, city=city)
     # Must-haves / avoids: exclude only known contradictions, rank known matches first (Unknown ≠ No)
     qs = discovery.apply_to_queryset(qs, must, avoid)
     if name_tokens:  # vendor-name matches rank first (for name searches and structured ones)
@@ -293,22 +297,22 @@ def search_vendors(request):
     suggestions = []
     if count == 0:
         if place_word:
-            n = _filtered(category, area, min_rating, keyword_tokens).count()
+            n = _filtered(category, area, min_rating, keyword_tokens, city=city).count()
             if n:
                 label = CATEGORY_NAMES.get(category, 'vendors')
-                suggestions.append({'label': f'Show all {label} in Chennai', 'remove': 'place',
+                suggestions.append({'label': f'Show all {label} in {city}', 'remove': 'place',
                                     'q': _without_place(query, place_word), 'count': n})
         if area:
-            n = _filtered(category, None, min_rating, keyword_tokens).count()
+            n = _filtered(category, None, min_rating, keyword_tokens, city=city).count()
             if n:
                 label = CATEGORY_NAMES.get(category, 'vendors')
-                suggestions.append({'label': f'Show all {label} in Chennai', 'remove': 'area', 'count': n})
+                suggestions.append({'label': f'Show all {label} in {city}', 'remove': 'area', 'count': n})
         if min_rating:
-            n = _filtered(category, area, None, keyword_tokens).count()
+            n = _filtered(category, area, None, keyword_tokens, city=city).count()
             if n:
                 suggestions.append({'label': 'Include all ratings', 'remove': 'min_rating', 'count': n})
         if category and (area or min_rating):
-            n = _filtered(None, area, min_rating, keyword_tokens).count()
+            n = _filtered(None, area, min_rating, keyword_tokens, city=city).count()
             if n:
                 suggestions.append({'label': f'Show other vendors{" in " + area if area else ""}',
                                     'remove': 'category', 'count': n})
@@ -320,9 +324,9 @@ def search_vendors(request):
         'pages': paginator.num_pages,
         'interpreted': {**{k: intent[k] for k in si.INTENT_FIELDS if k != 'event_date'},
                         'category_label': CATEGORY_NAMES.get(category)},
-        'applied': {'category': category, 'area': area, 'place_word': place_word, 'min_rating': min_rating,
-                    'sort': sort},
-        'notes': _notes(intent, area_param, area, place_word, count) + _requirement_notes(must, avoid),
+        'applied': {'category': category, 'area': area, 'city': city, 'place_word': place_word,
+                    'min_rating': min_rating, 'sort': sort},
+        'notes': _notes(intent, area_param, area, place_word, count, city) + _requirement_notes(must, avoid),
         'requirements': {'guests_min': guests_min, 'guests_max': guests_max, 'budget_min': budget_min,
                          'budget_max': budget_max, 'must': must, 'avoid': avoid},
         'suggestions': suggestions,
@@ -334,5 +338,6 @@ def search_vendors(request):
             'categories': [{'key': k, 'label': v} for k, v in CUSTOMER_CATEGORIES],
             'ratings': list(RATING_OPTIONS),
             'sorts': list(SORTS),
+            'cities': [{'name': c, 'areas': areas.CITY_AREAS[c]} for c in areas.CITIES],
         },
     }, status=status.HTTP_200_OK)

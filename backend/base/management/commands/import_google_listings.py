@@ -26,6 +26,7 @@ class Command(BaseCommand):
         parser.add_argument('path')
         parser.add_argument('--photos', required=True)
         parser.add_argument('--dry-run', action='store_true')
+        parser.add_argument('--hidden', action='store_true', help='create with is_approved=False (review first)')
 
     def handle(self, *args, **o):
         records = json.loads(pathlib.Path(o['path']).read_text())
@@ -66,9 +67,9 @@ class Command(BaseCommand):
                     description = f"Rated {r['rating']}★ on Google ({r['review_count']} reviews)."
                 product = Product(
                     user=None, name=name, brand=name, category=r['category'], description=description,
-                    city='Chennai', area_name=r['area'], address=r['address'], business_phone=phone,
+                    city=r.get('city') or 'Chennai', area_name=r['area'], address=r['address'], business_phone=phone,
                     personal_phone=phone, website_url=prospects.website_domain(r.get('website') or '') and r.get('website') or None,
-                    is_approved=True,
+                    is_approved=not o['hidden'],
                     data_sources={**{f: src for f in ('name', 'category', 'area_name', 'address', 'business_phone',
                                                       'image', 'description')},
                                   'google': {'place_id': r['place_id'], 'maps_url': r.get('maps_url'),

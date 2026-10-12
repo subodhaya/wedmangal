@@ -274,7 +274,7 @@ def product_page(request, pk):
         address['streetAddress'] = area
     if city:
         address['addressLocality'] = city
-    pin = re.search(r'\b6\d{5}\b', product.address or '')
+    pin = re.search(r'\b[1-9]\d{5}\b', product.address or '')
     if pin:
         address['postalCode'] = pin.group(0)
     if city.lower() == 'chennai':

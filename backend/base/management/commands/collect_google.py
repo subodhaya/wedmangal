@@ -1,6 +1,6 @@
 """Collect vendors from Google Places (API "New") into a JSON file + downloaded photos. Writes NO database rows.
 
-    python manage.py collect_google --area Tambaram --category Halls --out ../pilot/google/tambaram-halls.json
+    python manage.py collect_google [--city Bangalore] --area Koramangala --category Halls --out ../pilot/google/x.json
 
 Per area × category: run the category's text searches ("marriage hall Tambaram Chennai", …) until `--per` (10)
 businesses pass, else record "target not reached" and move on. A business passes only if it is operational,
@@ -26,13 +26,13 @@ FIELDS = ','.join(f'places.{f}' for f in (
     'businessStatus', 'types', 'primaryType', 'googleMapsUri', 'websiteUri', 'rating', 'userRatingCount'))
 
 QUERIES = {
-    'Halls': ['marriage hall in {area} Chennai', 'kalyana mandapam in {area} Chennai', 'banquet hall in {area} Chennai'],
-    'Photographers': ['wedding photographer in {area} Chennai', 'candid wedding photography {area} Chennai'],
-    'Caterers': ['wedding caterers in {area} Chennai', 'catering service in {area} Chennai'],
-    'Decorators': ['wedding decorators in {area} Chennai', 'stage decoration in {area} Chennai'],
-    'Makeup_Artist': ['bridal makeup artist in {area} Chennai', 'bridal makeup studio {area} Chennai'],
-    'Mehandi_Artist': ['bridal mehndi artist in {area} Chennai', 'mehendi artist {area} Chennai'],
-    'DJ_Artist': ['wedding DJ in {area} Chennai', 'DJ services {area} Chennai'],
+    'Halls': ['marriage hall in {area} {city}', 'kalyana mandapam in {area} {city}', 'banquet hall in {area} {city}'],
+    'Photographers': ['wedding photographer in {area} {city}', 'candid wedding photography {area} {city}'],
+    'Caterers': ['wedding caterers in {area} {city}', 'catering service in {area} {city}'],
+    'Decorators': ['wedding decorators in {area} {city}', 'stage decoration in {area} {city}'],
+    'Makeup_Artist': ['bridal makeup artist in {area} {city}', 'bridal makeup studio {area} {city}'],
+    'Mehandi_Artist': ['bridal mehndi artist in {area} {city}', 'mehendi artist {area} {city}'],
+    'DJ_Artist': ['wedding DJ in {area} {city}', 'DJ services {area} {city}'],
 }
 # Google business types that are themselves category evidence.
 GOOGLE_TYPES = {
@@ -51,6 +51,7 @@ class Command(BaseCommand):
     help = 'Collect vendors with phone, photo and address from Google Places into JSON. Writes no database rows.'
 
     def add_arguments(self, parser):
+        parser.add_argument('--city', default='Chennai', choices=['Chennai', 'Bangalore', 'Hyderabad'])
         parser.add_argument('--area', action='append', required=True)
         parser.add_argument('--category', action='append', required=True, choices=sorted(QUERIES))
         parser.add_argument('--per', type=int, default=10)
@@ -61,11 +62,13 @@ class Command(BaseCommand):
         self.key = os.environ.get('GOOGLE_PLACES_API_KEY', '').strip()
         if not self.key:
             raise CommandError('GOOGLE_PLACES_API_KEY is not set in backend/.env')
+        from base import areas as city_areas
+        self.city = o['city']
         areas = []
         for a in o['area']:
-            match = prospects.AREAS.get(prospects.si._key(a))
-            if not match:
-                raise CommandError(f'"{a}" is not one of the supported areas')
+            match = city_areas.canonical(a)
+            if not match or city_areas.city_of(match) != self.city:
+                raise CommandError(f'"{a}" is not one of the supported areas of {self.city}')
             areas.append(match)
         self.photo_dir = pathlib.Path(o['photos'])
         self.photo_dir.mkdir(parents=True, exist_ok=True)
@@ -82,7 +85,7 @@ class Command(BaseCommand):
                 for q in QUERIES[category]:
                     if len(got) >= o['per']:
                         break
-                    for place in self.search(q.format(area=area)):
+                    for place in self.search(q.format(area=area, city=self.city)):
                         if len(got) >= o['per']:
                             break
                         if place.get('id') in seen_ids:
@@ -143,7 +146,7 @@ class Command(BaseCommand):
             return None, f'already listed (name, #{pr._id})'
         photo = place['photos'][0]
         return {
-            'name': name, 'category': category, 'area': area, 'address': address, 'phone': phone,
+            'name': name, 'category': category, 'area': area, 'city': self.city, 'address': address, 'phone': phone,
             'website': place.get('websiteUri', ''), 'place_id': place['id'], 'maps_url': place.get('googleMapsUri', ''),
             'rating': place.get('rating'), 'review_count': place.get('userRatingCount'), 'types': sorted(types),
             'category_evidence': 'name' if name_ok else f'google type {sorted(types & GOOGLE_TYPES[category])}',

@@ -20,6 +20,7 @@ export default function MoreVendors({ vendor }) {
   const key = CATEGORIES.find(([k]) => k.toLowerCase() === String(vendor.category || '').toLowerCase())?.[0];
   const label = CATEGORIES.find(([k]) => k === key)?.[1] || 'wedding vendors';
   const area = vendor.area_name || '';
+  const city = vendor.city || 'Chennai';
 
   useEffect(() => {
     if (!vendor.category) return undefined;
@@ -35,25 +36,25 @@ export default function MoreVendors({ vendor }) {
           found.forEach(p => taken.add(p._id));
         }
         if (found.length < MAX) {   // top up with the same category across Chennai
-          const { data } = await api.get('/api/products/all', { params: { category: vendor.category, sort: 'rating', page: 1 } });
+          const { data } = await api.get('/api/products/all', { params: { category: vendor.category, city, sort: 'rating', page: 1 } });
           found = found.concat(pick(data.products || [], taken));
         }
       } catch { /* the section is optional — show nothing if the list can't load */ }
       if (active) setItems(found.slice(0, MAX));
     })();
     return () => { active = false; };
-  }, [vendor._id, vendor.category, area]);
+  }, [vendor._id, vendor.category, area, city]);
 
   const open = (other, position) => trackEvent(EVENTS.SEARCH_RESULT_CLICK, {
     vendorId: other._id, source: 'vendor_page_more', metadata: { position, category: vendor.category || '' },
   });
-  const areaParam = area ? `&area=${encodeURIComponent(area)}` : '';
+  const areaParam = area ? `&area=${encodeURIComponent(area)}` : (city !== 'Chennai' ? `&city=${encodeURIComponent(city)}` : '');
 
   return (
     <section className="vmore" aria-labelledby="vmore-title">
       {items.length > 0 && (
         <>
-          <h2 className="vp-h2" id="vmore-title">More {label.toLowerCase()} {area ? `in and near ${area}` : 'in Chennai'}</h2>
+          <h2 className="vp-h2" id="vmore-title">More {label.toLowerCase()} {area ? `in and near ${area}` : `in ${city}`}</h2>
           <div className="vmore-row">
             {items.map((p, i) => (
               <Link key={p._id} to={`/product/${p._id}?ref=more`} className="vmore-card" onClick={() => open(p, i + 1)}>

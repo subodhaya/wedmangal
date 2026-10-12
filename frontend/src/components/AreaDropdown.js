@@ -27,15 +27,26 @@ const CHENNAI_AREAS = [
   'Vichoor', 'Virugambakkam', 'West Mambalam', 'Wimco Nagar',
 ];
 
-function AreaDropdown({ value, onChange, className = '' }) {
+// Other cities (mirrors CITY_AREAS in backend/base/areas.py)
+export const CITY_AREAS = {
+  Chennai: CHENNAI_AREAS,
+  Bangalore: ['HSR Layout', 'Indiranagar', 'JP Nagar', 'Jayanagar', 'Koramangala', 'Malleshwaram',
+              'Marathahalli', 'Rajajinagar', 'Whitefield', 'Yelahanka'],
+  Hyderabad: ['Ameerpet', 'Banjara Hills', 'Dilsukhnagar', 'Gachibowli', 'Jubilee Hills', 'Kondapur',
+              'Kukatpally', 'LB Nagar', 'Madhapur', 'Secunderabad'],
+};
+export const CITIES = Object.keys(CITY_AREAS);
+
+function AreaDropdown({ value, onChange, className = '', city = 'Chennai' }) {
+  const AREAS = CITY_AREAS[city] || CHENNAI_AREAS;
   const [search, setSearch]   = useState('');
   const [open, setOpen]       = useState(false);
   const containerRef          = useRef(null);
   const inputRef              = useRef(null);
 
   const filtered = search.trim()
-    ? CHENNAI_AREAS.filter(a => a.toLowerCase().includes(search.toLowerCase()))
-    : CHENNAI_AREAS;
+    ? AREAS.filter(a => a.toLowerCase().includes(search.toLowerCase()))
+    : AREAS;
 
   // Close on outside click
   useEffect(() => {
