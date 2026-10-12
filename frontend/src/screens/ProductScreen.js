@@ -12,6 +12,7 @@ import VendorGallery from '../components/vendor/VendorGallery';
 import VendorActions from '../components/vendor/VendorActions';
 import DiscoveryPrompt from '../discovery/DiscoveryPrompt';
 import MoreVendors from '../components/vendor/MoreVendors';
+import { CITIES, hasChosenCity, setCity } from '../utils/city';
 import '../components/vendor/VendorProfile.css';
 import SlotPicker from '../components/SlotPicker';
 import QuoteModal from '../components/QuoteModal';
@@ -143,6 +144,8 @@ function ProductScreen() {
           services: (data.services || []).map(s => ({ ...s, reviews: s.reviews || [] })),
         };
         setProduct(normalized);
+        // Landed here first (e.g. from Google)? This vendor's city becomes the visitor's city.
+        if (!hasChosenCity() && CITIES.includes(data.city)) setCity(data.city);
 
         if (userInfo?._id) {
           const reviewed = {};

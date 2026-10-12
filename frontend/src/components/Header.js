@@ -5,6 +5,7 @@ import { Navbar, Nav, Container, NavDropdown } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import SmartSearch from './SmartSearch';
+import { CitySwitcher } from './CityPicker';
 import { isAdminUser } from '../utils/auth';
 import './Header.css';
 
@@ -394,6 +395,9 @@ const Header = () => {
                 </svg>
               </Navbar.Brand>
             </LinkContainer>
+
+            {/* City: always visible (also on phones), one city at a time across the site */}
+            {!isServiceOwner && <CitySwitcher />}
 
             <Navbar.Toggle aria-controls="basic-navbar-nav" className="custom-toggler" />
 

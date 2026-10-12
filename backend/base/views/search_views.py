@@ -341,3 +341,14 @@ def search_vendors(request):
             'cities': [{'name': c, 'areas': areas.CITY_AREAS[c]} for c in areas.CITIES],
         },
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def guess_city(request):
+    """GET /api/search/city/ → {"city": "Chennai"|"Bangalore"|"Hyderabad"|null} from the visitor's IP.
+    A hint for the first visit only; the IP is not stored or logged (base/geo.py)."""
+    from base import geo
+    response = Response({'city': geo.city_for_ip(geo.client_ip(request)), 'cities': areas.CITIES})
+    response['Cache-Control'] = 'private, no-store'
+    return response

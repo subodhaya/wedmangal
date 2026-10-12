@@ -8,6 +8,7 @@ import PrivateRoute from './components/PrivateRoute';
 import ProductScreen from './screens/ProductScreen';
 import lazyRoute from './utils/lazyRoute';
 import RouteFallback from './components/RouteFallback';
+import { CityGuessNote, CityPickerModal, useCityBoot } from './components/CityPicker';
 import { HelmetProvider } from 'react-helmet-async';
 import { trackSessionStart } from './utils/analytics';
 
@@ -54,6 +55,22 @@ const BlogPostScreen = lazyRoute(() => import('./screens/BlogPostScreen'));
 // Only show splash when launched as installed PWA
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
+// Decide the visitor's city before any vendor list loads (first visit only) — see components/CityPicker.js
+function CityGate({ children }) {
+  const [boot, setBoot] = useCityBoot();
+  if (!boot.ready) return <RouteFallback />;
+  return (
+    <>
+      {children}
+      {boot.ask && <CityPickerModal onClose={() => setBoot(s => ({ ...s, ask: false }))} />}
+      {boot.guessed && !boot.ask && (
+        <CityGuessNote city={boot.guessed} onClose={() => setBoot(s => ({ ...s, guessed: null }))}
+          onChange={() => setBoot(s => ({ ...s, ask: true, guessed: null }))} />
+      )}
+    </>
+  );
+}
+
 function App() {
   const [showSplash, setShowSplash] = useState(isStandalone);
 
@@ -67,6 +84,7 @@ function App() {
     <HelmetProvider>
     <Router>
       <Header />
+      <CityGate>
       <main className="py-0">
         <Container fluid>
           <Suspense fallback={<RouteFallback />}>
@@ -113,6 +131,7 @@ function App() {
           </Suspense>
         </Container>
       </main>
+      </CityGate>
       <Footer />
     </Router>
     </HelmetProvider>

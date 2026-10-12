@@ -17,6 +17,8 @@ def get_reels(request):
 
     if category:
         qs = qs.filter(category__iexact=category)
+    from base import areas
+    qs = qs.filter(areas.city_q(areas.request_city(request.GET)))   # one city at a time
 
     paginator = Paginator(qs, 10)
     page      = paginator.get_page(page_num)

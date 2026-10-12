@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getCity, isListingRequest } from "./city";
 const BASE_URL = window.location.origin.includes("localhost")
   ? "http://127.0.0.1:8000"
   : window.location.origin.includes("5.223.87.80")
@@ -79,6 +80,12 @@ api.interceptors.request.use(
       }
     } else if (userInfo?.token) {
       config.headers.Authorization = `Bearer ${userInfo.token}`;
+    }
+
+    // Vendor lists stay in the visitor's city (an explicit ?city= in the request wins)
+    if ((config.method || 'get') === 'get' && isListingRequest(config.url)) {
+      config.params = { ...(config.params || {}) };
+      if (!config.params.city) config.params.city = getCity();
     }
 
     // Attach Django CSRF token for mutating requests

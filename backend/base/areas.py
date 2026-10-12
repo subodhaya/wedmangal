@@ -181,15 +181,22 @@ CITY_ALIASES = {'chennai': 'Chennai', 'madras': 'Chennai', 'bangalore': 'Bangalo
                 'bengalooru': 'Bangalore', 'hyderabad': 'Hyderabad'}
 
 
-def city_q(city):
-    """Vendors in this city. Older Chennai listings may have no city stored; they count as Chennai."""
+def city_q(city, prefix=''):
+    """Vendors in this city. Older Chennai listings may have no city stored; they count as Chennai.
+    `prefix` reaches the vendor through a relation, e.g. 'product__' from a Service."""
     names = [alias for alias, c in CITY_ALIASES.items() if c == city] or [city]
+    field = f'{prefix}city'
     q = Q(pk__in=[])
     for name in names:
-        q |= Q(city__iexact=name)
+        q |= Q(**{f'{field}__iexact': name})
     if city == 'Chennai':
-        q |= Q(city__isnull=True) | Q(city='')
+        q |= Q(**{f'{field}__isnull': True}) | Q(**{field: ''})
     return q
+
+
+def request_city(params):
+    """The visitor's city from ?city= (the site sends it on every listing request); default Chennai."""
+    return canonical_city((params.get('city') or '').strip()) or 'Chennai'
 
 
 def city_of(area):

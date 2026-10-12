@@ -79,4 +79,5 @@ class CityTests(TestCase):
         get = lambda **p: [x['name'] for x in self.client.get('/api/products/all', p).json()['products']]
         self.assertEqual(get(category='Halls'), ['Chennai Hall'])
         self.assertEqual(sorted(get(category='Halls', city='Bangalore')), ['HSR Hall', 'Koramangala Hall'])
-        self.assertIn('Koramangala Hall', get(keyword='Koramangala'))      # name lookups search every city
+        self.assertIn('Koramangala Hall', get(keyword='Koramangala', city='Bangalore'))
+        self.assertNotIn('Koramangala Hall', get(keyword='Koramangala'))   # name lookups stay in the visitor's city

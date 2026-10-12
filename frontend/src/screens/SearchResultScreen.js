@@ -4,7 +4,8 @@ import { Helmet } from 'react-helmet-async';
 import api from '../utils/api';
 import Loader from '../components/Loader';
 import Paginate from '../components/Paginate';
-import AreaDropdown, { CITIES } from '../components/AreaDropdown';
+import AreaDropdown from '../components/AreaDropdown';
+import { CITIES, setCity } from '../utils/city';
 import VendorResultCard from '../components/VendorResultCard';
 import { createSearchTracker, trackEvent, EVENTS } from '../utils/analytics';
 import { paramsToRequirement, requirementChips, requirementToAnswers, requirementToFilters } from '../discovery/requirements';
@@ -207,7 +208,7 @@ function SearchResultScreen() {
           <div className="sr-filter-group">
             <label htmlFor="sr-city">City</label>
             <select id="sr-city" value={applied.city || city || 'Chennai'}
-              onChange={e => update({ city: e.target.value === 'Chennai' ? '' : e.target.value, area: '' })}>
+              onChange={e => { setCity(e.target.value); update({ city: e.target.value, area: '' }); }}>
               {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>

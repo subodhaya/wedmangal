@@ -741,8 +741,10 @@ def get_booked_dates(request, service_id):
 
 def getTopProducts(request):
     # Get top services with rating >= 2
+    from base import areas
     top_services = Service.objects.filter(
-        rating__gte=2
+        areas.city_q(areas.request_city(request.query_params), prefix='product__'),
+        rating__gte=2, product__is_approved=True,
     ).order_by('-rating').select_related('product')
     
     # Get unique product IDs while preserving order
@@ -1283,10 +1285,8 @@ def getProducts(request):
         qs = qs.filter(category__iexact=category)
 
     from base import areas
-    # One city at a time: the area's city, else the chosen city, else Chennai. A vendor-name lookup
-    # (keyword only, e.g. the search box suggestions) still searches every city.
-    city_name = (areas.city_of(area_name) if area_name else None) or areas.canonical_city(city) or (
-        None if (keyword and not city) else 'Chennai')
+    # One city at a time: the area's city, else the visitor's chosen city (?city=), else Chennai.
+    city_name = (areas.city_of(area_name) if area_name else None) or areas.canonical_city(city) or 'Chennai'
     if city_name:
         qs = qs.filter(areas.city_q(city_name))
     elif city:
@@ -1464,8 +1464,8 @@ def get_available_today(request):
 
     if category:
         qs = qs.filter(category__iexact=category)
-    if city:
-        qs = qs.filter(city__icontains=city)
+    from base import areas
+    qs = qs.filter(areas.city_q(areas.request_city(request.query_params)))   # one city at a time
 
     qs = qs.annotate(avg_rating=Avg('services__rating'))
 

@@ -4,7 +4,8 @@
 
 import React, { useState } from 'react';
 import './FilterBar.css';
-import AreaDropdown, { CITIES } from './AreaDropdown';
+import AreaDropdown from './AreaDropdown';
+import { CITIES, useCity } from '../utils/city';
 
 // ── Category-specific filter config ──────────────────────────────────────────
 const CATEGORY_FILTERS = {
@@ -42,6 +43,7 @@ const SORT_OPTIONS = [
 
 
 export default function FilterBar({ category, filters = {}, onChange }) {
+  const [city, setCity] = useCity();   // the site-wide city (utils/city.js); every list request sends it
   const [open, setOpen] = useState(false);
 
   const catFilters = CATEGORY_FILTERS[category] || [];
@@ -72,13 +74,13 @@ export default function FilterBar({ category, filters = {}, onChange }) {
         <select
           className="fb-city-select"
           aria-label="City"
-          value={filters.city || 'Chennai'}
-          onChange={e => onChange(prev => ({ ...(prev || {}), city: e.target.value, area_name: '' }))}
+          value={city}
+          onChange={e => { setCity(e.target.value); window.location.reload(); }}
         >
           {CITIES.map(c => <option key={c} value={c}>📍 {c}</option>)}
         </select>
         {/* Area */}
-        <AreaDropdown value={filters.area_name || ''} city={filters.city || 'Chennai'}
+        <AreaDropdown value={filters.area_name || ''} city={city}
           onChange={(area) => set('area_name', area)}/>
         {/* Filter toggle button */}
         <button className={`fb-filter-btn ${open ? 'active' : ''}`} onClick={() => setOpen(p => !p)}>
