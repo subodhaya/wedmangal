@@ -157,8 +157,11 @@ class Command(BaseCommand):
     def download_photo(self, rec):
         time.sleep(DELAY)
         self.calls['photo'] += 1
-        r = requests.get(f"https://places.googleapis.com/v1/{rec['photo_name']}/media",
-                         params={'maxWidthPx': 1000, 'key': self.key}, timeout=30)
+        try:
+            r = requests.get(f"https://places.googleapis.com/v1/{rec['photo_name']}/media",
+                             params={'maxWidthPx': 1000, 'key': self.key}, timeout=30)
+        except requests.RequestException:          # a slow photo skips that business, not the whole run
+            return False
         if r.status_code != 200 or not r.headers.get('content-type', '').startswith('image/'):
             return False
         ext = '.png' if 'png' in r.headers['content-type'] else '.jpg'
