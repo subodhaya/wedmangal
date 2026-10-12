@@ -209,8 +209,11 @@ class SeoPageTests(TestCase):
     def test_unknown_vendor_returns_404(self):
         self.get_html('/product/999999', status=404)
 
-    def test_unapproved_vendor_returns_404(self):
-        self.get_html(f'/product/{self.hidden._id}', status=404)
+    def test_hidden_vendor_redirects_to_similar_vendors(self):
+        response = self.client.get(f'/product/{self.hidden._id}')
+        self.assertEqual(response.status_code, 301)
+        self.assertTrue(response['Location'].startswith('/search/?'))
+        self.assertIn('from=hidden', response['Location'])
 
     def test_other_product_routes_still_use_react_fallback(self):
         self.assertNotEqual(resolve(f'/product/{self.vendor._id}/edit').url_name, 'seo-product')

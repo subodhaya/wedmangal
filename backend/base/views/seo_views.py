@@ -15,7 +15,9 @@ from collections import Counter
 from pathlib import Path
 
 from django.conf import settings
-from django.http import HttpResponse
+from urllib.parse import urlencode
+
+from django.http import HttpResponse, HttpResponsePermanentRedirect
 from django.utils.html import escape
 
 from base import vendor_profile
@@ -176,9 +178,19 @@ def _breadcrumbs(*items):
 # ── Views ────────────────────────────────────────────────────────────────────
 
 def product_page(request, pk):
-    product = Product.objects.filter(_id=pk, is_approved=True).first()
+    product = Product.objects.filter(_id=pk).first()
     if product is None:
         return _not_found()
+    if not product.is_approved:
+        # A hidden listing still gets visitors from old Google results: send them (permanently) to similar
+        # vendors in the same category and area instead of a dead end. Google then replaces the old result.
+        key = _category_key(product.category)
+        params = {'from': 'hidden'}
+        if key:
+            params['category'] = key
+        if (product.area_name or '').strip():
+            params['area'] = product.area_name.strip()
+        return HttpResponsePermanentRedirect(f'/search/?{urlencode(params)}')
 
     name = (product.name or '').strip() or 'Wedding vendor'
     key = _category_key(product.category)

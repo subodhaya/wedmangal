@@ -187,6 +187,9 @@ function SearchResultScreen() {
             {understood.map(chip => <span key={chip} className="sr-chip">{chip}</span>)}
           </div>
         )}
+        {params.get('from') === 'hidden' && (
+          <p className="sr-note">The vendor you were looking for isn’t listed right now — here are similar vendors nearby.</p>
+        )}
         {d?.notes?.map(note => <p key={note} className="sr-note">{note}</p>)}
       </div>
 
