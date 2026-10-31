@@ -23,7 +23,7 @@ from django.utils import timezone
 
 from base.models import Product, Review,OrderItem
 from rest_framework import status
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404
 from decimal import Decimal,InvalidOperation
 from django.core.exceptions import ValidationError
@@ -50,7 +50,7 @@ from rest_framework.response import Response
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from base.decorators import admin_only, product_manager_only
-from base import analytics, vendor_profile
+from base import analytics, removal_requests, vendor_profile
 from base.models import VendorEvent
 
 
@@ -70,6 +70,11 @@ def _is_admin(user):
     # The app has two admin notions: Django staff (API isAdmin) and profile role 'admin'.
     profile = getattr(user, 'profile', None)
     return user.is_staff or getattr(profile, 'role', None) == 'admin'
+
+
+def _visible(request, product):
+    # Hidden listings (awaiting review, or taken down) exist only for their owner and staff.
+    return product.is_approved or vendor_profile.can_manage(request.user, product)
 
 
 def _is_owner_or_admin(request, user_id):
@@ -169,7 +174,10 @@ class ProductDetailView(generics.RetrieveAPIView):
     def get_object(self):
         # Override to get the object based on the provided ID
         pk = self.kwargs.get('pk')
-        return Product.objects.get(pk=pk)
+        product = Product.objects.filter(pk=pk).first()
+        if product is None or not _visible(self.request, product):
+            raise Http404
+        return product
 
     def retrieve(self, request, *args, **kwargs):
         return Response(_public(self.get_serializer(self.get_object()).data))
@@ -390,6 +398,8 @@ def wishlist_sync(request):
 def getProductRelated(request, pk):
     try:
         product = Product.objects.prefetch_related('services').get(_id=pk)
+        if not _visible(request, product):
+            raise Product.DoesNotExist
         serializer = ProductSerializer(product, many=False)
         return Response(_public(serializer.data))
     except Product.DoesNotExist:
@@ -408,6 +418,8 @@ def getRelatedServices(request, pk):
         
         # Get the product associated with this service
         product = current_service.product
+        if not _visible(request, product):
+            return Response({'detail': 'Service not found'}, status=status.HTTP_404_NOT_FOUND)
         print(f"Product associated with service: {product}")
         
         # Serialize the product
@@ -698,6 +710,12 @@ def approveProduct(request, pk):
         return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
     try:
         product = Product.objects.get(_id=pk)
+        unlisted = removal_requests.unlisted_by_request(product)
+        if unlisted:
+            # The business asked to be removed and we verified it — relisting is a deliberate Django-admin step.
+            return Response({'detail': f'This listing was removed at the business\'s request ({unlisted.reference}). '
+                                       f'Relist it from Django admin only if they ask.'},
+                            status=status.HTTP_409_CONFLICT)
         product.is_approved = True
         product.save()
         return Response({'detail': 'Product approved successfully'})
@@ -975,7 +993,8 @@ def searchProducts(request):
 
     # Ensure city and vendor are not None before filtering
     if city and vendor:
-        products = Product.objects.filter(city__icontains=city, category__icontains=vendor).order_by('-createdAt')
+        products = Product.objects.filter(city__icontains=city, category__icontains=vendor,
+                                          is_approved=True).order_by('-createdAt')
     else:
         # Return an empty queryset if either city or vendor is not provided
         products = Product.objects.none()

@@ -1,3 +1,7 @@
+import os
+
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -638,3 +642,132 @@ class VendorProspect(models.Model):
 
     def __str__(self):
         return f'{self.business_name} ({", ".join(self.categories) or "no category"}, {self.business_area or "area unknown"})'
+
+
+# ── Unlisting & content removal requests ─────────────────────────────────────
+
+class PrivateStorage(FileSystemStorage):
+    """Evidence files are NOT media: MEDIA_ROOT (static/images) is served publicly. These live in
+    PRIVATE_MEDIA_ROOT (default backend/private_media, outside every served folder) and staff download
+    them through the admin only (base/admin.py → evidence view)."""
+
+    @property
+    def base_location(self):
+        return str(getattr(settings, 'PRIVATE_MEDIA_ROOT', settings.BASE_DIR / 'private_media'))
+
+    @property
+    def location(self):
+        return os.path.abspath(self.base_location)
+
+    @property
+    def base_url(self):
+        return None
+
+
+def private_storage():
+    return PrivateStorage()
+
+
+def removal_evidence_path(instance, filename):
+    import secrets
+    from pathlib import Path
+    return f'removal_evidence/{timezone.now():%Y/%m}/{secrets.token_hex(12)}{Path(filename).suffix.lower()}'
+
+
+class VendorRemovalRequest(models.Model):
+    """A request from anyone (no account needed) to unlist a business, correct it, or take down content.
+
+    Submitting never changes the listing. A person reviews it in Django admin; side effects of a decision
+    (unlisting, removing disputed content) live in base/removal_requests.py and are written to the audit log.
+    Requester contact details and admin notes never leave the admin.
+    """
+
+    class RequestType(models.TextChoices):
+        UNLIST                = 'unlist', 'Unlist the business'
+        INCORRECT_INFORMATION = 'incorrect_information', 'Incorrect information'
+        COPYRIGHT             = 'copyright', 'Copyright / image complaint'
+
+    class Status(models.TextChoices):
+        PENDING      = 'pending', 'Pending'
+        UNDER_REVIEW = 'under_review', 'Under review'
+        APPROVED     = 'approved', 'Approved'
+        REJECTED     = 'rejected', 'Rejected'
+        COMPLETED    = 'completed', 'Completed'
+
+    class Relationship(models.TextChoices):
+        OWNER          = 'owner', 'Business owner'
+        REPRESENTATIVE = 'representative', 'Authorised representative'
+        CONTENT_OWNER  = 'content_owner', 'I created or own the content'
+        CONTENT_AGENT  = 'content_agent', 'Authorised on behalf of the content owner'
+        OTHER          = 'other', 'Other'
+
+    class Reason(models.TextChoices):
+        OWNER_OPT_OUT       = 'owner_opt_out', "I own this business and don't want it listed"
+        INCORRECT           = 'incorrect', 'This business information is incorrect'
+        NO_PHOTO_PERMISSION = 'no_photo_permission', "I don't have permission to use these photographs"
+        DUPLICATE           = 'duplicate', 'Duplicate listing'
+        CLOSED              = 'closed', 'Business permanently closed'
+        OTHER               = 'other', 'Other'
+
+    class Verification(models.TextChoices):
+        LISTING_PHONE   = 'listing_phone', 'Called the phone number on the listing'
+        CLAIMED_ACCOUNT = 'claimed_account', 'Request came from the account that claimed the listing'
+        BUSINESS_EMAIL  = 'business_email', "Confirmed from the business's own e-mail or website"
+        DOCUMENTS       = 'documents', 'Ownership documents checked'
+        OTHER           = 'other', 'Other (see admin notes)'
+
+    reference    = models.CharField(max_length=16, unique=True, editable=False)
+    vendor       = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, related_name='removal_requests')
+    vendor_name  = models.CharField(max_length=200, blank=True, default='')   # as shown when submitted
+    listing_url  = models.CharField(max_length=300, blank=True, default='')
+    request_type = models.CharField(max_length=24, choices=RequestType.choices, db_index=True)
+
+    requester_name         = models.CharField(max_length=100)
+    requester_email        = models.EmailField(max_length=254, db_index=True)
+    requester_phone        = models.CharField(max_length=16)
+    requester_relationship = models.CharField(max_length=16, choices=Relationship.choices)
+    reason                 = models.CharField(max_length=24, choices=Reason.choices, blank=True, default='')
+    description            = models.TextField(blank=True, default='')
+    disputed_content       = models.TextField(blank=True, default='')   # copyright: URL or description
+    evidence_file          = models.FileField(upload_to=removal_evidence_path, storage=private_storage,
+                                              blank=True, max_length=200)
+    evidence_name          = models.CharField(max_length=200, blank=True, default='')   # original filename
+    consent                = models.BooleanField(default=False)   # confirmed accurate and authorised
+
+    status              = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING,
+                                           db_index=True)
+    ownership_verified  = models.BooleanField(default=False)
+    verification_method = models.CharField(max_length=20, choices=Verification.choices, blank=True, default='')
+    admin_notes         = models.TextField(blank=True, default='')            # internal only
+    message_to_requester = models.TextField(blank=True, default='')           # included in the decision e-mail
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='reviewed_removal_requests')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at  = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at  = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    OPEN_STATUSES = (Status.PENDING, Status.UNDER_REVIEW)
+
+    def __str__(self):
+        return f'{self.reference} – {self.get_request_type_display()} – {self.vendor_name} [{self.get_status_display()}]'
+
+
+class VendorRemovalRequestEvent(models.Model):
+    """Append-only audit trail of a removal request: status changes, listing changes, e-mails, notes."""
+    request    = models.ForeignKey(VendorRemovalRequest, on_delete=models.PROTECT, related_name='events')
+    action     = models.CharField(max_length=32)
+    from_status = models.CharField(max_length=16, blank=True, default='')
+    to_status   = models.CharField(max_length=16, blank=True, default='')
+    actor      = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='removal_request_events')
+    detail     = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['created_at', 'id']
+
+    def __str__(self):
+        return f'{self.request.reference}: {self.action} ({self.created_at:%Y-%m-%d %H:%M})'

@@ -1,11 +1,15 @@
 # base/admin.py
 from django.contrib import admin
 from django.contrib.auth.models import User
-from .models import Profile, Product, Service, Review, Order, OrderItem, Budget, ShippingAddress, ServiceImage, CartItem, Wishlist, BlogPost, VendorEvent, QuoteRequest, ServiceOwnerClaim, DiscoveryLead, SavedRequirement, VendorProspect
+from .models import Profile, Product, Service, Review, Order, OrderItem, Budget, ShippingAddress, ServiceImage, CartItem, Wishlist, BlogPost, VendorEvent, QuoteRequest, ServiceOwnerClaim, DiscoveryLead, SavedRequirement, VendorProspect, VendorRemovalRequest, VendorRemovalRequestEvent
 from django.db import transaction
 from django.utils import timezone
-from . import analytics, discovery, vendor_profile
-from django.utils.html import format_html_join
+from . import analytics, discovery, removal_requests, vendor_profile
+from django.utils.html import format_html, format_html_join
+from django import forms
+from django.http import FileResponse, Http404
+from django.urls import path, reverse
+from pathlib import Path
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 class ProfileInline(admin.StackedInline):
@@ -56,6 +60,14 @@ class ProductAdmin(admin.ModelAdmin):
                 changed += [f'attributes.{k}' for k in set(old) | set(new) if old.get(k) != new.get(k)]
             vendor_profile.stamp_sources(obj, changed, 'admin')
         super().save_model(request, obj, form, change)
+        if change and 'is_approved' in form.changed_data and obj.is_approved:
+            unlisted = removal_requests.unlisted_by_request(obj)
+            if unlisted:
+                removal_requests.log(unlisted, 'vendor_relisted', request.user,
+                                     detail=f'Listing #{obj._id} made visible again from Products admin.')
+                self.message_user(request, f'This listing had been removed at the business\'s request '
+                                           f'({unlisted.reference}). It is visible again — make sure they asked.',
+                                  level='warning')
 
     @admin.action(description='Mark as verified by WedMangal (claimed listings only)')
     def mark_verified(self, request, queryset):
@@ -318,3 +330,176 @@ class VendorProspectAdmin(admin.ModelAdmin):
     @admin.action(description='Mark as READY FOR OUTREACH (no message is sent)')
     def mark_ready_for_outreach(self, request, queryset):
         self._decide(request, queryset, VendorProspect.Decision.READY_FOR_OUTREACH)
+
+
+# ── Unlisting & content removal requests ─────────────────────────────────────
+
+RR = VendorRemovalRequest
+
+
+class RemovalRequestForm(forms.ModelForm):
+    remove_content = forms.MultipleChoiceField(
+        required=False, widget=forms.CheckboxSelectMultiple, label='Remove disputed content',
+        help_text='Only for an approved copyright complaint. Removes just the ticked photos/videos from the '
+                  'listing; the listing stays visible. Files are kept on the server and logged below.')
+
+    class Meta:
+        model = VendorRemovalRequest
+        fields = ('status', 'ownership_verified', 'verification_method', 'admin_notes', 'message_to_requester')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk and self.instance.request_type == RR.RequestType.COPYRIGHT:
+            self.fields['remove_content'].choices = removal_requests.content_choices(self.instance.vendor)
+        else:
+            del self.fields['remove_content']
+
+    def clean(self):
+        data = super().clean()
+        new_status = data.get('status', self.instance.status)
+        if data.get('ownership_verified') and not data.get('verification_method'):
+            self.add_error('verification_method', 'Choose how ownership was verified.')
+        problem = removal_requests.decision_problem(self.instance, new_status, data.get('ownership_verified'),
+                                                    data.get('verification_method'))
+        if problem:
+            self.add_error('status', problem)
+        if data.get('remove_content') and new_status not in (RR.Status.APPROVED, RR.Status.COMPLETED):
+            self.add_error('remove_content', 'Approve the complaint before removing content.')
+        return data
+
+
+class RemovalRequestEventInline(admin.TabularInline):
+    model = VendorRemovalRequestEvent
+    extra = 0
+    can_delete = False
+    fields = readonly_fields = ('created_at', 'action', 'from_status', 'to_status', 'actor', 'detail')
+    verbose_name_plural = 'Audit log'
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(VendorRemovalRequest)
+class VendorRemovalRequestAdmin(admin.ModelAdmin):
+    form = RemovalRequestForm
+    list_display = ('reference', 'request_type', 'vendor_name', 'listing_visible', 'requester_name',
+                    'requester_relationship', 'status', 'ownership_verified', 'has_evidence', 'created_at')
+    list_filter = ('request_type', 'status', 'ownership_verified', 'reason', 'created_at')
+    search_fields = ('reference', 'vendor_name', 'requester_name', 'requester_email',
+                     'requester_phone')
+    readonly_fields = ('reference', 'request_type', 'vendor_links', 'listing_visible', 'requester_name',
+                       'requester_email', 'requester_phone', 'requester_relationship', 'reason', 'description',
+                       'disputed_content', 'evidence', 'consent', 'reviewed_by', 'reviewed_at', 'created_at',
+                       'updated_at')
+    fieldsets = (
+        ('Request', {'fields': ('reference', 'request_type', 'created_at', 'vendor_links', 'listing_visible',
+                                'reason', 'description', 'disputed_content', 'evidence')}),
+        ('Requester (never shown publicly)', {'fields': ('requester_name', 'requester_email', 'requester_phone',
+                                                         'requester_relationship', 'consent')}),
+        ('Review', {'fields': ('ownership_verified', 'verification_method', 'status', 'remove_content',
+                               'admin_notes', 'message_to_requester', 'reviewed_by', 'reviewed_at', 'updated_at'),
+                    'description': 'Unlisting: verify ownership first (e.g. call the number on the listing), then '
+                                   'set Approved — the listing is hidden, never deleted. Incorrect information: '
+                                   'fix the listing in Products, then Approved → Completed. Copyright: set '
+                                   'Approved and tick only the disputed content. Approved/Rejected e-mails the '
+                                   'requester; "Message to requester" is included, admin notes never are.'}),
+    )
+    inlines = (RemovalRequestEventInline,)
+    actions = ('mark_under_review', 'reject_requests', 'mark_completed')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False   # kept for audit
+
+    def get_fieldsets(self, request, obj=None):
+        if obj is not None and obj.request_type == RR.RequestType.COPYRIGHT:
+            return self.fieldsets
+        request_fields, requester, (title, review) = self.fieldsets
+        return (request_fields, requester,
+                (title, {**review, 'fields': tuple(f for f in review['fields'] if f != 'remove_content')}))
+
+    def get_urls(self):
+        return [path('<int:pk>/evidence/', self.admin_site.admin_view(self.evidence_view),
+                     name='base_vendorremovalrequest_evidence')] + super().get_urls()
+
+    def evidence_view(self, request, pk):
+        req = self.get_object(request, str(pk))
+        if req is None or not req.evidence_file or not self.has_view_permission(request, req):
+            raise Http404
+        try:
+            handle = req.evidence_file.open('rb')
+        except FileNotFoundError:
+            raise Http404
+        response = FileResponse(handle, as_attachment=True,
+                                filename=req.evidence_name or Path(req.evidence_file.name).name)
+        response['X-Content-Type-Options'] = 'nosniff'
+        return response
+
+    @admin.display(description='Listing')
+    def vendor_links(self, obj):
+        if obj.vendor_id is None:
+            return f'{obj.vendor_name} (listing deleted)'
+        return format_html('{} — <a href="/product/{}" target="_blank" rel="noopener">public page</a> · '
+                           '<a href="{}">edit in Products</a>', obj.vendor_name, obj.vendor_id,
+                           reverse('admin:base_product_change', args=[obj.vendor_id]))
+
+    @admin.display(description='On website', boolean=True)
+    def listing_visible(self, obj):
+        return bool(obj.vendor and obj.vendor.is_approved)
+
+    @admin.display(description='Evidence', boolean=True)
+    def has_evidence(self, obj):
+        return bool(obj.evidence_file)
+
+    @admin.display(description='Evidence file')
+    def evidence(self, obj):
+        if not obj.evidence_file:
+            return '—'
+        return format_html('<a href="{}">Download {}</a>',
+                           reverse('admin:base_vendorremovalrequest_evidence', args=[obj.pk]),
+                           obj.evidence_name or 'file')
+
+    def save_model(self, request, obj, form, change):
+        new_status = obj.status
+        obj.status = form.initial.get('status', obj.status)
+        for field in ('ownership_verified', 'verification_method', 'admin_notes', 'message_to_requester'):
+            if field in form.changed_data:
+                detail = obj.admin_notes if field == 'admin_notes' else str(getattr(obj, field))
+                removal_requests.log(obj, f'{field}_changed', request.user, detail=detail)
+        super().save_model(request, obj, form, change)
+        removal_requests.change_status(obj, new_status, request.user)
+        keys = form.cleaned_data.get('remove_content')
+        if keys:
+            removed = removal_requests.remove_content(obj, keys, request.user)
+            self.message_user(request, f'Removed {len(removed)} item(s) from the listing.')
+        if new_status == RR.Status.APPROVED and obj.request_type == RR.RequestType.UNLIST:
+            self.message_user(request, 'The listing is now hidden from the website (the record is kept).')
+
+    def _move(self, request, queryset, new_status):
+        moved, skipped = 0, []
+        for req in queryset:
+            problem = removal_requests.decision_problem(req, new_status)
+            if problem or req.status == new_status:
+                skipped.append(req.reference)
+                continue
+            removal_requests.change_status(req, new_status, request.user)
+            moved += 1
+        self.message_user(request, f'{moved} request(s) set to {RR.Status(new_status).label.lower()}.'
+                                   + (f' Skipped: {", ".join(skipped)}.' if skipped else ''))
+
+    @admin.action(description='Mark as under review')
+    def mark_under_review(self, request, queryset):
+        self._move(request, queryset, RR.Status.UNDER_REVIEW)
+
+    @admin.action(description='Reject (e-mails the requester)')
+    def reject_requests(self, request, queryset):
+        self._move(request, queryset, RR.Status.REJECTED)
+
+    @admin.action(description='Mark approved requests as completed')
+    def mark_completed(self, request, queryset):
+        self._move(request, queryset, RR.Status.COMPLETED)

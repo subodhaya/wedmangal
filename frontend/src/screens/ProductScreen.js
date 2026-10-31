@@ -12,6 +12,7 @@ import VendorGallery from '../components/vendor/VendorGallery';
 import VendorActions from '../components/vendor/VendorActions';
 import DiscoveryPrompt from '../discovery/DiscoveryPrompt';
 import MoreVendors from '../components/vendor/MoreVendors';
+import ListingReportLinks from '../components/vendor/ListingReportLinks';
 import { CITIES, hasChosenCity, setCity } from '../utils/city';
 import '../components/vendor/VendorProfile.css';
 import SlotPicker from '../components/SlotPicker';
@@ -850,6 +851,7 @@ const handleDirectBooking = async (serviceId) => {
               <div className="vp-owner ps-claim-row">
                 <ClaimButton product={product} hideStatus />
               </div>
+              <ListingReportLinks vendor={product} />
 
               {/* ── Keep exploring: similar vendors with photos, other categories, home ── */}
               <MoreVendors vendor={product} />

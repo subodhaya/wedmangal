@@ -26,6 +26,7 @@ STATIC_URLS = [
     ("ContactUs",             "yearly", "0.3"),
     ("TermsAndCondition",     "yearly", "0.3"),
     ("RefundAndCancellation", "yearly", "0.3"),
+    ("removal-request",       "yearly", "0.3"),
 ]
 
 def sitemap_xml(request):

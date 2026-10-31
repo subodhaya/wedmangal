@@ -26,6 +26,7 @@ PUBLIC_ROUTE_PATTERNS = [
     r'/TermsAndCondition',
     r'/RefundAndCancellation',
     r'/ContactUs',
+    r'/removal-request',
     r'/faq',
     r'/blog',
     r'/blog/[\w-]+',
