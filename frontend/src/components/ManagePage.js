@@ -28,7 +28,7 @@ function ManagePage() {
         website_url: '',
         min_price: '',
         max_price: '',
-        isApproved: false,
+        is_approved: false,
     });
     const [services, setServices] = useState([]);
     const [successMessage, setSuccessMessage] = useState('');
@@ -236,8 +236,8 @@ function ManagePage() {
 
     /* ── Approval badge ─────────────────────────────────────── */
     const ApprovalBadge = () => (
-        <span className={`mp-badge ${productData.isApproved ? 'mp-badge-approved' : 'mp-badge-pending'}`}>
-            {productData.isApproved ? '✅ Live on WedMangal' : '⏳ Pending Approval'}
+        <span className={`mp-badge ${productData.is_approved ? 'mp-badge-approved' : 'mp-badge-pending'}`}>
+            {productData.is_approved ? '✅ Live on WedMangal' : '⏳ Pending Approval'}
         </span>
     );
 
