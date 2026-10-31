@@ -7,6 +7,7 @@ import axios from 'axios';
 import SmartSearch from './SmartSearch';
 import { CitySwitcher } from './CityPicker';
 import { isAdminUser } from '../utils/auth';
+import { BASE_URL } from '../utils/api';
 import './Header.css';
 
 const getUserInfo = () => {
@@ -486,6 +487,12 @@ const Header = () => {
                       <LinkContainer to="/orderlist/">
                         <NavDropdown.Item onClick={collapseNav}>Booking List</NavDropdown.Item>
                       </LinkContainer>
+                      <NavDropdown.Divider />
+                      {/* Reviewed in Django admin (ownership check, evidence, audit log) — a full page load */}
+                      <NavDropdown.Item href={`${BASE_URL}/admin/base/vendorremovalrequest/?status__exact=pending`}
+                        onClick={collapseNav}>
+                        Unlisting &amp; Removal Requests
+                      </NavDropdown.Item>
                     </NavDropdown>
                   )}
 
