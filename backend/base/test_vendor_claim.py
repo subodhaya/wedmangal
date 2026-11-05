@@ -28,7 +28,7 @@ class ClaimTestCase(TestCase):
         self.hall = imported_vendor('Lotus Hall')
         self.owner = User.objects.create_user(username='owner', email='owner@example.com', password='x')
         self.other = User.objects.create_user(username='other', email='other@example.com', password='x')
-        sms = mock.patch('base.notifications.send_sms', return_value=SENT)
+        sms = mock.patch('base.notifications.send_otp', return_value=SENT)
         self.sms = sms.start()
         self.addCleanup(sms.stop)
 
@@ -58,7 +58,6 @@ class ClaimFlowTests(ClaimTestCase):
                                                  {'phone': '9111111111'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.sms.call_args.args[0], '9876543210')
-        self.assertIn('Lotus Hall', self.sms.call_args.args[1])
         self.assertEqual(response.json()['listed_mobile'], '+91 98••••••10')
         self.assertEqual(self.events('claim_started'), 1)
 

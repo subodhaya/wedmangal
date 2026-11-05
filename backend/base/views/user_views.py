@@ -1,6 +1,5 @@
 import random
 import string
-import requests as http_requests
 from datetime import timedelta
 
 from django.shortcuts import render, get_object_or_404
@@ -21,7 +20,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from base.serializers import ProductSerializer, UserSerializer, UserSerializerWithToken
 from base.permissions import IsAdmin
 from base.models import Profile, Product, ServiceOwnerClaim
-from base import identity
+from base import identity, notifications
 
 import os
 
@@ -51,7 +50,7 @@ def _cache_key_rate(phone, purpose='claim'):
 
 def _send_otp_fast2sms(phone, otp):
     """
-    Calls Fast2SMS Quick Transactional route (no website verification needed).
+    Sends the code by the Fast2SMS OTP route (see notifications.send_otp).
     Returns (success: bool, error_msg: str)
     """
     if not FAST2SMS_API_KEY:
@@ -59,25 +58,8 @@ def _send_otp_fast2sms(phone, otp):
         print(f"[DEV] OTP for {phone}: {otp}")
         return True, None
 
-    url = "https://www.fast2sms.com/dev/bulkV2"
-    params = {
-        "authorization": FAST2SMS_API_KEY,
-        "route":         "q",                        # q = Quick Transactional, no website verify needed
-        "message":       f"{otp} is your WedMangal verification code. Valid for 5 minutes.",
-        "language":      "english",
-        "numbers":       phone,
-    }
-    try:
-        resp = http_requests.get(url, params=params, timeout=10,
-                                 headers={"cache-control": "no-cache"})
-        data = resp.json()
-        if data.get("return") is True:
-            return True, None
-        else:
-            error = data.get("message", ["SMS delivery failed"])
-            return False, error[0] if isinstance(error, list) else error
-    except Exception as e:
-        return False, str(e)
+    sms_status, error = notifications.send_otp(phone, otp)
+    return (True, None) if sms_status == notifications.Status.SENT else (False, error)
 
 
 # ── Auth ───────────────────────────────────────────────────────────────────────

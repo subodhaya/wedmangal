@@ -182,7 +182,7 @@ def send_whatsapp(mobile, variables, quote_id):
 
 
 def send_sms(mobile, text):
-    """Returns (status, error). Uses the Fast2SMS Quick route, like the OTP login."""
+    """Returns (status, error). Uses the Fast2SMS Quick route (about Rs 5-7 per SMS)."""
     key = _fast2sms_key()
     if not key:
         return Status.SKIPPED, 'sms: no Fast2SMS key configured'
@@ -196,6 +196,28 @@ def send_sms(mobile, text):
     if data.get('return') is True:
         return Status.SENT, ''
     message = data.get('message', 'delivery failed')
+    return Status.FAILED, f'sms: {message[0] if isinstance(message, list) else message}'[:200]
+
+
+def send_otp(mobile, code):
+    """Send a numeric code by the Fast2SMS OTP route (about Rs 0.35; fixed wording, the code is the only variable).
+
+    Returns (status, error). Never falls back to the Quick route (about Rs 7): if Fast2SMS refuses, the send fails.
+    """
+    key = _fast2sms_key()
+    if not key:
+        return Status.SKIPPED, 'sms: no Fast2SMS key configured'
+    try:
+        response = requests.get(FAST2SMS_URL, timeout=10, headers={'cache-control': 'no-cache'}, params={
+            'authorization': key, 'route': 'otp', 'variables_values': code, 'numbers': mobile,
+        })
+        data = response.json()
+    except Exception as exc:
+        return Status.FAILED, f'sms: {type(exc).__name__}: {exc}'[:200]
+    if data.get('return') is True:
+        return Status.SENT, ''
+    message = data.get('message', 'delivery failed')
+    logger.warning('Fast2SMS OTP route refused: %s', message)
     return Status.FAILED, f'sms: {message[0] if isinstance(message, list) else message}'[:200]
 
 

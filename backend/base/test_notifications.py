@@ -219,3 +219,42 @@ class BackgroundDispatchTests(TestCase):
         thread.assert_called_once()
         self.assertEqual(thread.call_args.kwargs['args'], (123,))
         thread.return_value.start.assert_called_once()
+
+
+class OtpRouteTests(TestCase):
+    """Codes go only by the cheap OTP route, never the Quick route."""
+
+    def setUp(self):
+        patcher = mock.patch('base.notifications._fast2sms_key', return_value='test-key')
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    @mock.patch('base.notifications.requests.get', return_value=fast2sms_reply(SMS_OK))
+    def test_code_sent_by_otp_route(self, sms):
+        self.assertEqual(notifications.send_otp('9876543210', '123456'), ('sent', ''))
+        sms.assert_called_once()
+        params = sms.call_args.kwargs['params']
+        self.assertEqual((params['route'], params['variables_values'], params['numbers']),
+                         ('otp', '123456', '9876543210'))
+        self.assertNotIn('message', params)
+
+    @mock.patch('base.notifications.requests.get', return_value=fast2sms_reply(
+        {'return': False, 'status_code': 996, 'message': 'Complete website verification'}))
+    def test_refused_otp_fails_without_trying_the_quick_route(self, sms):
+        status, error = notifications.send_otp('9876543210', '123456')
+        self.assertEqual((status, error), ('failed', 'sms: Complete website verification'))
+        sms.assert_called_once()
+
+    @mock.patch('base.notifications.requests.get', side_effect=OSError('timeout'))
+    def test_network_error_does_not_send_a_second_code(self, sms):
+        status, error = notifications.send_otp('9876543210', '123456')
+        self.assertEqual(status, 'failed')
+        self.assertIn('OSError', error)
+        sms.assert_called_once()
+
+    @mock.patch('base.notifications.requests.get', return_value=fast2sms_reply(SMS_OK))
+    def test_login_otp_uses_otp_route(self, sms):
+        from base.views import user_views
+        with mock.patch.object(user_views, 'FAST2SMS_API_KEY', 'test-key'):
+            self.assertEqual(user_views._send_otp_fast2sms('9876543210', '654321'), (True, None))
+        self.assertEqual(sms.call_args.kwargs['params']['route'], 'otp')
