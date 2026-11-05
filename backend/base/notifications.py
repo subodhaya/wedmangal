@@ -199,10 +199,11 @@ def send_sms(mobile, text):
     return Status.FAILED, f'sms: {message[0] if isinstance(message, list) else message}'[:200]
 
 
-def send_otp(mobile, code):
+def send_otp(mobile, code, fallback_text):
     """Send a numeric code by the Fast2SMS OTP route (about Rs 0.35; fixed wording, the code is the only variable).
 
-    Returns (status, error). Never falls back to the Quick route (about Rs 7): if Fast2SMS refuses, the send fails.
+    Returns (status, error). While Fast2SMS refuses the route (website verification not done), the code goes by
+    the Quick route (about Rs 7) so login keeps working. Once the route is approved no Quick SMS is sent.
     """
     key = _fast2sms_key()
     if not key:
@@ -216,9 +217,8 @@ def send_otp(mobile, code):
         return Status.FAILED, f'sms: {type(exc).__name__}: {exc}'[:200]
     if data.get('return') is True:
         return Status.SENT, ''
-    message = data.get('message', 'delivery failed')
-    logger.warning('Fast2SMS OTP route refused: %s', message)
-    return Status.FAILED, f'sms: {message[0] if isinstance(message, list) else message}'[:200]
+    logger.warning('Fast2SMS OTP route refused (%s); sending by the Quick route', data.get('message'))
+    return send_sms(mobile, fallback_text)
 
 
 def _vendor_email(vendor):

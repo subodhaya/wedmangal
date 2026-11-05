@@ -58,6 +58,7 @@ class ClaimFlowTests(ClaimTestCase):
                                                  {'phone': '9111111111'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.sms.call_args.args[0], '9876543210')
+        self.assertIn('Lotus Hall', self.sms.call_args.kwargs['fallback_text'])
         self.assertEqual(response.json()['listed_mobile'], '+91 98••••••10')
         self.assertEqual(self.events('claim_started'), 1)
 

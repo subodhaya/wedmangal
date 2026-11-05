@@ -58,7 +58,8 @@ def _send_otp_fast2sms(phone, otp):
         print(f"[DEV] OTP for {phone}: {otp}")
         return True, None
 
-    sms_status, error = notifications.send_otp(phone, otp)
+    sms_status, error = notifications.send_otp(
+        phone, otp, fallback_text=f"{otp} is your WedMangal verification code. Valid for 5 minutes.")
     return (True, None) if sms_status == notifications.Status.SENT else (False, error)
 
 

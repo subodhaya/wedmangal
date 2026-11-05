@@ -154,7 +154,9 @@ def claim_send_code(request, pk):
     cache.set(_code_key(product, user), code, CODE_TTL)
     cache.delete(_tries_key(product, user))
     mobile = vp.listed_mobile(product)
-    sms_status, error = notifications.send_otp(mobile, code)
+    text = (f'{code} is your code to claim {(product.name or "your listing")[:40]} on WedMangal. '
+            f'Valid 10 minutes. Do not share it with anyone.')
+    sms_status, error = notifications.send_otp(mobile, code, fallback_text=text)
     if sms_status == notifications.Status.SKIPPED and settings.DEBUG:
         logger.warning('[DEV] claim code for vendor %s: %s', product._id, code)
     elif sms_status != notifications.Status.SENT:
