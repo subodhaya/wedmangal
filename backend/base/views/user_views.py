@@ -1,5 +1,5 @@
-import random
-import string
+import logging
+import secrets
 from datetime import timedelta
 
 from django.shortcuts import render, get_object_or_404
@@ -24,6 +24,8 @@ from base import identity, notifications
 
 import os
 
+logger = logging.getLogger(__name__)
+
 # ── Config ─────────────────────────────────────────────────────────────────────
 FAST2SMS_API_KEY  = os.environ.get('FAST2SMS_API_KEY', '')   # set in .env
 OTP_EXPIRY_SECS   = 300          # OTP valid for 5 minutes
@@ -35,7 +37,7 @@ MAX_VERIFY_TRIES  = 5            # lock out after 5 wrong attempts
 
 def _generate_otp():
     """Secure 6-digit numeric OTP."""
-    return ''.join(random.choices(string.digits, k=6))
+    return f'{secrets.randbelow(10 ** 6):06d}'
 
 
 def _cache_key_otp(phone, purpose='claim'):
@@ -61,6 +63,31 @@ def _send_otp_fast2sms(phone, otp):
     sms_status, error = notifications.send_otp(
         phone, otp, fallback_text=f"{otp} is your WedMangal verification code. Valid for 5 minutes.")
     return (True, None) if sms_status == notifications.Status.SENT else (False, error)
+
+
+def _send_login_code(phone, otp, resend):
+    """
+    Login and add-phone codes: WhatsApp first (wedmangal_login_otp template, about Rs 0.12),
+    SMS otherwise. A resend always goes by SMS, so a number without WhatsApp still gets the code.
+    Returns (success: bool, error_msg: str, channel: 'whatsapp' | 'sms')
+    """
+    if FAST2SMS_API_KEY and not resend:
+        wa_status, error = notifications.send_otp_whatsapp(phone, otp)
+        if wa_status == notifications.Status.SENT:
+            return True, None, 'whatsapp'
+        if wa_status == notifications.Status.FAILED:
+            logger.warning('WhatsApp code not accepted (%s); sending by SMS', error)
+    success, error = _send_otp_fast2sms(phone, otp)
+    return success, error, 'sms'
+
+
+def _code_sent_response(phone, channel):
+    if channel == 'whatsapp':
+        detail = (f'Verification code sent on WhatsApp to +91 {phone}. Valid for 5 minutes. '
+                  f'Not received? Tap Resend to get it by SMS.')
+    else:
+        detail = f'Verification code sent to +91 {phone}. Valid for 5 minutes.'
+    return Response({'detail': detail, 'phone': phone, 'channel': channel}, status=status.HTTP_200_OK)
 
 
 # ── Auth ───────────────────────────────────────────────────────────────────────
@@ -128,22 +155,26 @@ def login_send_otp(request):
             status=status.HTTP_429_TOO_MANY_REQUESTS
         )
 
+    previous = cache.get(_cache_key_otp(phone, 'login'))
+    resend = previous is not None   # earlier code still valid
     otp = _generate_otp()
     cache.set(_cache_key_otp(phone, 'login'),  otp, timeout=OTP_EXPIRY_SECS)
     cache.set(_cache_key_rate(phone, 'login'), '1', timeout=OTP_RATE_LIMIT)
     cache.delete(_cache_key_tries(phone, 'login'))
 
-    success, error = _send_otp_fast2sms(phone, otp)
+    success, error, channel = _send_login_code(phone, otp, resend)
     if not success:
+        if previous:   # the code the user already has keeps working
+            cache.set(_cache_key_otp(phone, 'login'), previous, timeout=OTP_EXPIRY_SECS)
+        else:
+            cache.delete(_cache_key_otp(phone, 'login'))
+        cache.delete(_cache_key_rate(phone, 'login'))
         return Response(
             {'detail': f'SMS delivery failed: {error}. Please try again.'},
             status=status.HTTP_503_SERVICE_UNAVAILABLE
         )
 
-    return Response({
-        'detail': f'Verification code sent to +91 {phone}. Valid for 5 minutes.',
-        'phone': phone,
-    }, status=status.HTTP_200_OK)
+    return _code_sent_response(phone, channel)
 
 
 @csrf_exempt
@@ -243,22 +274,26 @@ def link_phone_send_otp(request):
             status=status.HTTP_429_TOO_MANY_REQUESTS
         )
 
+    previous = cache.get(_cache_key_otp(phone, 'link'))
+    resend = previous is not None   # earlier code still valid
     otp = _generate_otp()
     cache.set(_cache_key_otp(phone, 'link'),  otp, timeout=OTP_EXPIRY_SECS)
     cache.set(_cache_key_rate(phone, 'link'), '1', timeout=OTP_RATE_LIMIT)
     cache.delete(_cache_key_tries(phone, 'link'))
 
-    success, error = _send_otp_fast2sms(phone, otp)
+    success, error, channel = _send_login_code(phone, otp, resend)
     if not success:
+        if previous:   # the code the user already has keeps working
+            cache.set(_cache_key_otp(phone, 'link'), previous, timeout=OTP_EXPIRY_SECS)
+        else:
+            cache.delete(_cache_key_otp(phone, 'link'))
+        cache.delete(_cache_key_rate(phone, 'link'))
         return Response(
             {'detail': f'SMS delivery failed: {error}. Please try again.'},
             status=status.HTTP_503_SERVICE_UNAVAILABLE
         )
 
-    return Response({
-        'detail': f'Verification code sent to +91 {phone}. Valid for 5 minutes.',
-        'phone': phone,
-    }, status=status.HTTP_200_OK)
+    return _code_sent_response(phone, channel)
 
 
 @csrf_exempt

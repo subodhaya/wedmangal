@@ -22,6 +22,7 @@ export default function PhoneOtpStep({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [channel, setChannel] = useState('sms');   // where the last code went: 'whatsapp' | 'sms'
   const inputRefs = useRef([]);
   const timerRef = useRef(null);
 
@@ -41,7 +42,8 @@ export default function PhoneOtpStep({
     }
     setLoading(true);
     try {
-      await api.post(sendUrl, { phone: cleaned, ...extraParams });
+      const { data } = await api.post(sendUrl, { phone: cleaned, ...extraParams });
+      setChannel(data?.channel === 'whatsapp' ? 'whatsapp' : 'sms');
       setStep('otp');
       setResendTimer(RESEND_SECONDS);
     } catch (err) {
@@ -139,9 +141,12 @@ export default function PhoneOtpStep({
   return (
     <div className="claim-body">
       <p className="claim-desc">
-        {otpDescPrefix} <strong>+91 {phone}</strong>.
+        {otpDescPrefix} {channel === 'whatsapp' && 'WhatsApp on '}<strong>+91 {phone}</strong>.
         <br />
-        <span className="claim-hint">It expires in 5 minutes.</span>
+        <span className="claim-hint">
+          It expires in 5 minutes.
+          {channel === 'whatsapp' && ' Not on WhatsApp? Wait for the timer and resend to get it by SMS.'}
+        </span>
       </p>
 
       <div className="claim-otp-row" onPaste={handleOtpPaste}>
@@ -174,7 +179,9 @@ export default function PhoneOtpStep({
       <div className="claim-resend">
         {resendTimer > 0
           ? <span className="claim-timer">Resend in {resendTimer}s</span>
-          : <button className="claim-resend-btn" onClick={handleResend}>Resend Code</button>
+          : <button className="claim-resend-btn" onClick={handleResend}>
+              {channel === 'whatsapp' ? 'Send by SMS instead' : 'Resend Code'}
+            </button>
         }
         <button
           className="claim-back-btn"

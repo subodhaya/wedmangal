@@ -260,3 +260,72 @@ class OtpRouteTests(TestCase):
         with mock.patch.object(user_views, 'FAST2SMS_API_KEY', 'test-key'):
             self.assertEqual(user_views._send_otp_fast2sms('9876543210', '654321'), (True, None))
         self.assertEqual(sms.call_args.kwargs['params']['route'], 'otp')
+
+
+
+WA_OTP_OK = {'request_id': 'WZrvuiO8UZg4PR7', 'return': True, 'message': ['Whatsapp Message sent successfully.']}
+OTP_ROUTE = lambda call: call.kwargs['params'].get('route')   # None = the WhatsApp endpoint
+
+
+@override_settings(FAST2SMS_WHATSAPP_PHONE_NUMBER_ID='1503522142835303', FAST2SMS_WHATSAPP_OTP_MESSAGE_ID='46117')
+class WhatsAppLoginCodeTests(TestCase):
+    """Login / add-phone codes: WhatsApp first, SMS on failure or resend. Never a real message."""
+
+    def setUp(self):
+        cache.clear()
+        for patcher in (mock.patch('base.notifications._fast2sms_key', return_value='test-key'),
+                        mock.patch('base.views.user_views.FAST2SMS_API_KEY', 'test-key')):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        self.client = APIClient()
+
+    def send(self):
+        return self.client.post('/api/users/login/send-otp/', {'phone': '9876543210'}, format='json')
+
+    @mock.patch('base.notifications.requests.get', return_value=fast2sms_reply(WA_OTP_OK))
+    def test_login_code_goes_by_whatsapp(self, get):
+        response = self.send()
+        self.assertEqual((response.status_code, response.data['channel']), (200, 'whatsapp'))
+        get.assert_called_once()
+        code = cache.get('login_otp:9876543210')
+        self.assertRegex(code, r'^\d{6}$')
+        self.assertEqual(get.call_args.args[0], notifications.FAST2SMS_WHATSAPP_URL)
+        self.assertEqual(get.call_args.kwargs['params'], {'message_id': '46117', 'phone_number_id': '1503522142835303',
+                                                         'numbers': '9876543210', 'variables_values': code})
+
+    @mock.patch('base.notifications.requests.get', side_effect=[
+        fast2sms_reply({'return': False, 'message': ['WhatsApp Phone Number ID is invalid or not connected.']}),
+        fast2sms_reply(SMS_OK)])
+    def test_rejected_whatsapp_falls_back_to_sms(self, get):
+        response = self.send()
+        self.assertEqual((response.status_code, response.data['channel']), (200, 'sms'))
+        self.assertEqual([OTP_ROUTE(c) for c in get.call_args_list], [None, 'otp'])
+
+    @mock.patch('base.notifications.requests.get', return_value=fast2sms_reply(SMS_OK))
+    def test_resend_goes_by_sms(self, get):
+        self.send()
+        cache.delete('login_otp_rate:9876543210')          # the 60 s resend wait is over
+        response = self.send()
+        self.assertEqual(response.data['channel'], 'sms')
+        self.assertEqual([OTP_ROUTE(c) for c in get.call_args_list], [None, 'otp'])
+
+    @override_settings(FAST2SMS_WHATSAPP_OTP_MESSAGE_ID='')
+    @mock.patch.dict('os.environ', {'FAST2SMS_WHATSAPP_OTP_MESSAGE_ID': ''})   # the local .env may switch it on
+    @mock.patch('base.notifications.requests.get', return_value=fast2sms_reply(SMS_OK))
+    def test_without_setting_codes_stay_on_sms(self, get):
+        self.assertEqual(self.send().data['channel'], 'sms')
+        self.assertEqual([OTP_ROUTE(c) for c in get.call_args_list], ['otp'])
+
+    @mock.patch('base.notifications.requests.get', side_effect=[OSError('timeout'), fast2sms_reply(SMS_OK)])
+    def test_whatsapp_outage_falls_back_to_sms(self, get):
+        response = self.send()
+        self.assertEqual((response.status_code, response.data['channel']), (200, 'sms'))
+
+    @mock.patch('base.notifications.requests.get', return_value=fast2sms_reply(WA_OTP_OK))
+    def test_failed_resend_keeps_the_earlier_code(self, get):
+        self.send()
+        first = cache.get('login_otp:9876543210')
+        cache.delete('login_otp_rate:9876543210')
+        get.side_effect = OSError('timeout')                  # the SMS resend cannot be sent
+        self.assertEqual(self.send().status_code, 503)
+        self.assertEqual(cache.get('login_otp:9876543210'), first)

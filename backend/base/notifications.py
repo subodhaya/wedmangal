@@ -94,20 +94,18 @@ def email_content(quote):
 
 
 # ── WhatsApp message content ───────────────────────────────────────────────────
-# Template (submitted for approval as UTILITY, 4 body variables):
+# Template wedmangal_lead_enquiry_v2 (UTILITY, APPROVED 2026-11, Fast2SMS message_id 46051, 4 body variables):
 #
-#   🔔 New customer enquiry – WedMangal
+#   [header] New Customer Enquiry
+#   Hello! 🔔 You have a new customer enquiry on *WedMangal*.
+#   👤 *{{1}}* is looking for {{2}}.
+#   📝 *Details:* {{3}}
+#   📞 *Customer phone:* {{4}}
+#   This customer sent this enquiry for your business on WedMangal. Please call them soon if you can take
+#   this booking.
+#   [footer] WedMangal – Wedding vendors near you      [static button] Open WedMangal → www.wedmangal.com
 #
-#   {{1}} is looking for {{2}}.
-#
-#   {{3}}
-#
-#   📞 Customer: {{4}}
-#
-#   This customer sent an enquiry for your business on WedMangal. Please call them if you can
-#   take this booking.
-#
-#   – WedMangal
+# Switched on by FAST2SMS_WHATSAPP_MESSAGE_ID=46051 in the server .env.
 
 CATEGORY_PHRASES = {
     'halls': 'a wedding hall', 'photographers': 'a wedding photographer', 'makeup_artist': 'bridal makeup',
@@ -197,6 +195,38 @@ def send_sms(mobile, text):
         return Status.SENT, ''
     message = data.get('message', 'delivery failed')
     return Status.FAILED, f'sms: {message[0] if isinstance(message, list) else message}'[:200]
+
+
+# ── Login codes by WhatsApp (Authentication template with a Copy code button) ──
+# Template wedmangal_login_otp (Fast2SMS message_id 46117): "{{1}} is your verification code. For your security,
+# do not share this code." + "Expires in 5 minutes." — so only 5-minute codes (login, add phone) may use it;
+# claim codes last 10. Fast2SMS fills the Copy code button from the same single variable.
+# Switched on by FAST2SMS_WHATSAPP_OTP_MESSAGE_ID=46117 (plus FAST2SMS_WHATSAPP_PHONE_NUMBER_ID).
+
+
+def whatsapp_otp_config():
+    """(phone_number_id, message_id) when WhatsApp login codes are switched on, else None."""
+    phone_number_id, message_id = _setting('FAST2SMS_WHATSAPP_PHONE_NUMBER_ID'), _setting('FAST2SMS_WHATSAPP_OTP_MESSAGE_ID')
+    return (phone_number_id, message_id) if phone_number_id and message_id and _fast2sms_key() else None
+
+
+def send_otp_whatsapp(mobile, code):
+    """Returns (status, error). SENT means Fast2SMS accepted it — not that it was delivered."""
+    config = whatsapp_otp_config()
+    if config is None:
+        return Status.SKIPPED, 'whatsapp: login codes not configured'
+    phone_number_id, message_id = config
+    try:
+        response = requests.get(FAST2SMS_WHATSAPP_URL, timeout=10, headers={'Authorization': _fast2sms_key()}, params={
+            'message_id': message_id, 'phone_number_id': phone_number_id, 'numbers': mobile, 'variables_values': code,
+        })
+        data = response.json()
+    except Exception as exc:   # timeout, network error, non-JSON reply
+        return Status.FAILED, mask_phones(f'whatsapp otp: {type(exc).__name__}: {exc}')[:200]
+    if data.get('status') is True or data.get('return') is True:
+        return Status.SENT, ''
+    message = data.get('message', 'rejected')
+    return Status.FAILED, mask_phones(f'whatsapp otp: {message[0] if isinstance(message, list) else message}')[:200]
 
 
 def send_otp(mobile, code, fallback_text):
