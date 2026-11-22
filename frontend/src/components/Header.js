@@ -459,6 +459,9 @@ const Header = () => {
                         align="end"
                         onClick={e => e.stopPropagation()}
                       >
+                        <LinkContainer to="/manage-my-page">
+                          <NavDropdown.Item onClick={collapseNav}>My Business Page</NavDropdown.Item>
+                        </LinkContainer>
                         <LinkContainer to="/orderlist/">
                           <NavDropdown.Item onClick={collapseNav}>Booking List</NavDropdown.Item>
                         </LinkContainer>
@@ -515,9 +518,16 @@ const Header = () => {
                       </NavDropdown.Item>
                     </NavDropdown>
                   ) : (
-                    <LinkContainer to="/login">
-                      <Nav.Link>Login</Nav.Link>
-                    </LinkContainer>
+                    <>
+                      <LinkContainer to="/owner-register">
+                        <Nav.Link title="Wedding vendors: list your business free">
+                          <i className="fas fa-store" aria-hidden="true" /> For Vendors
+                        </Nav.Link>
+                      </LinkContainer>
+                      <LinkContainer to="/login">
+                        <Nav.Link>Login</Nav.Link>
+                      </LinkContainer>
+                    </>
                   )}
 
                 </Nav>
@@ -531,4 +541,4 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default Header;

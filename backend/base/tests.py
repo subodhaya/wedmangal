@@ -19,6 +19,7 @@ PUBLIC_ROUTE_PATTERNS = [
     r'/plan',
     r'/login',
     r'/register',
+    r'/owner-register',
     r'/product/\d+',
     r'/available-today',
     r'/search/',

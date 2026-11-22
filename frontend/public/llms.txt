@@ -30,6 +30,18 @@ Tamil Nadu, India — including Chennai, Coimbatore, Madurai, Salem, Trichy (Tir
 6. Confirm — you'll be connected to the vendor via WhatsApp
 7. Vendor confirms the booking directly
 
+## For Wedding Vendors (Businesses)
+
+Wedding businesses can list on WedMangal for free to showcase their work, get discovered by couples and receive booking enquiries.
+
+1. Go to https://www.wedmangal.com/owner-register (or click "For Vendors" at the top of the site)
+2. Create a vendor account with your name, email and a password
+3. Add your business details: category, city, photos, services and prices
+4. After a quick review your profile goes live and couples can contact you
+
+Already registered? Vendor login: https://www.wedmangal.com/login?as=vendor
+Business already listed on WedMangal? Open the listing and use "Claim this listing".
+
 ## Vendor Categories
 
 | Category | Description |

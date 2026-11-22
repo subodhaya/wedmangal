@@ -10,6 +10,7 @@ function Footer() {
                         <p className="mb-0">&copy; {new Date().getFullYear()} WedMangal. All Rights Reserved.</p>
                     </Col>
                     <Col md={6} className="py-2">
+                        <a href="/owner-register" className="text-white mx-2"><strong>Register Your Business (Vendors)</strong></a> |
                         <a href="/blog" className="text-white mx-2">Blog</a> |
                         <a href="/faq" className="text-white mx-2">FAQ</a> |
                         <a href="/TermsAndCondition" className="text-white mx-2">Terms & Conditions</a> |

@@ -364,7 +364,7 @@ function HomeScreen() {
           { '@type': 'Question', name: 'How do I book a wedding vendor on WedMangal?', acceptedAnswer: { '@type': 'Answer', text: 'Browse vendors by category, view their profile, select a service and date, then confirm your booking directly on WedMangal.' } },
           { '@type': 'Question', name: 'Is WedMangal free to use for customers?', acceptedAnswer: { '@type': 'Answer', text: 'Yes, browsing and booking wedding vendors on WedMangal is completely free for customers.' } },
           { '@type': 'Question', name: 'What wedding vendors are available on WedMangal?', acceptedAnswer: { '@type': 'Answer', text: 'WedMangal lists photographers, makeup artists, caterers, decorators, mehandi artists, DJ artists, wedding halls, event planners, jewellery, pandits, and more across Tamil Nadu.' } },
-          { '@type': 'Question', name: 'How do I register as a vendor on WedMangal?', acceptedAnswer: { '@type': 'Answer', text: 'Click "Register as Vendor" on the login page or visit wedmangal.com/owner-register to create your vendor profile.' } },
+          { '@type': 'Question', name: 'How do I register as a vendor on WedMangal?', acceptedAnswer: { '@type': 'Answer', text: 'Click "For Vendors" at the top of any page, or visit wedmangal.com/owner-register. Create your free vendor account, add your business details, photos and services, and after a quick review couples can discover you and send enquiries.' } },
         ],
       },
     ];
@@ -547,6 +547,25 @@ return () => { isMounted = false; };
         </main>
       )}
 
+      {/* ── Vendor call-to-action (logged-out visitors only) ── */}
+      {!userInfo && (
+        <section className="container-fluid" style={{ marginTop: 24 }} aria-label="For wedding vendors">
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 20px', borderRadius: 12, background: '#5e143f', color: '#fff' }}>
+            <div style={{ flex: '1 1 260px' }}>
+              <h2 style={{ fontSize: '1.15rem', margin: 0, color: '#f9e79f' }}>🏪 Are you a wedding vendor?</h2>
+              <p style={{ margin: '4px 0 0', fontSize: '0.92rem', opacity: 0.9 }}>
+                Photographers, makeup artists, caterers, decorators, halls &amp; more — showcase your business,
+                get discovered by couples and receive enquiries. Listing is free.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Button variant="warning" onClick={() => navigate('/owner-register')}>Register your business</Button>
+              <Button variant="outline-light" onClick={() => navigate('/login?as=vendor')}>Vendor login</Button>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── Category grid ── */}
       {role !== 'service-owner' && (
         <section className="category-section" aria-label="Wedding vendor categories">
@@ -636,4 +655,4 @@ return () => { isMounted = false; };
   );
 }
 
-export default HomeScreen;
+export default HomeScreen;

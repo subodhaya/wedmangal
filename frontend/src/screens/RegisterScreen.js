@@ -6,6 +6,7 @@ import Message from '../components/Message';
 import FormContainer from '../components/FormContainer';
 import axios from 'axios';
 import api from '../utils/api';  
+import './LoginScreen.css';
 
 function RegisterScreen() {
   const [name, setName] = useState('');
@@ -73,6 +74,13 @@ function RegisterScreen() {
   return (
     <FormContainer>
       <h1>Sign Up</h1>
+      <p className="text-muted mb-2">Customer account — for couples &amp; families planning a wedding.</p>
+      <div className="ls-vendor-box">
+        <p>
+          🏪 <strong>Are you a wedding vendor or business owner?</strong> This form is for customers.{' '}
+          <Link to="/owner-register">Register your business here — it's free →</Link>
+        </p>
+      </div>
       {message && <Message variant='danger'>{message}</Message>}
       {error && <Message variant='danger'>{error}</Message>}
       {loading && <Loader />}

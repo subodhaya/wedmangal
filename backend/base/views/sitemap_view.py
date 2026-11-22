@@ -23,6 +23,7 @@ STATIC_URLS = [
     ("available-today", "daily",  "0.6"),
     ("blog",            "weekly", "0.6"),
     ("faq",             "monthly","0.5"),
+    ("owner-register",  "monthly","0.6"),
     ("ContactUs",             "yearly", "0.3"),
     ("TermsAndCondition",     "yearly", "0.3"),
     ("RefundAndCancellation", "yearly", "0.3"),
