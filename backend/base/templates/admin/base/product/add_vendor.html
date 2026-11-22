@@ -1,0 +1,36 @@
+{% extends "admin/base_site.html" %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Home</a> › <a href="{% url 'admin:base_product_changelist' %}">Products</a> › Add vendor from WhatsApp
+</div>
+{% endblock %}
+{% block content %}
+{% if done %}
+  <div style="background:#e8f5e9;border:1px solid #66bb6a;padding:14px 18px;margin-bottom:22px;border-radius:6px">
+    <h2 style="margin-top:0">✅ Added: {{ done.product.name }} (#{{ done.product_id }})</h2>
+    <p>Owner: account #{{ done.owner.id }} ({{ done.owner.email|default:done.owner.username }}), {{ done.how }}.
+       {% if done.product.is_approved %}It is on the website now.{% else %}It is <b>not</b> on the website yet (not approved).{% endif %}</p>
+    <p><a href="/product/{{ done.product_id }}" target="_blank" rel="noopener">Open public page</a> ·
+       <a href="{{ done.change_url }}">Edit in Products</a></p>
+    <p><b>Send this to the vendor on WhatsApp:</b></p>
+    <textarea rows="6" cols="90" readonly onclick="this.select()">{{ done.reply }}</textarea>
+  </div>
+  <h2>Add another</h2>
+{% endif %}
+<p style="max-width:760px">Paste the details the vendor sent. The listing goes to <b>their own account</b>: the one already
+  using their phone, else the one with their e-mail, else a new account with their phone (they log in with a WhatsApp code).
+  Nothing is saved if anything looks wrong — the reason is shown at the top.</p>
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+  {% if form.non_field_errors %}<ul class="errorlist">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  <fieldset class="module aligned">
+  {% for field in form %}
+    <div class="form-row{% if field.errors %} errors{% endif %}">
+      {{ field.errors }}
+      <div class="flex-container">{{ field.label_tag }} {{ field }}</div>
+      {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+    </div>
+  {% endfor %}
+  </fieldset>
+  <div class="submit-row"><input type="submit" class="default" value="Add vendor"></div>
+</form>
+{% endblock %}

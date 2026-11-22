@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from .models import Profile, Product, Service, Review, Order, OrderItem, Budget, ShippingAddress, ServiceImage, CartItem, Wishlist, BlogPost, VendorEvent, QuoteRequest, ServiceOwnerClaim, DiscoveryLead, SavedRequirement, VendorProspect, VendorRemovalRequest, VendorRemovalRequestEvent
 from django.db import transaction
 from django.utils import timezone
-from . import analytics, discovery, removal_requests, vendor_profile
+from . import analytics, discovery, removal_requests, vendor_onboarding, vendor_profile
 from django.utils.html import format_html, format_html_join
 from django import forms
 from django.http import FileResponse, Http404
@@ -36,8 +36,45 @@ class UserAdmin(BaseUserAdmin):
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
+class AddVendorForm(forms.Form):
+    """Details a vendor sent on WhatsApp. See base/vendor_onboarding.py for how the owner account is chosen."""
+    name = forms.CharField(label='Business name', max_length=200)
+    category = forms.ChoiceField(choices=[('', '—')] + vendor_onboarding.CATEGORIES)
+    city = forms.ChoiceField(choices=[], initial='Chennai')
+    area = forms.CharField(required=False, max_length=150, help_text='As in their address, e.g. Keelkattalai.')
+    address = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2, 'cols': 60}))
+    business_phone = forms.CharField(label='Business phone', max_length=20,
+                                     help_text='Shown to customers. +91 / spaces are fine.')
+    owner_phone = forms.CharField(label="Owner's phone (login)", max_length=20, required=False,
+                                  help_text='The number they log in with — usually the WhatsApp number they '
+                                            'messaged from. Blank = same as business phone.')
+    owner_name = forms.CharField(label="Owner's name", max_length=150, required=False)
+    owner_email = forms.EmailField(label="Owner's e-mail", required=False,
+                                   help_text='Only their real e-mail. Never make one up.')
+    description = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 4, 'cols': 60}))
+    image = forms.ImageField(label='Cover photo', required=False)
+    instagram_url = forms.URLField(label='Instagram link', required=False, assume_scheme='https')
+    website_url = forms.URLField(label='Website', required=False, assume_scheme='https')
+    min_price = forms.DecimalField(label='Price from (Rs)', required=False, min_value=0, max_digits=15, decimal_places=2)
+    max_price = forms.DecimalField(label='Price up to (Rs)', required=False, min_value=0, max_digits=15, decimal_places=2)
+    approve = forms.BooleanField(label='Show on the website now', required=False, initial=True)
+    allow_duplicate = forms.BooleanField(label='Create anyway (I checked: it is a different business)', required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from base.areas import CITIES
+        self.fields['city'].choices = [(c, c) for c in CITIES]
+
+    def clean(self):
+        data = super().clean()
+        if data.get('min_price') and data.get('max_price') and data['min_price'] > data['max_price']:
+            raise forms.ValidationError('"Price from" is more than "Price up to".')
+        return data
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
+    change_list_template = 'admin/base/product/change_list_with_add_vendor.html'
     list_display = ('name', 'category', 'area_name', 'is_approved', 'is_claimed', 'is_verified', 'createdAt')
     list_filter = ('is_approved', 'is_claimed', 'is_verified', 'category')
     search_fields = ('name', 'area_name', 'business_phone')
@@ -68,6 +105,37 @@ class ProductAdmin(admin.ModelAdmin):
                 self.message_user(request, f'This listing had been removed at the business\'s request '
                                            f'({unlisted.reference}). It is visible again — make sure they asked.',
                                   level='warning')
+
+    def get_urls(self):
+        return [path('add-vendor/', self.admin_site.admin_view(self.add_vendor_view),
+                     name='base_product_add_vendor')] + super().get_urls()
+
+    def add_vendor_view(self, request):
+        """Admin → Products → "Add vendor from WhatsApp": listing + the vendor's own account, in one step."""
+        from django.template.response import TemplateResponse
+        if not self.has_add_permission(request):
+            raise Http404
+        done = None
+        form = AddVendorForm(request.POST or None, request.FILES or None)
+        if request.method == 'POST' and form.is_valid():
+            data = form.cleaned_data
+            try:
+                product, owner, how = vendor_onboarding.create_vendor(
+                    data, request.user, image=data.get('image'), allow_duplicate=data.get('allow_duplicate'))
+            except vendor_onboarding.OnboardingError as exc:
+                form.add_error(None, str(exc))
+            else:
+                done = {'product': product, 'product_id': product._id, 'owner': owner,
+                        'how': {'phone': 'their existing account (found by phone)',
+                                'email': 'their existing account (found by e-mail; phone added to it)',
+                                'new': 'a new account with their phone (no password)'}[how],
+                        'reply': vendor_onboarding.whatsapp_reply(product),
+                        'change_url': reverse('admin:base_product_change', args=[product._id])}
+                form = AddVendorForm()
+        return TemplateResponse(request, 'admin/base/product/add_vendor.html', {
+            **self.admin_site.each_context(request), 'opts': self.model._meta, 'title': 'Add vendor from WhatsApp',
+            'form': form, 'done': done,
+        })
 
     @admin.action(description='Mark as verified by WedMangal (claimed listings only)')
     def mark_verified(self, request, queryset):
