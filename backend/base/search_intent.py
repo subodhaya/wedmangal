@@ -70,6 +70,8 @@ CATEGORY_SYNONYMS = {
     'Entertainment': ['nadaswaram', 'orchestra', 'entertainment', 'live band', 'music band'],
     'Travel_Transport': ['wedding car', 'car rental', 'transport', 'travels', 'travel', 'bus'],
     'Pandit': ['purohit', 'pandit', 'priest', 'vadhyar'],
+    'Return_Gifts': ['return gifts', 'return gift', 'thamboolam bags', 'thamboolam bag', 'thambulam bag',
+                     'wedding favours', 'wedding favors'],
 }
 
 PHONE_RE = re.compile(r'(?<!\d)(?:\+?91[\s-]?)?[6-9](?:[\s-]?\d){9}(?!\d)')

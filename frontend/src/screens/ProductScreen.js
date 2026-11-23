@@ -1,4 +1,5 @@
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import { categoryText } from '../utils/categories';
 import { Row, Col, Carousel } from 'react-bootstrap';
 import Rating from '../components/Rating';
 import Loader from '../components/Loader';
@@ -363,8 +364,8 @@ const handleDirectBooking = async (serviceId) => {
 
         return (
         <Helmet>
-          <title>{`${product.name} | ${(product.category || '').replace(/_/g, ' ')} in ${product.city || ''} | WedMangal`}</title>
-          <meta name="description" content={product.description?.slice(0, 155) || `Book ${product.name}, a trusted ${product.category?.replace(/_/g, ' ')} in ${product.city}. View services, pricing and reviews on WedMangal.`} />
+          <title>{`${product.name} | ${categoryText(product)} in ${product.city || ''} | WedMangal`}</title>
+          <meta name="description" content={product.description?.slice(0, 155) || `Book ${product.name}, a trusted ${categoryText(product)} in ${product.city}. View services, pricing and reviews on WedMangal.`} />
           <link rel="canonical" href={`https://www.wedmangal.com/product/${product._id}`} />
 
           <meta property="og:type" content="business.business" />
@@ -440,7 +441,7 @@ const handleDirectBooking = async (serviceId) => {
               <div className="vp-identity">
                 {product.category && (
                   <Link className="vp-category" to={`/category/${product.category}`}>
-                    {product.category.replace(/_/g, ' ')}
+                    {categoryText(product)}
                   </Link>
                 )}
                 <h1 className="vp-name">{product.name}</h1>
@@ -535,7 +536,7 @@ const handleDirectBooking = async (serviceId) => {
                     <div style={{ color: '#fff', fontSize: '15px', fontWeight: 500, marginBottom: '2px', lineHeight: 1.3 }}>{product.name}</div>
                     {/* Category · City */}
                     <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', marginBottom: '10px' }}>
-                      {[product.category?.replace(/_/g, ' '), product.city].filter(Boolean).join(' · ')}
+                      {[categoryText(product), product.city].filter(Boolean).join(' · ')}
                     </div>
                     {/* Rating row + dots + Mute */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>

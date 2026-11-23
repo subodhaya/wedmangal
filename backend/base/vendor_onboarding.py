@@ -24,7 +24,7 @@ CATEGORIES = [
     ('Caterers', 'Caterers'), ('Decorators', 'Decorators'), ('Mehandi_Artist', 'Mehandi artists'),
     ('DJ_Artist', 'DJ artists'), ('Planners', 'Wedding planners'), ('Invitation', 'Invitations'),
     ('Jewellery', 'Jewellery'), ('Pandit', 'Pandits'), ('Travel_Transport', 'Travel & transport'),
-    ('Entertainment', 'Entertainment'),
+    ('Entertainment', 'Entertainment'), ('Return_Gifts', 'Return gifts'),
 ]
 SOURCE = 'admin_whatsapp'
 

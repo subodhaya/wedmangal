@@ -30,6 +30,8 @@ class Product(models.Model):
     image = models.ImageField(null=True, blank=True, default='/static/images/placeholder.png')
     brand = models.CharField(max_length=200, null=True, blank=True)
     category = models.CharField(max_length=200, null=True, blank=True)
+    # category 'Other': the vendor's own words for their wedding work, e.g. "Wedding cakes"
+    custom_category = models.CharField(max_length=60, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
     _id = models.AutoField(primary_key=True, editable=False)

@@ -40,6 +40,8 @@ CATEGORY_LABELS = {
     'Entertainment':    'Music & Entertainment',
     'Travel_Transport': 'Travel & Transport',
     'Pandit':           'Pandit',
+    'Return_Gifts':     'Return Gifts',
+    'Other':            'Services & More',          # page title: "Wedding Services & More in Chennai"
 }
 
 
@@ -50,6 +52,7 @@ SEARCH_NOUNS = {
     'DJ_Artist': 'Wedding DJ', 'Planners': 'Wedding Planner', 'Jewellery': 'Bridal Jewellery',
     'Invitation': 'Wedding Invitations', 'Entertainment': 'Wedding Music & Entertainment',
     'Travel_Transport': 'Wedding Cars & Travel', 'Pandit': 'Wedding Pandit',
+    'Return_Gifts': 'Wedding Return Gifts', 'Other': 'Wedding Service',
 }
 GOOGLE_RATING_RE = re.compile(r'Rated ([\d.]+)★ on Google \((\d+) reviews?\)')
 
@@ -194,7 +197,8 @@ def product_page(request, pk):
 
     name = (product.name or '').strip() or 'Wedding vendor'
     key = _category_key(product.category)
-    category_text = SEARCH_NOUNS.get(key) or (product.category or '').replace('_', ' ').strip()
+    category_text = ((product.custom_category or '').strip() if key == 'Other' else '') or SEARCH_NOUNS.get(key) \
+        or (product.category or '').replace('_', ' ').strip()
     city = (product.city or '').strip().title()
     area = (product.area_name or '').strip()
     place = ', '.join(p for p in (area, city) if p)

@@ -24,6 +24,8 @@ const CATEGORY_LABELS = {
   Entertainment:    'Music & Entertainment',
   Travel_Transport: 'Travel & Transport',
   Pandit:           'Pandit',
+  Return_Gifts:     'Return Gifts',
+  Other:            'More Wedding Services',
 };
 
 function CategoryScreen() {

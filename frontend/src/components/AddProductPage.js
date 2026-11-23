@@ -1,4 +1,6 @@
 import React, { useState, useRef } from 'react';
+import CategoryPicker from './CategoryPicker';
+import { isOtherCategory, CUSTOM_CATEGORY_ERROR } from '../utils/categories';
 import { Container, Row, Col } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
@@ -20,6 +22,7 @@ const AddProductPage = ({ client = null, onClientDone = null }) => {
         image: '',
         brand: '',
         category: '',
+        custom_category: '',
         description: '',
         city: '',
         area_name: '',
@@ -104,6 +107,8 @@ const AddProductPage = ({ client = null, onClientDone = null }) => {
 
         if (!productData.category)
             e.category = 'Please select a category.';
+        else if (isOtherCategory(productData.category) && !productData.custom_category?.trim())
+            e.custom_category = CUSTOM_CATEGORY_ERROR;
 
         const phoneDigits = (productData.business_phone || '').replace(/\D/g, '');
         if (!phoneDigits)
@@ -367,32 +372,8 @@ const AddProductPage = ({ client = null, onClientDone = null }) => {
 
                                 <div className="ap-form-group">
                                     <label className="ap-label">Category *</label>
-                                    <div className="ap-select-wrap">
-                                        <select
-                                            name="category"
-                                            className={`ap-select${fieldErrors.category ? ' ap-select--error' : ''}`}
-                                            value={productData.category}
-                                            onChange={handleProductChange}
-                                            required
-                                        >
-                                            <option value="" disabled>Select a category</option>
-                                            <option value="Makeup_Artist">Makeup Artist</option>
-                                            <option value="Photographers">Photographers</option>
-                                            <option value="Caterers">Caterers</option>
-                                            <option value="Planners">Planners</option>
-                                            <option value="Halls">Halls</option>
-                                            <option value="Decorators">Decorators</option>
-                                            <option value="Mehandi_Artist">Mehandi Artist</option>
-                                            <option value="Invitation">Invitation</option>
-                                            <option value="Jewellery">Jewellery</option>
-                                            <option value="DJ_Artist">DJ Artist</option>
-                                            <option value="Travel_Transport">Travel and Transport</option>
-                                            <option value="Entertainment">Entertainment</option>
-                                            <option value="Pandit">Pandit</option>
-                                        </select>
-                                        <i className="fa fa-caret-down ap-select-arrow"></i>
-                                    </div>
-                                    {fieldErrors.category && <span className="ap-field-error">{fieldErrors.category}</span>}
+                                    <CategoryPicker category={productData.category} customCategory={productData.custom_category}
+                                        onChange={handleProductChange} errors={fieldErrors} cls="ap" required />
                                 </div>
 
                                 <div className="ap-form-group">

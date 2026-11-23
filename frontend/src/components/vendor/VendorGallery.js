@@ -1,5 +1,6 @@
 // Photo hero for a vendor profile: the vendor's own photos only (business photo +
 // service photos). No stock images — with no photos we show a plain name card.
+import { categoryText } from '../../utils/categories';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 export const vendorPhotos = (product) => {
@@ -54,7 +55,7 @@ export default function VendorGallery({ product }) {
     return (
       <div className="vg-empty" aria-hidden="true">
         <span className="vg-monogram">{initials(product.name)}</span>
-        <span className="vg-empty-label">{(product.category || '').replace(/_/g, ' ')}</span>
+        <span className="vg-empty-label">{categoryText(product)}</span>
       </div>
     );
   }

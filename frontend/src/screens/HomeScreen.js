@@ -237,6 +237,8 @@ function HomeScreen() {
     { name: 'Entertainment', label: 'Music', image: '/images/categories/nadaswaram.jpg' },
     { name: 'Travel_Transport', label: 'Travel & Transport', image: '/images/categories/travel.jpg' },
     { name: 'Pandit', label: 'Pandit', image: '/images/categories/pandit.jpg' },
+    { name: 'Return_Gifts', label: 'Return Gifts', image: '/images/categories/return-gifts.svg' },
+    { name: 'Other', label: 'More Services', image: '/images/categories/more-services.svg' },
   ], []);
 
   const handleHeaderDownloadClick = async () => {

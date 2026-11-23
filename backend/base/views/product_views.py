@@ -200,6 +200,7 @@ def update_product(request, user_id):
             'name': request.data.get('name', product.name),
             'brand': request.data.get('brand', product.brand),
             'category': request.data.get('category', product.category),
+            'custom_category': request.data.get('custom_category', product.custom_category),
             'description': request.data.get('description', product.description),
             'city': request.data.get('city', product.city),
             'area_name': request.data.get('area_name', product.area_name),
@@ -531,6 +532,7 @@ def register_product_for(owner, request):
         'image': request.FILES.get('image'),
         'brand': request.data.get('brand'),
         'category': request.data.get('category'),
+        'custom_category': request.data.get('custom_category'),
         'description': request.data.get('description'),
         'city': request.data.get('city'),
         'area_name': request.data.get('area_name'),  # New field
@@ -1319,6 +1321,7 @@ def getProducts(request):
         qs = qs.filter(
             Q(name__icontains=keyword) |
             Q(category__icontains=keyword) |
+            Q(custom_category__icontains=keyword) |
             Q(description__icontains=keyword) |
             Q(city__icontains=keyword)
         )
@@ -1440,6 +1443,7 @@ def getProducts(request):
             'image':             str(product.image),
             'brand':             product.brand,
             'category':          product.category,
+            'custom_category':   product.custom_category,
             'description':       product.description,
             'createdAt':         product.createdAt,
             'city':              product.city,
@@ -1526,6 +1530,7 @@ def get_available_today(request):
             'name':             p.name,
             'image':            str(p.image),
             'category':         p.category,
+            'custom_category':  p.custom_category,
             'city':             p.city,
             'area_name':        p.area_name,
             'business_phone':   p.business_phone,

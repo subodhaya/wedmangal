@@ -16,6 +16,7 @@ const SUGGESTIONS = [
   { name: 'Jewellery',        label: 'Jewellery' },
   { name: 'Invitation',       label: 'Invitation' },
   { name: 'Pandit',           label: 'Pandit' },
+  { name: 'Return_Gifts',     label: 'Return Gifts' },
   { name: 'Travel_Transport', label: 'Travel & Transport' },
   { name: 'Entertainment',    label: 'Music' },
 ];

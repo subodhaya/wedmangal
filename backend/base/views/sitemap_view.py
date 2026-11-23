@@ -19,6 +19,8 @@ STATIC_URLS = [
     ("category/Entertainment",   "weekly","0.7"),
     ("category/Travel_Transport","weekly","0.7"),
     ("category/Pandit",          "weekly","0.7"),
+    ("category/Return_Gifts",    "weekly","0.7"),
+    ("category/Other",           "weekly","0.6"),
     ("plan",            "monthly","0.6"),
     ("available-today", "daily",  "0.6"),
     ("blog",            "weekly", "0.6"),

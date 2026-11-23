@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import CategoryPicker from './CategoryPicker';
+import { isOtherCategory, CUSTOM_CATEGORY_ERROR } from '../utils/categories';
 import { Container, Row, Col } from 'react-bootstrap';
 import api from '../utils/api';
 import { FaTimes } from 'react-icons/fa';
@@ -16,6 +18,7 @@ function ManagePage() {
         image: null,
         brand: '',
         category: '',
+        custom_category: '',
         description: '',
         city: '',
         area_name: '',
@@ -73,6 +76,9 @@ function ManagePage() {
             e.name = 'Business name is required.';
         else if (productData.name.trim().length < 2)
             e.name = 'Name must be at least 2 characters.';
+
+        if (isOtherCategory(productData.category) && !productData.custom_category?.trim())
+            e.custom_category = CUSTOM_CATEGORY_ERROR;
 
         const phoneDigits = (productData.business_phone || '').replace(/\D/g, '');
         if (!phoneDigits)
@@ -385,14 +391,8 @@ function ManagePage() {
 
                             <div className="mp-form-group">
                                 <label className="mp-label">Category</label>
-                                <input
-                                    type="text"
-                                    name="category"
-                                    className="mp-input"
-                                    value={productData.category || ''}
-                                    onChange={handleProductChange}
-                                    placeholder="e.g. Makeup_Artist"
-                                />
+                                <CategoryPicker category={productData.category} customCategory={productData.custom_category}
+                                    onChange={handleProductChange} errors={fieldErrors} cls="mp" />
                             </div>
 
                             <div className="mp-form-group">

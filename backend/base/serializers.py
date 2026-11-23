@@ -96,6 +96,19 @@ class ServiceSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+def validate_custom_category(attrs, instance=None):
+    """Category 'Other' needs the vendor's own words for their work; any other category clears them."""
+    category = attrs.get('category', getattr(instance, 'category', None)) or ''
+    if category.strip().lower() == 'other':
+        text = ' '.join(str(attrs.get('custom_category', getattr(instance, 'custom_category', '')) or '').split())
+        if not text:
+            raise serializers.ValidationError({'custom_category': 'Tell couples what wedding work you do.'})
+        attrs['custom_category'] = text[:60]
+    elif 'category' in attrs:
+        attrs['custom_category'] = None
+    return attrs
+
+
 class ProductSerializer(serializers.ModelSerializer):
     is_claimed = serializers.BooleanField(read_only=True)
     claimed_by_id = serializers.SerializerMethodField(read_only=True)
@@ -105,7 +118,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-    '_id', 'user', 'name', 'image', 'brand', 'category', 'description', 'createdAt',
+    '_id', 'user', 'name', 'image', 'brand', 'category', 'custom_category', 'description', 'createdAt',
     'city', 'area_name', 'address', 'business_phone', 'personal_phone',
     'opening_time', 'closing_time', 'is_approved',
     'is_available_today', 'available_since',
@@ -138,9 +151,12 @@ class ProductSerializer(serializers.ModelSerializer):
         services = obj.services.all()
         return sum(s.numReviews or 0 for s in services)
 
+    def validate(self, attrs):
+        return validate_custom_category(attrs, self.instance)
+
     def update(self, instance, validated_data):
         fields = [
-    'name', 'image', 'brand', 'category', 'description',
+    'name', 'image', 'brand', 'category', 'custom_category', 'description',
     'city', 'area_name', 'address', 'business_phone', 'personal_phone',
     'opening_time', 'closing_time', 'is_approved',
     'instagram_url', 'website_url', 'video_url', 'video_thumb', 'video_duration', 'min_price', 'max_price', 
@@ -289,7 +305,7 @@ class DetailedProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-    '_id', 'user', 'name', 'image', 'brand', 'category', 'description', 'createdAt',
+    '_id', 'user', 'name', 'image', 'brand', 'category', 'custom_category', 'description', 'createdAt',
     'city', 'area_name', 'address', 'business_phone', 'personal_phone',
     'opening_time', 'closing_time', 'is_approved', 'services',
     'is_claimed', 'claimed_by_id',
@@ -355,7 +371,7 @@ class ProductReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-    '_id', 'user', 'name', 'image', 'brand', 'category', 'description',
+    '_id', 'user', 'name', 'image', 'brand', 'category', 'custom_category', 'description',
     'createdAt', 'city', 'area_name', 'address', 'business_phone',
     'personal_phone', 'opening_time', 'closing_time', 'is_approved',
     'services', 'is_claimed', 'claimed_by_id',

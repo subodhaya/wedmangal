@@ -31,6 +31,8 @@ CATEGORIES = {
     'wedding-music-entertainment': ('Entertainment', 'Wedding Music & Entertainment'),
     'wedding-cars-travel':         ('Travel_Transport', 'Wedding Cars & Travel'),
     'wedding-pandits':             ('Pandit', 'Wedding Pandits'),
+    'wedding-return-gifts':        ('Return_Gifts', 'Wedding Return Gifts'),
+    'other-wedding-services':      ('Other', 'Other Wedding Services'),
 }
 SLUG_OF = {key: slug for slug, (key, _) in CATEGORIES.items()}
 CITY_SLUGS = {slugify(c): c for c in areas.CITIES}           # chennai, bangalore, hyderabad

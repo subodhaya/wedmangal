@@ -19,6 +19,7 @@ const CATEGORIES = [
   { name: 'Travel_Transport', label: 'Transport' },
   { name: 'Entertainment',    label: 'Music' },
   { name: 'Pandit',           label: 'Pandit' },
+  { name: 'Return_Gifts',     label: 'Return Gifts' },
 ];
 
 // ── Shared vendor card used in both HomeScreen preview + full page ─────────────

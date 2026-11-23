@@ -41,6 +41,8 @@ CUSTOMER_CATEGORIES = [
     ('Entertainment', 'Music & Entertainment'),
     ('Travel_Transport', 'Wedding Cars & Travel'),
     ('Pandit', 'Pandits & Priests'),
+    ('Return_Gifts', 'Return Gifts'),
+    ('Other', 'Other Wedding Services'),
 ]
 CATEGORY_NAMES = dict(CUSTOMER_CATEGORIES)
 RATING_OPTIONS = (4.0, 4.5)
@@ -131,7 +133,7 @@ def _card(product):
         '_id': product._id,
         'name': product.name,
         'category': product.category,
-        'category_label': _category_label(product.category),
+        'category_label': product.custom_category or _category_label(product.category),
         'area_name': product.area_name,
         'city': product.city,
         'image': str(product.image) if product.image else '',
@@ -166,6 +168,7 @@ def _filtered(category=None, area=None, min_rating=None, keyword_tokens=None, pl
         qs = qs.filter(avg_rating__gte=min_rating)
     for token in keyword_tokens or []:  # keyword-only searches: every word must appear somewhere
         qs = qs.filter(Q(name__icontains=token) | Q(description__icontains=token) | Q(category__icontains=token)
+                       | Q(custom_category__icontains=token)
                        | Q(area_name__icontains=token) | Q(address__icontains=token))
     return qs
 
