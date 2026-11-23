@@ -68,7 +68,7 @@ header {
 }
 
 /* Tablet / mid screens */
-@media (max-width: 992px) {
+@media (max-width: 991.98px) {
   .brand-text {
     font-size: 1.2rem;
   }
@@ -103,7 +103,7 @@ header {
 }
 
 /* ------------------ MOBILE LAYOUT (≤ 992px) ------------------ */
-@media (max-width: 992px) {
+@media (max-width: 991.98px) {
 
   /* brand & hamburger in one row */
   .header-navbar .container {
@@ -130,7 +130,7 @@ header {
   /* dropdown below header row */
   #basic-navbar-nav {
     position: absolute;
-    top: 60px;
+    top: 100%;   /* just below the header, however many rows it wraps to */
     left: 0;
     width: 100%;
     background: linear-gradient(90deg, #5e143f, #7a1c54);
@@ -278,4 +278,150 @@ header {
   font-size: 14px;
   color: #9a5070;
   margin-bottom: 20px;
+}
+
+/* ── Phones: account action next to ☰, flat account links inside the menu ── */
+.header-mobile-action {
+  flex: none;
+  margin: 0 8px 0 4px;
+  padding: 6px 12px !important;
+  border-radius: 999px;
+  background: var(--wedding-yellow, #f9e79f);
+  color: #5e143f !important;
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.header-mobile-group {
+  width: 100%;
+  border-top: 1px solid rgba(249, 231, 159, 0.25);
+  margin-top: 8px;
+  padding-top: 8px;
+}
+.header-mobile-hello {
+  color: var(--wedding-yellow, #f9e79f);
+  font-weight: 700;
+  padding: 4px 0 6px;
+}
+.header-mobile-logout {
+  background: none;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  text-transform: uppercase;
+  letter-spacing: inherit;
+}
+@media (max-width: 400px) {
+  .header-mobile-action { padding: 5px 9px !important; font-size: 0.78rem; margin: 0 4px; }
+}
+
+/* ── ☰ Menu button: outlined pill with a label, easy to notice (phones only — desktop has no ☰) ── */
+@media (max-width: 991.98px) {
+.header-navbar .custom-toggler.navbar-toggler {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px !important;
+  border: 1.5px solid #f9e79f !important;
+  border-radius: 999px;
+  background: rgba(249, 231, 159, 0.08) !important;
+  color: #f9e79f;
+}
+.header-navbar .custom-toggler.navbar-toggler:hover,
+.header-navbar .custom-toggler.navbar-toggler:focus {
+  background: rgba(249, 231, 159, 0.2) !important;
+}
+.header-navbar .custom-toggler .navbar-toggler-icon {
+  width: 1.25em;
+  height: 1.25em;
+  background-color: transparent !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='%23f9e79f' stroke-width='3' stroke-linecap='round' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+.header-navbar .custom-toggler .navbar-toggler-icon::before,
+.header-navbar .custom-toggler .navbar-toggler-icon::after {
+  display: none;
+}
+}
+.toggler-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── "List Your Business" call to action ── */
+.header-navbar .header-cta {
+  border: 1.5px solid #f9e79f;
+  border-radius: 999px;
+  padding: 5px 12px !important;
+  margin-left: 6px;
+  white-space: nowrap;
+  font-weight: 700;
+}
+.header-navbar .header-cta:hover { background: rgba(249, 231, 159, 0.15); }
+.header-navbar .header-cta--block {
+  display: block;
+  text-align: center !important;
+  background: #f9e79f;
+  color: #5e143f !important;
+  margin-bottom: 10px;
+}
+
+/* ── Phones, logged out: Login / Create account at the top of the menu ── */
+.header-mobile-top {
+  width: 100%;
+  padding-bottom: 10px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(249, 231, 159, 0.25);
+}
+.header-mobile-auth { display: flex; gap: 10px; }
+.header-navbar .header-mobile-auth-btn {
+  flex: 1;
+  text-align: center !important;
+  border-radius: 10px;
+  padding: 8px 10px !important;
+  background: rgba(255, 255, 255, 0.12);
+  font-weight: 700;
+}
+.header-navbar .header-mobile-auth-btn--ghost {
+  background: transparent;
+  border: 1px solid rgba(249, 231, 159, 0.5);
+}
+@media (max-width: 400px) {
+  .toggler-label { display: none; }
+}
+
+/* ── Desktop: never squeeze the logo away; tighten links so the vendor CTA + Login fit ── */
+@media (min-width: 992px) {
+  .header-navbar .brand-logo { flex: none; }
+  .header-navbar .container-lg { max-width: 100% !important; padding-left: 16px !important; padding-right: 16px !important; }
+  .header-navbar .brand-logo { margin-right: 16px !important; }
+  .header-navbar .header-search-wrap { min-width: 160px; }
+}
+@media (min-width: 992px) and (max-width: 1699.98px) {
+  .header-navbar .navbar-nav .nav-link {
+    padding: 6px 8px !important;
+    font-size: 0.86rem;
+    letter-spacing: 0.5px;
+  }
+  .header-navbar .brand-logo svg { height: 48px; }
+  .header-navbar .header-search-wrap { margin: 0 8px; }
+  .header-navbar .navbar-nav .nav-link > i { display: none; }   /* text only on mid-size screens */
+}
+
+/* Small laptops (992–1199px): narrower search and tighter links so the CTA + Login still fit */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .header-navbar .header-search-wrap { min-width: 110px; max-width: 130px; margin: 0 4px; }
+  .header-navbar .navbar-nav .nav-link { padding: 6px 5px !important; font-size: 0.8rem; }
+  .header-navbar .header-cta { padding: 4px 8px !important; font-size: 0.76rem; letter-spacing: 0.3px; }
+  .header-navbar .brand-logo { margin-right: 8px !important; }
+  .header-navbar .container-lg { padding-left: 10px !important; padding-right: 10px !important; }
+}
+
+/* Narrowest laptops (992–1099px) */
+@media (min-width: 992px) and (max-width: 1099.98px) {
+  .header-navbar .brand-logo svg { height: 40px; }
+  .header-navbar .header-search-wrap { min-width: 90px; max-width: 105px; }
 }

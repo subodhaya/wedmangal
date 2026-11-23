@@ -400,11 +400,42 @@ const Header = () => {
             {/* City: always visible (also on phones), one city at a time across the site */}
             {!isServiceOwner && <CitySwitcher />}
 
-            <Navbar.Toggle aria-controls="basic-navbar-nav" className="custom-toggler" />
+            {/* Phones: the main account action stays visible next to ☰ (desktop has it in the nav) */}
+            {!userInfo ? (
+              <LinkContainer to="/login" onClick={collapseNav}>
+                <Nav.Link className="header-mobile-action d-lg-none">Login</Nav.Link>
+              </LinkContainer>
+            ) : isServiceOwner ? (
+              <LinkContainer to="/manage-my-page" onClick={collapseNav}>
+                <Nav.Link className="header-mobile-action d-lg-none">🏪 My Business</Nav.Link>
+              </LinkContainer>
+            ) : !isAdminUser(userInfo) ? (
+              <LinkContainer to="/profile" onClick={collapseNav}>
+                <Nav.Link className="header-mobile-action d-lg-none" aria-label="My account">👤 Account</Nav.Link>
+              </LinkContainer>
+            ) : null}
+
+            <Navbar.Toggle aria-controls="basic-navbar-nav" className="custom-toggler" aria-label="Open menu">
+              <span className="navbar-toggler-icon" aria-hidden="true" />
+              <span className="toggler-label">Menu</span>
+            </Navbar.Toggle>
 
             <Navbar.Collapse id="basic-navbar-nav">
               {/* ✅ Single wrapper — any link click closes navbar on mobile */}
               <div onClick={collapseNav} style={{ display: 'contents' }}>
+
+                {/* ── Phones, logged out: account + vendor actions first in the menu ── */}
+                {!userInfo && (
+                  <div className="d-lg-none header-mobile-top">
+                    <LinkContainer to="/owner-register">
+                      <Nav.Link className="header-cta header-cta--block">🏪 Register Your Business — Free</Nav.Link>
+                    </LinkContainer>
+                    <div className="header-mobile-auth">
+                      <LinkContainer to="/login"><Nav.Link className="header-mobile-auth-btn">Login</Nav.Link></LinkContainer>
+                      <LinkContainer to="/register"><Nav.Link className="header-mobile-auth-btn header-mobile-auth-btn--ghost">Create account</Nav.Link></LinkContainer>
+                    </div>
+                  </div>
+                )}
 
                 {/* ── SmartSearch — hidden for service owners ── */}
                 {!isServiceOwner && (
@@ -452,11 +483,20 @@ const Header = () => {
                 <Nav className="ms-auto align-items-center">
 
                   {isServiceOwner && (
+                    <div className="d-lg-none header-mobile-group">
+                      <LinkContainer to="/manage-my-page"><Nav.Link>🏪 My Business Page</Nav.Link></LinkContainer>
+                      <LinkContainer to="/orderlist/"><Nav.Link>📋 Booking List</Nav.Link></LinkContainer>
+                      <LinkContainer to="/my-appointment/"><Nav.Link>📅 My Appointments</Nav.Link></LinkContainer>
+                    </div>
+                  )}
+
+                  {isServiceOwner && (
                     <>
                       <NavDropdown 
                         title="Owner Menu" 
                         id="owner-nav-dropdown" 
                         align="end"
+                        className="d-none d-lg-block"
                         onClick={e => e.stopPropagation()}
                       >
                         <LinkContainer to="/manage-my-page">
@@ -502,8 +542,17 @@ const Header = () => {
                     </NavDropdown>
                   )}
 
+                  {userInfo && (
+                    <div className="d-lg-none header-mobile-group">
+                      <div className="header-mobile-hello">👋 Hi, {userInfo.name || 'there'}</div>
+                      <LinkContainer to="/profile"><Nav.Link>👤 Profile{isServiceOwner ? '' : ' / Bookings'}</Nav.Link></LinkContainer>
+                      <Nav.Link as="button" type="button" className="header-mobile-logout" onClick={logoutHandler}>🚪 Logout</Nav.Link>
+                    </div>
+                  )}
+
                   {userInfo ? (
                     <NavDropdown
+                      className="d-none d-lg-block"
                       title={
                         <>
                           <i className="fas fa-user" aria-hidden="true" /> {userInfo.name}
@@ -523,12 +572,12 @@ const Header = () => {
                   ) : (
                     <>
                       <LinkContainer to="/owner-register">
-                        <Nav.Link title="Wedding vendors: list your business free">
-                          <i className="fas fa-store" aria-hidden="true" /> For Vendors
+                        <Nav.Link className="header-cta d-none d-lg-block" title="Wedding vendors: register your business free">
+                          <i className="fas fa-store" aria-hidden="true" /> Register Your Business
                         </Nav.Link>
                       </LinkContainer>
                       <LinkContainer to="/login">
-                        <Nav.Link>Login</Nav.Link>
+                        <Nav.Link className="d-none d-lg-block">Login</Nav.Link>
                       </LinkContainer>
                     </>
                   )}
