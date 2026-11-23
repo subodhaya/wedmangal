@@ -4,7 +4,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import './AddProductPage.css';
 
-const AddProductPage = () => {
+// `client` (admin only): register this business for a client's account instead of the
+// logged-in user — { phone, email, name, password }. `onClientDone(result)` is called
+// at the end (after services, or Skip) with the register-for-client response.
+const AddProductPage = ({ client = null, onClientDone = null }) => {
+    const isClientMode = !!client;
     const [userInfo, setUserInfo] = useState(() => {
         try { return JSON.parse(localStorage.getItem('userInfo')); }
         catch { return null; }
@@ -52,6 +56,12 @@ const AddProductPage = () => {
     const [createdProductId, setCreatedProductId] = useState(null);
     const [isSubmittingServices, setIsSubmittingServices] = useState(false);
     const [servicesError, setServicesError]       = useState('');
+    const [clientResult, setClientResult]         = useState(null);
+
+    const finish = () => {
+        if (isClientMode && onClientDone) onClientDone(clientResult);
+        else navigate('/manage-my-page');
+    };
 
     const handleProductChange = (e) => {
         const { name, value, files } = e.target;
@@ -162,9 +172,16 @@ const AddProductPage = () => {
 
         const formData = new FormData();
         Object.keys(finalProductData).forEach(key => formData.append(key, finalProductData[key]));
+        if (isClientMode) {
+            formData.append('client_phone', client.phone || '');
+            formData.append('client_email', client.email || '');
+            formData.append('client_name', client.name || '');
+            formData.append('client_password', client.password || '');
+        }
 
         try {
-            const response = await api.post('/api/products/register-product/', formData, {
+            const endpoint = isClientMode ? '/api/products/admin/register-for-client/' : '/api/products/register-product/';
+            const response = await api.post(endpoint, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     Authorization: `Bearer ${userInfo.token}`,
@@ -172,6 +189,7 @@ const AddProductPage = () => {
             });
 
             const productId = response.data.productId;
+            if (isClientMode) setClientResult(response.data);
 
             // Upload any videos the user selected in the form
             for (const pv of pendingVideos) {
@@ -189,7 +207,9 @@ const AddProductPage = () => {
             setProductData(emptyProduct);
             setRawPhones({ business_phone: '', personal_phone: '' });
             setPendingVideos([]);
-            setResponseMessage('Business registered successfully! Now add your services below.');
+            setResponseMessage(isClientMode
+                ? "Business registered on the client's account! Now add their services below."
+                : 'Business registered successfully! Now add your services below.');
             setError('');
             setIsFormVisible(false);
             setCreatedProductId(productId);
@@ -202,7 +222,9 @@ const AddProductPage = () => {
                 || Object.values(err.response?.data || {})[0]?.[0]
                 || null;
 
-            if (err.response?.status === 400 && backendMsg?.toLowerCase().includes('already')) {
+            if (isClientMode && backendMsg) {
+                setError(backendMsg);
+            } else if (err.response?.status === 400 && backendMsg?.toLowerCase().includes('already')) {
                 setError('You already have a registered business. Go to Manage My Page to edit or add services.');
             } else if (backendMsg) {
                 setError(backendMsg);
@@ -226,12 +248,13 @@ const AddProductPage = () => {
                 fd.append('description', service.description || '');
                 fd.append('price', service.price || '0');
                 fd.append('countInStock', 1);
+                if (isClientMode) fd.append('product_id', createdProductId);
                 service.images.forEach((img, i) => fd.append(`images[${i}]`, img));
                 await api.post('/api/products/add_service/', fd, {
                     headers: { Authorization: `Bearer ${userInfo.token}` },
                 });
             }
-            navigate('/manage-my-page');
+            finish();
         } catch (err) {
             setServicesError(err.response?.data?.detail || 'Failed to save services. Please try again.');
         } finally {
@@ -243,7 +266,8 @@ const AddProductPage = () => {
         <div className="add-product-page">
             <Container fluid style={{ padding: '0 16px' }}>
 
-                {/* ── Welcome hero ────────────────────────────────── */}
+                {/* ── Welcome hero (vendor's own signup only) ─────── */}
+                {!isClientMode && (
                 <div className="ap-welcome-card">
                     <Row className="g-0">
                         <Col md={6}>
@@ -277,11 +301,12 @@ const AddProductPage = () => {
                         </Col>
                     </Row>
                 </div>
+                )}
 
                 {/* ── Form section ────────────────────────────────── */}
                 <div className="ap-form-section">
                     <div className="ap-form-header">
-                        <h2 className="ap-form-title">🎊 Register Your Business</h2>
+                        <h2 className="ap-form-title">{isClientMode ? "🎊 Client's Business Details" : '🎊 Register Your Business'}</h2>
                         <p className="ap-form-subtitle">
                             A streamlined dashboard to help you showcase your services and connect with clients
                         </p>
@@ -716,16 +741,16 @@ const AddProductPage = () => {
                                     <button
                                         type="button"
                                         className="ap-add-service-btn"
-                                        onClick={() => navigate('/manage-my-page')}
+                                        onClick={finish}
                                     >
-                                        Skip → Go to Dashboard
+                                        {isClientMode ? 'Skip → Finish' : 'Skip → Go to Dashboard'}
                                     </button>
                                     <button
                                         type="submit"
                                         className="ap-submit-btn"
                                         disabled={isSubmittingServices}
                                     >
-                                        {isSubmittingServices ? '⏳ Saving...' : '✅ Save Services & Go to Dashboard'}
+                                        {isSubmittingServices ? '⏳ Saving...' : (isClientMode ? '✅ Save Services & Finish' : '✅ Save Services & Go to Dashboard')}
                                     </button>
                                 </div>
                             </form>

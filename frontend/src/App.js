@@ -20,6 +20,7 @@ const AddPhoneScreen = lazyRoute(() => import('./screens/AddPhoneScreen'));
 const ProfileScreen = lazyRoute(() => import('./screens/ProfileScreen'));
 const RegisterScreen = lazyRoute(() => import('./screens/RegisterScreen'));
 const OwnerRegisterScreen = lazyRoute(() => import('./screens/OwnerRegisterScreen'));
+const RegisterClientVendorScreen = lazyRoute(() => import('./screens/RegisterClientVendorScreen'));
 const CartScreen = lazyRoute(() => import('./screens/CartScreen'));
 const WishlistScreen = lazyRoute(() => import('./screens/WishlistScreen'));
 const ShippingScreen = lazyRoute(() => import('./screens/ShippingScreen'));
@@ -114,6 +115,7 @@ function App() {
             <Route path="/category/:category" element={<CategoryScreen />} />
             <Route path="/profile" element={<PrivateRoute roles={['customer', 'admin', 'service-owner', 'product-manager']} element={<ProfileScreen />} />} />
             <Route path="/payment-success" element={<PaymentSuccessScreen />} />
+            <Route path="/register-client-vendor" element={<PrivateRoute roles={['admin']} element={<RegisterClientVendorScreen />} />} />
             <Route path="/userlist/" element={<PrivateRoute roles={['admin']} element={<UserListScreen />} />} />
             <Route path="/productlist/" element={<PrivateRoute roles={['admin']} element={<ProductListScreen />} />} />
             <Route path="/manage-my-page" element={<PrivateRoute roles={['admin', 'service-owner']} element={<ManagePage />} />} />

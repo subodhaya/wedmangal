@@ -486,6 +486,9 @@ const Header = () => {
                       <LinkContainer to="/userlist/">
                         <NavDropdown.Item onClick={collapseNav}>User List</NavDropdown.Item>
                       </LinkContainer>
+                      <LinkContainer to="/register-client-vendor">
+                        <NavDropdown.Item onClick={collapseNav}>Register Vendor for Client</NavDropdown.Item>
+                      </LinkContainer>
                       <NavDropdown.Divider />
                       <LinkContainer to="/orderlist/">
                         <NavDropdown.Item onClick={collapseNav}>Booking List</NavDropdown.Item>

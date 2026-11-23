@@ -1,6 +1,7 @@
 from django.urls import path
 from base.views import product_views as views
 from base.views.product_views import ProductDetailView
+from base.views import client_vendor_views
 
 urlpatterns = [
     path('', views.getRoutes, name="routes"),
@@ -22,6 +23,8 @@ urlpatterns = [
     path('<int:pk>/remove-service-image/', views.remove_service_image, name='service-remove-image'),
     path('mine/', views.get_my_product, name='get-my-product'),
     path('register-product/', views.register_product, name="register-product"),
+    path('admin/client-account/', client_vendor_views.client_account, name='admin-client-account'),
+    path('admin/register-for-client/', client_vendor_views.register_for_client, name='admin-register-for-client'),
     path('register-service/', views.register_service, name="register-service"),
     path('upload/', views.uploadImage, name="image-upload"),
     path('search/', views.searchProducts, name='search-products'),

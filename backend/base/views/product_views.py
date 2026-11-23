@@ -512,7 +512,13 @@ def add_service_images(request, service_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def register_product(request):
-  
+    return register_product_for(request.user, request)
+
+
+def register_product_for(owner, request):
+    """Create `owner`'s business (and any services[i][...] sent with it) from the form
+    data in `request`. Used by register-product (owner = the logged-in vendor) and by
+    the admin "register a vendor for a client" flow (owner = the client's account)."""
     print("Received request to register product")
     print("Request FILES keys:", request.FILES.keys())
     print("Request DATA keys:", request.data.keys())
@@ -520,7 +526,7 @@ def register_product(request):
 
     # Collect product data from the request
     product_data = {
-        'user': request.user.id,
+        'user': owner.id,
         'name': request.data.get('name'),
         'image': request.FILES.get('image'),
         'brand': request.data.get('brand'),
@@ -1074,11 +1080,14 @@ def add_service(request):
     if not service_name:
         return Response({'detail': 'Service name is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Retrieve the user's product
+    # Retrieve the user's product (admins may add to a client's business by product_id)
     try:
-        product = Product.objects.get(user=user)
+        if request.data.get('product_id') and _is_admin(user):
+            product = Product.objects.get(_id=request.data.get('product_id'))
+        else:
+            product = Product.objects.get(user=user)
         print(product)
-    except Product.DoesNotExist:
+    except (Product.DoesNotExist, ValueError):
         return Response({'detail': 'Product associated with this user not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     # Convert fields to appropriate types
@@ -1570,7 +1579,10 @@ def _sync_product_primary_video(product):
 @permission_classes([IsAuthenticated])
 def upload_product_video(request, product_id):
     try:
-        product = Product.objects.get(_id=product_id, user=request.user)
+        if _is_admin(request.user):     # admins upload for a client's business (register-for-client)
+            product = Product.objects.get(_id=product_id)
+        else:
+            product = Product.objects.get(_id=product_id, user=request.user)
     except Product.DoesNotExist:
         return Response({'error': 'Product not found or access denied.'}, status=status.HTTP_404_NOT_FOUND)
 
