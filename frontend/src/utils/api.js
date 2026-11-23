@@ -54,6 +54,11 @@ const refreshAccessToken = async () => {
     console.log("Token refreshed successfully!");
     return response.data.access;
   } catch (error) {
+    // Only the server saying the refresh token is no good ends the session — not bad network or a server hiccup
+    if (![400, 401].includes(error.response?.status)) {
+      console.error("Token refresh could not reach the server. Staying logged in.");
+      return null;
+    }
     console.error("Token refresh failed. Logging out...");
     localStorage.removeItem("userInfo");
     window.location.href = "/login"; 

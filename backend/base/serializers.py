@@ -59,14 +59,18 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserSerializerWithToken(UserSerializer):
     token = serializers.SerializerMethodField(read_only=True)
+    refresh = serializers.SerializerMethodField(read_only=True)   # keeps them logged in after `token` expires
 
     class Meta:
         model = User
-        fields = ['id', '_id', 'username', 'email', 'name', 'isAdmin', 'role', 'phone', 'token']
+        fields = ['id', '_id', 'username', 'email', 'name', 'isAdmin', 'role', 'phone', 'token', 'refresh']
 
     def get_token(self, obj):
         token = RefreshToken.for_user(obj)
         return str(token.access_token)
+
+    def get_refresh(self, obj):
+        return str(RefreshToken.for_user(obj))
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -409,7 +413,7 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         reviews = service.reviews.all()
         return [{
             '_id': review._id,
-            'user': review.name if review.name else "Anonymous",
+             'user': review.name if review.name else "Anonymous",
             'rating': review.rating,
             'comment': review.comment,
             'createdAt': review.createdAt

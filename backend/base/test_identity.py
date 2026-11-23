@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.test import TestCase
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from base.models import Order, Product, Profile, Wishlist
 
@@ -50,6 +51,23 @@ class IdentityTestCase(TestCase):
         self.client.force_authenticate(None)
         return self.client.get(f'/api/vendors/{self.listing._id}/profile/',
                                HTTP_AUTHORIZATION=f'Bearer {token}').status_code
+
+
+class StayLoggedInTests(IdentityTestCase):
+
+    def assert_stays_logged_in(self, data):
+        refresh = RefreshToken(data['refresh'])
+        self.assertGreaterEqual(refresh['exp'] - refresh['iat'], 90 * 24 * 60 * 60)
+        renewed = self.client.post('/api/token/refresh/', {'refresh': data['refresh']})
+        self.assertEqual(renewed.status_code, 200)
+        self.assertEqual(self.can_manage(renewed.data['access']), 403 if data.get('phone') == PHONE else 200)
+
+    def test_phone_login_gets_a_90_day_refresh_token(self):
+        self.assert_stays_logged_in(self.phone_login().data)
+
+    def test_password_login_gets_a_90_day_refresh_token(self):
+        response = self.client.post('/api/users/login/', {'username': OWNER_EMAIL, 'password': 'secret-pw'})
+        self.assert_stays_logged_in(response.data)
 
 
 class PasswordLoginTests(IdentityTestCase):
