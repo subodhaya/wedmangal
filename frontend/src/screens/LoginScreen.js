@@ -172,7 +172,33 @@ function LoginScreen() {
                     {error   && <div className="ls-error">{error}</div>}
                     {loading && <Loader />}
 
-                    {/* All three ways to log in, shown together: email · Google · phone */}
+                    {/* All three ways to log in, shown together: phone · Google · email */}
+                    <div className="ls-phone-compact">
+                        <PhoneOtpStep
+                            sendUrl="/api/users/login/send-otp/"
+                            verifyUrl="/api/users/login/verify-otp/"
+                            onVerified={(data) => { setUserInfo(data); navigate(redirect); }}
+                            verifyButtonLabel="Verify & Log In ✓"
+                        />
+                    </div>
+                    <div className="ls-divider ls-divider--compact" aria-hidden="true">
+                        <span /><span className="ls-divider-text">or</span><span />
+                    </div>
+                    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+                        <div className="ls-google-wrap ls-google-wrap--compact">
+                            <GoogleLogin
+                                onSuccess={handleGoogle}
+                                onError={() => setError('Google login failed. Please try another way.')}
+                                text="continue_with"
+                                width="300"
+                                useOneTap={false}
+                                auto_select={false}
+                            />
+                        </div>
+                    </GoogleOAuthProvider>
+                    <div className="ls-divider ls-divider--compact" aria-hidden="true">
+                        <span /><span className="ls-divider-text">or with email</span><span />
+                    </div>
                     <form onSubmit={submitHandler} className="ls-form ls-form--compact">
                         <label className="ls-sr-only" htmlFor="ls-email">Email address</label>
                         <input
@@ -211,34 +237,6 @@ function LoginScreen() {
                             <span className="ls-btn-arrow">→</span>
                         </button>
                     </form>
-
-                    <div className="ls-divider ls-divider--compact" aria-hidden="true">
-                        <span /><span className="ls-divider-text">or</span><span />
-                    </div>
-                    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-                        <div className="ls-google-wrap ls-google-wrap--compact">
-                            <GoogleLogin
-                                onSuccess={handleGoogle}
-                                onError={() => setError('Google login failed. Please try another way.')}
-                                text="continue_with"
-                                width="300"
-                                useOneTap={false}
-                                auto_select={false}
-                            />
-                        </div>
-                    </GoogleOAuthProvider>
-
-                    <div className="ls-divider ls-divider--compact" aria-hidden="true">
-                        <span /><span className="ls-divider-text">or with mobile number</span><span />
-                    </div>
-                    <div className="ls-phone-compact">
-                        <PhoneOtpStep
-                            sendUrl="/api/users/login/send-otp/"
-                            verifyUrl="/api/users/login/verify-otp/"
-                            onVerified={(data) => { setUserInfo(data); navigate(redirect); }}
-                            verifyButtonLabel="Verify & Log In ✓"
-                        />
-                    </div>
 
                     {/* Footer links — one short row */}
                     <p className="ls-foot-row">
