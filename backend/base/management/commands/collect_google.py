@@ -17,7 +17,7 @@ import time
 import requests
 from django.core.management.base import BaseCommand, CommandError
 
-from base import prospects
+from base import listing_checks as checks
 from base.models import Product
 
 SEARCH_URL = 'https://places.googleapis.com/v1/places:searchText'
@@ -73,7 +73,7 @@ class Command(BaseCommand):
         self.photo_dir = pathlib.Path(o['photos'])
         self.photo_dir.mkdir(parents=True, exist_ok=True)
         self.calls = {'search': 0, 'photo': 0}
-        existing = prospects.ProductIndex()
+        existing = checks.ProductIndex()
         taken_phones = set(existing.by_phone)
         out_path = pathlib.Path(o['out'])
         out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -123,26 +123,26 @@ class Command(BaseCommand):
         name = (place.get('displayName') or {}).get('text', '').strip()
         if place.get('businessStatus') not in (None, 'OPERATIONAL'):
             return None, 'not operational'
-        phone = prospects.normalize_phone(place.get('nationalPhoneNumber') or place.get('internationalPhoneNumber'))
+        phone = checks.normalize_phone(place.get('nationalPhoneNumber') or place.get('internationalPhoneNumber'))
         if not phone:
             return None, 'no phone'
         if not place.get('photos'):
             return None, 'no photo'
         address = place.get('formattedAddress', '')
-        biz_area, status, _ = prospects.check_area(address, area)
+        biz_area, status, _ = checks.check_area(address, area)
         if status != 'located_in' or biz_area != area:
             return None, 'address not in area'
         types = set(place.get('types') or [])
-        name_ok = bool(re.search(prospects.CATEGORY_WORDS[category], name, re.I))
+        name_ok = bool(re.search(checks.CATEGORY_WORDS[category], name, re.I))
         type_ok = bool(types & GOOGLE_TYPES[category])
         if not (name_ok or type_ok):
             return None, 'category not evident'
-        bad = prospects.NOT_CATEGORY.get(category)
+        bad = checks.NOT_CATEGORY.get(category)
         if bad and re.search(bad, name, re.I) and not type_ok:
             return None, 'looks like another kind of business'
         if phone in taken_phones:
             return None, 'already listed (phone)'
-        for pr in existing.by_name.get(prospects.compact_name(name), []):
+        for pr in existing.by_name.get(checks.compact_name(name), []):
             return None, f'already listed (name, #{pr._id})'
         photo = place['photos'][0]
         return {

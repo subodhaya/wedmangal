@@ -15,7 +15,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
-from base import prospects
+from base import listing_checks as checks
 from base.models import Product
 
 
@@ -31,7 +31,7 @@ class Command(BaseCommand):
     def handle(self, *args, **o):
         records = json.loads(pathlib.Path(o['path']).read_text())
         photos = pathlib.Path(o['photos'])
-        existing = prospects.ProductIndex()
+        existing = checks.ProductIndex()
         place_ids = {ds.get('google', {}).get('place_id') for ds in Product.objects.values_list('data_sources', flat=True)
                      if isinstance(ds, dict)}
         names = {n.lower() for n in Product.objects.values_list('name', flat=True) if n}
@@ -43,13 +43,13 @@ class Command(BaseCommand):
 
         with transaction.atomic():
             for r in records:
-                phone = prospects.normalize_phone(r.get('phone'))
+                phone = checks.normalize_phone(r.get('phone'))
                 photo = photos / r.get('photo_file', '')
                 if r['place_id'] in place_ids:
                     skip('already imported'); continue
                 if not phone or phone in existing.by_phone:
                     skip('no phone or phone already listed'); continue
-                if existing.by_name.get(prospects.compact_name(r['name'])):
+                if existing.by_name.get(checks.compact_name(r['name'])):
                     skip('name already listed'); continue
                 if not (r.get('photo_file') and photo.is_file()):
                     skip('photo file missing'); continue
@@ -68,7 +68,7 @@ class Command(BaseCommand):
                 product = Product(
                     user=None, name=name, brand=name, category=r['category'], description=description,
                     city=r.get('city') or 'Chennai', area_name=r['area'], address=r['address'], business_phone=phone,
-                    personal_phone=phone, website_url=prospects.website_domain(r.get('website') or '') and r.get('website') or None,
+                    personal_phone=phone, website_url=checks.website_domain(r.get('website') or '') and r.get('website') or None,
                     is_approved=not o['hidden'],
                     data_sources={**{f: src for f in ('name', 'category', 'area_name', 'address', 'business_phone',
                                                       'image', 'description')},
