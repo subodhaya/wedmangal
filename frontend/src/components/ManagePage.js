@@ -267,10 +267,12 @@ function ManagePage() {
                                     Keep your profile fresh — couples check your details before they reach out.
                                 </p>
                                 <p className="mp-welcome-text">
-                                    Update your business name, photos, contact details, and working hours anytime. A complete profile gets 3× more enquiries.
+                                    Update your business name, photos, contact details, and working hours anytime. A complete profile helps couples choose you.
                                 </p>
                                 <p className="mp-welcome-text">
-                                    Changes go live after a quick review by our team — usually within a few hours.
+                                    {productData.is_approved
+                                        ? 'Your listing is live — changes you save appear on WedMangal straight away.'
+                                        : 'Our team will review your listing once. After it is approved, every change you save goes live straight away.'}
                                 </p>
 
                                 {/* Quick stats */}
