@@ -1,0 +1,21 @@
+{% extends "seo/base.html" %}
+{% block content %}
+<div class="crumbs"><a href="/">Home</a> › {{ city }}</div>
+<h1>Wedding Vendors in {{ city }}</h1>
+<p class="lead">{{ total }} wedding vendors in {{ city }} are listed on WedMangal — halls, photographers, makeup artists, caterers, decorators and more. Open any vendor to see photos, Google ratings and their phone number.</p>
+<p><a class="btn" href="/search/?city={{ city|urlencode }}">Search vendors in {{ city }}</a></p>
+
+<h2>Browse by category</h2>
+<ul class="chips">{% for c in categories %}<li><a href="{{ c.url }}">{{ c.label }} ({{ c.count }})</a></li>{% endfor %}</ul>
+
+{% if popular %}
+<h2>Popular searches in {{ city }}</h2>
+<ul class="chips">{% for p in popular %}<li><a href="{{ p.url }}">{{ p.label }} ({{ p.count }})</a></li>{% endfor %}</ul>
+{% endif %}
+
+<h2>Planning a wedding in {{ city }}?</h2>
+<p>Read our free guides: <a href="/blog/tamil-wedding-planning-checklist">wedding planning checklist</a>, <a href="/blog/tamil-wedding-budget-guide">wedding budget guide</a> and <a href="/blog">more wedding ideas</a>.</p>
+
+<h2>Wedding business in {{ city }}?</h2>
+<p>Couples search WedMangal for vendors like you. <a href="/list-your-business">List your business free</a>.</p>
+{% endblock %}

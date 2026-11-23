@@ -1,0 +1,7 @@
+<div class="grid">
+{% for v in items %}<a class="card" href="/product/{{ v.id }}">
+  {% if v.image %}<img src="{{ v.image }}" alt="{{ v.name }}{% if v.area %} — {{ v.area }}{% endif %}" loading="lazy" width="400" height="300">{% else %}<span class="noimg"></span>{% endif %}
+  <span class="body"><strong>{{ v.name }}</strong>
+  <small>{% if v.area %}{{ v.area }}{% endif %}{% if v.rating %} · {{ v.rating }}★ Google ({{ v.reviews }} reviews){% endif %}{% if v.price %} · from ₹{{ v.price|floatformat:"0g" }}{% endif %}</small></span>
+</a>{% endfor %}
+</div>

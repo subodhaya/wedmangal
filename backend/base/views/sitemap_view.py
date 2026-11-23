@@ -23,7 +23,7 @@ STATIC_URLS = [
     ("available-today", "daily",  "0.6"),
     ("blog",            "weekly", "0.6"),
     ("faq",             "monthly","0.5"),
-    ("owner-register",  "monthly","0.6"),
+    ("list-your-business", "monthly","0.8"),
     ("ContactUs",             "yearly", "0.3"),
     ("TermsAndCondition",     "yearly", "0.3"),
     ("RefundAndCancellation", "yearly", "0.3"),
@@ -53,6 +53,15 @@ def sitemap_xml(request):
     <loc>{SITE}/product/{p['_id']}</loc>{lastmod_str}
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>""")
+
+    # Search landing pages: city hubs, city × category, category × area (base/landing.py)
+    from base import landing
+    for path in landing.all_pages():
+        urls.append(f"""  <url>
+    <loc>{SITE}{path}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>""")
 
     # AI Dictionary experiment: exactly one record (docs/aidictionary-experiment.md)

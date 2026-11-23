@@ -31,6 +31,8 @@ PUBLIC_ROUTE_PATTERNS = [
     r'/faq',
     r'/blog',
     r'/blog/[\w-]+',
+    r'/list-your-business',               # Django landing pages (base/landing.py)
+    r'/(chennai|bangalore|hyderabad)(/[a-z-]+(/[a-z0-9-]+)?)?',
 ]
 
 

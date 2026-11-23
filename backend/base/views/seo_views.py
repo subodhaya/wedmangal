@@ -385,3 +385,83 @@ def category_page(request, category):
     ]
 
     return _render(title, description, url, ''.join(body), json_ld=json_ld, noindex=(count == 0))
+
+
+# ── Home, blog and vendor sign-up (React pages, with their content in the first HTML) ──────────────────
+
+def _inject_body(body_html, status=200):
+    html = _load_index().replace('<div id="root"></div>', f'<div id="root">{body_html}</div>', 1)
+    return HttpResponse(html, status=status)
+
+
+def home_page(request):
+    """Keeps index.html's own title and description; adds the links crawlers need to find every section."""
+    from base import areas, landing
+    from base.models import BlogPost
+    cats = ''.join(f'<li><a href="/category/{k}">Wedding {escape(CATEGORY_LABELS[k])} in Chennai</a></li>'
+                   for k in CATEGORY_LABELS)
+    cities = ''.join(f'<li><a href="/{landing.city_slug(c)}">Wedding vendors in {escape(c)}</a></li>'
+                     for c in areas.CITIES)
+    posts = ''.join(f'<li><a href="/blog/{escape(p.slug)}">{escape(p.title)}</a></li>'
+                    for p in BlogPost.objects.filter(published=True).order_by('-created_at')[:8])
+    body = ('<main class="seo-summary">'
+            '<h1>WedMangal — find and book wedding vendors in Chennai, Bangalore and Hyderabad</h1>'
+            '<p>Compare wedding halls, photographers, bridal makeup artists, caterers, decorators, mehendi artists '
+            'and more. See photos, Google ratings and phone numbers, and get free quotes.</p>'
+            f'<h2>Wedding vendors by category</h2><ul>{cats}</ul>'
+            f'<h2>Wedding vendors by city</h2><ul>{cities}</ul>'
+            + (f'<h2>Wedding planning guides</h2><ul>{posts}</ul>' if posts else '') +
+            '<h2>For wedding businesses</h2><p><a href="/list-your-business">List your wedding business free</a></p>'
+            '</main>')
+    return _inject_body(body)
+
+
+def blog_list_page(request):
+    from base.models import BlogPost
+    posts = list(BlogPost.objects.filter(published=True).order_by('-created_at'))
+    items = ''.join(f'<li><a href="/blog/{escape(p.slug)}">{escape(p.title)}</a><p>{escape(p.excerpt)}</p></li>'
+                    for p in posts)
+    body = ('<main class="seo-summary"><nav><a href="/">WedMangal</a></nav>'
+            '<h1>Wedding Planning Guides &amp; Ideas</h1>'
+            '<p>Tamil wedding rituals, budgets, checklists, muhurtham dates, bridal makeup and decor ideas.</p>'
+            f'<ul>{items}</ul></main>')
+    return _render('Wedding Planning Guides, Tamil Wedding Ideas & Tips | WedMangal',
+                   'Free wedding planning guides: Tamil wedding checklist, budget guide, muhurtham dates, rituals, '
+                   'bridal makeup and decor ideas from WedMangal.',
+                   f'{SITE}/blog', body,
+                   json_ld=[_breadcrumbs(('Home', f'{SITE}/'), ('Wedding planning guides', f'{SITE}/blog'))])
+
+
+def blog_post_page(request, slug):
+    from base.models import BlogPost
+    post = BlogPost.objects.filter(slug=slug, published=True).first()
+    if post is None:
+        return _not_found()
+    url = f'{SITE}/blog/{post.slug}'
+    image = SITE + post.cover_image.url if post.cover_image else None
+    article = {'@context': 'https://schema.org', '@type': 'Article', 'headline': post.title[:110],
+               'description': post.excerpt, 'url': url, 'mainEntityOfPage': url,
+               'datePublished': post.created_at.isoformat(), 'dateModified': post.updated_at.isoformat(),
+               'author': {'@type': 'Organization', 'name': post.author or 'WedMangal'},
+               'publisher': {'@type': 'Organization', 'name': 'WedMangal', 'url': SITE,
+                             'logo': {'@type': 'ImageObject', 'url': f'{SITE}/android-chrome-512x512.png'}}}
+    if image:
+        article['image'] = image
+    # The post body is HTML written by our own admins in Django admin (same HTML the React page shows).
+    body = ('<main class="seo-summary"><nav><a href="/">WedMangal</a> › <a href="/blog">Guides</a></nav>'
+            f'<article><h1>{escape(post.title)}</h1><p>{escape(post.excerpt)}</p>{post.content}</article>'
+            '<p><a href="/list-your-business">Wedding business? List it free on WedMangal</a></p></main>')
+    return _render(f'{post.title} | WedMangal', post.excerpt, url, body, image=image,
+                   json_ld=[article, _breadcrumbs(('Home', f'{SITE}/'), ('Guides', f'{SITE}/blog'),
+                                                  (post.title, url))])
+
+
+def owner_register_page(request):
+    """The sign-up form. /list-your-business is the page meant to rank for "register wedding vendor",
+    so this one stays out of the index (but its links are followed)."""
+    body = ('<main class="seo-summary"><h1>Register Your Wedding Business</h1>'
+            '<p>Free listing for wedding halls, photographers, makeup artists, caterers, decorators and more. '
+            '<a href="/list-your-business">How listing on WedMangal works</a>.</p></main>')
+    return _render('Register Your Wedding Business — Free Vendor Sign Up | WedMangal',
+                   'Create your free WedMangal vendor account and list your wedding business.',
+                   f'{SITE}/owner-register', body, noindex=True)

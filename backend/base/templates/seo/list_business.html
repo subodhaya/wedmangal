@@ -1,0 +1,27 @@
+{% extends "seo/base.html" %}
+{% block content %}
+<div class="crumbs"><a href="/">Home</a> › List your business</div>
+<h1>List Your Wedding Business on WedMangal — Free</h1>
+<p class="lead">Are you a wedding hall, photographer, makeup artist, caterer or decorator? Register on WedMangal and get your own page that couples find on Google, with Call and WhatsApp buttons and quote requests sent to your phone. {{ total }} wedding businesses in Chennai, Bangalore and Hyderabad are already listed.</p>
+<p><a class="btn" href="/owner-register">Register my business — free</a> &nbsp; <a class="btn wa" href="{{ whatsapp }}" rel="nofollow">Send details on WhatsApp</a></p>
+
+<h2>How it works</h2>
+<ol class="steps">
+  <li><strong>1. Create your vendor account</strong><br>Takes a minute. Later you log in with your phone and a WhatsApp code.</li>
+  <li><strong>2. Add your business details</strong><br>Category, city and area, photos, services and prices.</li>
+  <li><strong>3. Go live and get enquiries</strong><br>After a quick review, couples can find you, call you, WhatsApp you or ask for a quote.</li>
+</ol>
+
+<h2>Already listed? Claim your page</h2>
+<p>Many wedding businesses are already on WedMangal. <a href="/search/">Search for your business</a>, open it and tap <strong>"Claim this listing"</strong> to manage it yourself.</p>
+
+<h2>Who can register</h2>
+<ul class="chips">{% for c in categories %}<li><span>{{ c }}</span></li>{% endfor %}</ul>
+<p>Cities: {% for city, n in counts.items %}{% if n %}{{ city }} ({{ n }} listed){% if not forloop.last %}, {% endif %}{% endif %}{% endfor %}.</p>
+
+<h2>Questions vendors ask</h2>
+{% for q, a in faq %}<details{% if forloop.first %} open{% endif %}><summary>{{ q }}</summary><p>{{ a }}</p></details>{% endfor %}
+
+<p style="margin-top:24px"><a class="btn" href="/owner-register">Register my business — free</a></p>
+<p>Tips for growing your business: <a href="/blog/grow-wedding-vendor-business-tamil-nadu">how to grow a wedding vendor business in Tamil Nadu</a>.</p>
+{% endblock %}

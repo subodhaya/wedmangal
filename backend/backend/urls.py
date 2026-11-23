@@ -23,7 +23,9 @@ from django.views.generic import TemplateView
 from django.http import FileResponse, Http404
 from dj_rest_auth.views import LoginView
 from base.views.sitemap_view import sitemap_xml
-from base.views.seo_views import product_page, category_page
+from base.views.seo_views import (product_page, category_page, home_page, blog_list_page, blog_post_page,
+                                  owner_register_page)
+from base.views import landing_views
 import os
 
 def serve_public_file(filename):
@@ -71,6 +73,14 @@ urlpatterns += [
     re_path(r'^product/(?P<pk>\d+)/?$', product_page, name='seo-product'),
     re_path(r'^AIDictionary/(?P<slug>[^/]+)/?$', aidictionary_page, name='aidictionary'),  # any other slug → real 404
     re_path(r'^category/(?P<category>[^/]+)/?$', category_page, name='seo-category'),
+    re_path(r'^$', home_page, name='seo-home'),
+    re_path(r'^blog/?$', blog_list_page, name='seo-blog'),
+    re_path(r'^blog/(?P<slug>[^/]+)/?$', blog_post_page, name='seo-blog-post'),
+    re_path(r'^owner-register/?$', owner_register_page, name='seo-owner-register'),
+    re_path(r'^list-your-business/?$', landing_views.list_business_page, name='list-your-business'),
+    re_path(r'^(?P<city_slug>chennai|bangalore|hyderabad)/?$', landing_views.city_page, name='landing-city'),
+    re_path(r'^(?P<city_slug>chennai|bangalore|hyderabad)/(?P<category_slug>[a-z-]+)/?$', landing_views.city_category_page, name='landing-city-category'),
+    re_path(r'^(?P<city_slug>chennai|bangalore|hyderabad)/(?P<category_slug>[a-z-]+)/(?P<area_slug>[a-z0-9-]+)/?$', landing_views.area_page, name='landing-area'),
 ]
 
 # Add a fallback for React's index.html

@@ -1,0 +1,23 @@
+{% extends "seo/base.html" %}
+{% block content %}
+<div class="crumbs"><a href="/">Home</a> › <a href="/{{ city_slug }}">{{ city }}</a>{% if area %} › <a href="{{ category_link }}">{{ label }}</a>{% endif %}</div>
+<h1>{{ heading }}</h1>
+<p class="lead">{{ vendors|length }} {{ label|lower }} {% if area %}in {{ area }}{% else %}in {{ city }}{% endif %} listed on WedMangal{% if nearby %}, plus {{ nearby|length }} nearby{% endif %}. Open a vendor to see photos, services and their phone number, or ask several for a quote at once.</p>
+<p><a class="btn" href="{{ search_url }}">Compare &amp; get free quotes</a></p>
+
+<h2>{{ label }} {% if area %}in {{ area }}{% else %}in {{ city }}{% endif %}</h2>
+{% include "seo/_cards.html" with items=vendors %}
+
+{% if nearby %}
+<h2>{{ label }} near {{ area }}</h2>
+{% include "seo/_cards.html" with items=nearby %}
+{% endif %}
+
+{% if area_links %}
+<h2>{{ label }} in other areas of {{ city }}</h2>
+<ul class="chips">{% for a in area_links %}<li><a href="{{ a.url }}">{{ a.label }} ({{ a.count }})</a></li>{% endfor %}</ul>
+{% endif %}
+
+<h2>Are you a {{ label|lower }} business{% if area %} in {{ area }}{% endif %}?</h2>
+<p>List your business on WedMangal for free and get enquiries from couples. <a href="/list-your-business">Register your business</a>.</p>
+{% endblock %}
