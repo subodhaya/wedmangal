@@ -400,6 +400,13 @@ const Header = () => {
             {/* City: always visible (also on phones), one city at a time across the site */}
             {!isServiceOwner && <CitySwitcher />}
 
+            {/* Phones: Home sits right next to the account action (desktop has Home in the nav) */}
+            <LinkContainer to="/" onClick={collapseNav}>
+              <Nav.Link className="header-mobile-action header-mobile-home d-lg-none" aria-label="Home">
+                <i className="fas fa-home" aria-hidden="true" />
+              </Nav.Link>
+            </LinkContainer>
+
             {/* Phones: the main account action stays visible next to ☰ (desktop has it in the nav) */}
             {!userInfo ? (
               <LinkContainer to="/login" onClick={collapseNav}>

@@ -313,8 +313,16 @@ header {
   text-transform: uppercase;
   letter-spacing: inherit;
 }
+/* Home: outlined so the yellow account button stays the main action */
+.header-mobile-home {
+  margin-right: 0;
+  background: transparent;
+  border: 1.5px solid var(--wedding-yellow, #f9e79f);
+  color: var(--wedding-yellow, #f9e79f) !important;
+}
 @media (max-width: 400px) {
   .header-mobile-action { padding: 5px 9px !important; font-size: 0.78rem; margin: 0 4px; }
+  .header-mobile-home { margin-right: 0; }
 }
 
 /* ── ☰ Menu button: outlined pill with a label, easy to notice (phones only — desktop has no ☰) ── */
