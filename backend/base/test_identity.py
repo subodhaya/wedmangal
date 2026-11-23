@@ -1,6 +1,7 @@
 from unittest import mock
 
 from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.cache import cache
 from django.test import TestCase
 from rest_framework.test import APIClient
@@ -57,15 +58,17 @@ class StayLoggedInTests(IdentityTestCase):
 
     def assert_stays_logged_in(self, data):
         refresh = RefreshToken(data['refresh'])
-        self.assertGreaterEqual(refresh['exp'] - refresh['iat'], 90 * 24 * 60 * 60)
+        lifetime = settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds()   # 14 days on the server
+        self.assertEqual(refresh['exp'] - refresh['iat'], lifetime)
+        self.assertGreater(lifetime, 24 * 60 * 60)   # outlives the access token
         renewed = self.client.post('/api/token/refresh/', {'refresh': data['refresh']})
         self.assertEqual(renewed.status_code, 200)
         self.assertEqual(self.can_manage(renewed.data['access']), 403 if data.get('phone') == PHONE else 200)
 
-    def test_phone_login_gets_a_90_day_refresh_token(self):
+    def test_phone_login_gets_a_refresh_token(self):
         self.assert_stays_logged_in(self.phone_login().data)
 
-    def test_password_login_gets_a_90_day_refresh_token(self):
+    def test_password_login_gets_a_refresh_token(self):
         response = self.client.post('/api/users/login/', {'username': OWNER_EMAIL, 'password': 'secret-pw'})
         self.assert_stays_logged_in(response.data)
 
