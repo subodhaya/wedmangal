@@ -320,6 +320,7 @@ header {
   border: 1.5px solid var(--wedding-yellow, #f9e79f);
   color: var(--wedding-yellow, #f9e79f) !important;
 }
+.header-mobile-home.nav-link i { color: inherit; margin: 0; }   /* index.css colours nav icons the header's plum */
 @media (max-width: 400px) {
   .header-mobile-action { padding: 5px 9px !important; font-size: 0.78rem; margin: 0 4px; }
   .header-mobile-home { margin-right: 0; }
