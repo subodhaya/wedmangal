@@ -829,6 +829,7 @@ def getProduct(request, pk):
     data['details'] = vendor_profile.public_details(product)          # only questions actually answered
     data['google_rating'] = vendor_profile.google_rating(product.description)
     data['about'] = vendor_profile.about_text(product.description)
+    data['can_manage'] = vendor_profile.can_manage(request.user, product)   # owner, approved claimant or admin
     return Response(data)
 
 @api_view(['POST'])

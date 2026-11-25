@@ -177,6 +177,15 @@ def date_range(range_key):
     return DEFAULT_RANGE, month_start, now
 
 
+def recent_events(start, end, vendor, limit=10):
+    """Newest customer actions on one listing. Never says who did it: no user, session, path or metadata."""
+    events = VendorEvent.objects.filter(
+        vendor=vendor, event_type__in=VENDOR_EVENT_TYPES, created_at__gte=start, created_at__lte=end,
+    ).order_by('-created_at', '-id')[:limit]
+    return [{'label': e.get_event_type_display(), 'device': e.get_device_type_display(), 'at': e.created_at}
+            for e in events]
+
+
 def metrics(start, end, vendor=None):
     """Counts for the dashboard. With vendor=None, totals across all vendors."""
     events = VendorEvent.objects.filter(created_at__gte=start, created_at__lte=end)

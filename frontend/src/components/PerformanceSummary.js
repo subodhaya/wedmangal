@@ -19,10 +19,16 @@ const METRICS = [
 
 // Vendor dashboard:  <PerformanceSummary endpoint="/api/analytics/vendor-summary/" />
 // Admin overview:    <PerformanceSummary endpoint="/api/analytics/admin-summary/" title="…" />
+// Vendor page:       <PerformanceSummary endpoint="…/vendor-summary/?vendor_id=5" showRecent />  (owner/admin only)
+const when = (iso) => new Date(iso).toLocaleString('en-IN', {
+  day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata',
+});
+
 export default function PerformanceSummary({
   endpoint,
   title = 'Your WedMangal Performance',
   subtitle = 'How couples interacted with your listing on WedMangal.',
+  showRecent = false,
 }) {
   const [range, setRange] = useState('month');
   const [state, setState] = useState({ loading: true, error: '', data: null, hidden: false });
@@ -44,6 +50,7 @@ export default function PerformanceSummary({
 
   if (state.hidden) return null;
   const metrics = state.data?.metrics || {};
+  const recent = state.data?.recent_events || [];
 
   return (
     <section className="perf-card" aria-labelledby="perf-title">
@@ -75,6 +82,24 @@ export default function PerformanceSummary({
               <span className="perf-label">{label}</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {showRecent && !state.error && !state.loading && (
+        <div className="perf-recent">
+          <h3 className="perf-recent-title">Recent activity</h3>
+          {recent.length === 0 ? (
+            <p className="perf-subtitle">No activity in this period.</p>
+          ) : (
+            <ul className="perf-recent-list">
+              {recent.map((e, i) => (
+                <li key={`${e.at}-${i}`}>
+                  <span>{e.label}{e.device && <small> · {e.device}</small>}</span>
+                  <time dateTime={e.at}>{when(e.at)}</time>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </section>

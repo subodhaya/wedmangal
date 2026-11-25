@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
-from base import analytics, discovery, notifications, search_intent
+from base import analytics, discovery, notifications, search_intent, vendor_profile
 from base.models import Product, QuoteRequest, SearchQuery
 from base.views.product_views import _is_admin
 
@@ -188,8 +188,8 @@ def create_quote_request(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def vendor_summary(request):
-    """This vendor's performance. Vendors only ever get their own listing;
-    admins may pass ?vendor_id= to view any vendor."""
+    """This vendor's performance. Vendors only ever get a listing they manage (their own
+    account's, or one whose claim was approved); admins may pass ?vendor_id= to view any vendor."""
     vendor_id = request.query_params.get('vendor_id')
     if vendor_id:
         try:
@@ -198,7 +198,7 @@ def vendor_summary(request):
             vendor = None
         if vendor is None:
             return Response({'detail': 'Vendor not found.'}, status=status.HTTP_404_NOT_FOUND)
-        if vendor.user_id != request.user.id and not _is_admin(request.user):
+        if not vendor_profile.can_manage(request.user, vendor):
             return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
     else:
         vendor = Product.objects.filter(user=request.user).first()
@@ -212,6 +212,7 @@ def vendor_summary(request):
         'end': end,
         'vendor': {'id': vendor._id, 'name': vendor.name},
         'metrics': analytics.metrics(start, end, vendor=vendor),
+        'recent_events': analytics.recent_events(start, end, vendor),
     })
 
 

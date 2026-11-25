@@ -83,6 +83,32 @@
   font-size: 14px;
 }
 
+.vp-main .perf-card { margin-top: 24px; }   /* vendor page: clear of the contact buttons */
+.perf-recent { margin-top: 18px; }
+.perf-recent-title {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--plum, #5e143f);
+}
+.perf-recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.perf-recent-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border, #e8d5de);
+  font-size: 14px;
+  color: var(--text-dark, #2a1a1f);
+}
+.perf-recent-list small,
+.perf-recent-list time { color: var(--text-mid, #5a3a45); font-size: 13px; }
+.perf-recent-list time { white-space: nowrap; }
+
 @media (max-width: 576px) {
   .perf-card { padding: 18px 16px; }
   .perf-num { font-size: 1.6rem; }

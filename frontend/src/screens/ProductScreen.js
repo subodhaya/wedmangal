@@ -9,6 +9,7 @@ import api from '../utils/api';
 import { useLocation } from 'react-router-dom';
 import ClaimButton from '../components/ClaimButton';
 import VendorDetails from '../components/VendorDetails';
+import PerformanceSummary from '../components/PerformanceSummary';
 import VendorGallery from '../components/vendor/VendorGallery';
 import VendorActions from '../components/vendor/VendorActions';
 import DiscoveryPrompt from '../discovery/DiscoveryPrompt';
@@ -470,6 +471,16 @@ const handleDirectBooking = async (serviceId) => {
               <div ref={inlineActionsRef}>
                 <VendorActions product={product} onQuote={openQuote} />
               </div>
+
+              {/* ── Listing activity: owner and admins only (the API checks again) ─ */}
+              {product.can_manage && (
+                <PerformanceSummary
+                  endpoint={`/api/analytics/vendor-summary/?vendor_id=${product._id}`}
+                  title="Listing activity"
+                  subtitle="Only the business owner and WedMangal admins can see this."
+                  showRecent
+                />
+              )}
 
               {/* ── Key details (only what the business has told us) ─ */}
               <VendorDetails details={product.details} category={product.category} />

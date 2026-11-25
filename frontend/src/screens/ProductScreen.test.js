@@ -114,3 +114,28 @@ it('does not show the imported placeholder review counts on services', async () 
   await screen.findByRole('heading', { level: 1 });
   expect(screen.queryByText('(5)')).not.toBeInTheDocument();
 });
+
+// ── Listing activity (owner and admins only) ─────────────────────────────────
+const summary = { metrics: { listing_views: 41, whatsapp_clicks: 3 },
+  recent_events: [{ label: 'WhatsApp click', device: 'Mobile', at: '2026-11-24T10:00:00Z' }] };
+const showAs = (canManage) => {
+  show(vendor({ can_manage: canManage }));
+  const page = api.get.getMockImplementation();
+  api.get.mockImplementation((url, opts) => url.includes('vendor-summary') ? Promise.resolve({ data: summary }) : page(url, opts));
+};
+const summaryCalls = () => api.get.mock.calls.filter(([url]) => url.includes('vendor-summary'));
+
+it('shows the listing activity to someone who manages the listing', async () => {
+  showAs(true);
+  expect(await screen.findByRole('heading', { name: 'Listing activity' })).toBeInTheDocument();
+  expect(await screen.findByText('41')).toBeInTheDocument();
+  expect(screen.getByText('WhatsApp click')).toBeInTheDocument();
+  expect(summaryCalls()[0][0]).toContain('vendor_id=7');
+});
+
+it.each([false, undefined])('hides the activity from everyone else and never asks for it (can_manage=%s)', async (flag) => {
+  showAs(flag);
+  await screen.findByRole('heading', { level: 1 });
+  expect(screen.queryByText('Listing activity')).not.toBeInTheDocument();
+  expect(summaryCalls()).toHaveLength(0);
+});

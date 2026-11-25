@@ -238,6 +238,27 @@ class VendorSummaryTests(AnalyticsTestCase):
         self.assertEqual(response.status_code, 403)
         self.assertNotIn('metrics', response.json())
 
+    def test_approved_claimant_sees_the_listing_they_claimed(self):
+        self.assertEqual(self.summary(self.customer, vendor_id=self.vendor._id).status_code, 403)
+        self.vendor.is_claimed, self.vendor.claimed_by = True, self.customer
+        self.vendor.save()
+        self.assertEqual(self.summary(self.customer, vendor_id=self.vendor._id).status_code, 200)
+
+    def test_recent_events_are_this_vendors_and_anonymous(self):
+        rows = self.summary(self.owner, vendor_id=self.vendor._id, range='7d').json()['recent_events']
+        self.assertEqual(len(rows), 10)   # 12 in the period, newest 10 shown
+        self.assertEqual(set(rows[0]), {'label', 'device', 'at'})
+        self.assertEqual(rows, sorted(rows, key=lambda r: r['at'], reverse=True))
+        VendorEvent.objects.filter(vendor=self.vendor).delete()
+        self.assertEqual(self.summary(self.owner, vendor_id=self.vendor._id).json()['recent_events'], [])
+
+    def test_vendor_page_tells_only_owner_claimant_and_admin_they_can_manage(self):
+        def flag(user):
+            self.client.force_authenticate(user)
+            return self.client.get(f'/api/products/{self.vendor._id}/').json()['can_manage']
+        self.assertEqual([flag(u) for u in (None, self.customer, self.rival)], [False, False, False])
+        self.assertEqual([flag(u) for u in (self.owner, self.staff)], [True, True])
+
     def test_vendor_without_param_only_gets_own_listing(self):
         data = self.summary(self.rival).json()
         self.assertEqual(data['vendor']['id'], self.rival_vendor._id)
