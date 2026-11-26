@@ -69,6 +69,10 @@ say "3. Building the frontend (live build keeps serving)"
 cd "$APP"
 git merge -q --ff-only "$NEW"                       # code on disk only; gunicorn still runs the old code
 cd "$APP/frontend"
+if ! git -C "$APP" diff --quiet "$OLD" "$NEW" -- frontend/package.json frontend/package-lock.json; then
+  # Installs only what the lockfile lists; the live site serves build/, which this does not touch.
+  npm ci --legacy-peer-deps --no-audit --no-fund > "$BACKUP/npm.log" 2>&1 || { tail -30 "$BACKUP/npm.log"; git -C "$APP" reset -q --keep "$OLD"; fail "npm ci failed (code reset to $OLD; run npm ci again before the next deploy)"; }
+fi
 rm -rf build_new
 BUILD_PATH=build_new npx react-scripts build > "$BACKUP/build.log" 2>&1 || { tail -30 "$BACKUP/build.log"; git -C "$APP" reset -q --keep "$OLD"; fail "frontend build failed (code reset to $OLD)"; }
 [ -f build_new/index.html ] || { git -C "$APP" reset -q --keep "$OLD"; fail "build produced no index.html"; }
