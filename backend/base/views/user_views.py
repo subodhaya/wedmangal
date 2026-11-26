@@ -20,7 +20,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from base.serializers import ProductSerializer, UserSerializer, UserSerializerWithToken
 from base.permissions import IsAdmin
 from base.models import Profile, Product, ServiceOwnerClaim
-from base import identity, notifications
+from base import account_deletion, identity, notifications
 
 import os
 
@@ -501,6 +501,19 @@ def deleteUser(request, pk):
     userForDeletion = User.objects.get(id=pk)
     userForDeletion.delete()
     return Response('User was deleted')
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def delete_my_account(request):
+    """POST /api/users/delete-account/ {"confirm": "DELETE"} — see base/account_deletion.py"""
+    if request.data.get('confirm') != 'DELETE':
+        return Response({'detail': 'Type DELETE to confirm.'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        account_deletion.delete_account(request.user)
+    except account_deletion.DeletionBlocked as e:
+        return Response({'detail': str(e)}, status=status.HTTP_403_FORBIDDEN)
+    return Response({'detail': 'Your account has been deleted.'})
 
 
 # ── Service Owner Claim ──────────────────────────────────────────────────────

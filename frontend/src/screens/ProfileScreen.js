@@ -163,6 +163,11 @@ function ProfileScreen() {
           </div>
         </div>
 
+        <p style={{ textAlign: 'center', margin: '14px 0 0', fontSize: '0.82rem' }}>
+          <Link to="/privacy-policy" style={{ color: '#5e143f' }}>Privacy Policy</Link>{' · '}
+          <Link to="/delete-account" style={{ color: '#c0392b' }}>Delete my account</Link>
+        </p>
+
         {/* ── Body ── */}
         <div style={s.body}>
 

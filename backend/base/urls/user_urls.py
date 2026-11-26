@@ -11,6 +11,8 @@ urlpatterns = [
     path('wedding-date/',               views.wedding_date,                     name='save-wedding-date'),
     path('wedding-date/<str:user_id>/', views.wedding_date,                     name='get-wedding-date'),
 
+    path('delete-account/',             views.delete_my_account,                name='delete-my-account'),
+
     # ── Phone login OTP ──────────────────────────────────────────────────────
     path('login/send-otp/',             views.login_send_otp,                   name='login-send-otp'),
     path('login/verify-otp/',           views.login_verify_otp,                 name='login-verify-otp'),

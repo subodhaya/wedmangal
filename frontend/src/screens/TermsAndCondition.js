@@ -179,7 +179,7 @@ const SECTIONS = [
         <p>Your data is collected and handled in accordance with our Privacy Policy.</p>
         <ul>
           <li>We collect only what is necessary for platform operations</li>
-          <li>Please refer to the Privacy Policy for full details on data use</li>
+          <li>Please refer to the <a href="/privacy-policy">Privacy Policy</a> for full details on data use</li>
         </ul>
       </>
     )

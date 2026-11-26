@@ -51,6 +51,8 @@ const AvailableTodayScreen = lazyRoute(() => import('./screens/AvailableTodayScr
 const CategoryScreen = lazyRoute(() => import('./screens/CategoryScreen'));
 const FAQScreen = lazyRoute(() => import('./screens/FAQScreen'));
 const RemovalRequestScreen = lazyRoute(() => import('./screens/RemovalRequestScreen'));
+const PrivacyPolicyScreen = lazyRoute(() => import('./screens/PrivacyPolicyScreen'));
+const DeleteAccountScreen = lazyRoute(() => import('./screens/DeleteAccountScreen'));
 const BlogListScreen = lazyRoute(() => import('./screens/BlogListScreen'));
 const BlogPostScreen = lazyRoute(() => import('./screens/BlogPostScreen'));
 
@@ -127,6 +129,8 @@ function App() {
             <Route path="/ContactUs" element={<ContactUs />} />
             <Route path="/faq" element={<FAQScreen />} />
             <Route path="/removal-request" element={<RemovalRequestScreen />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyScreen />} />
+            <Route path="/delete-account" element={<DeleteAccountScreen />} />
             <Route path="/blog" element={<BlogListScreen />} />
             <Route path="/blog/:slug" element={<BlogPostScreen />} />
             <Route path="/my-appointment/" element={<MyAppointmentScreen />} />

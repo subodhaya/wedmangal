@@ -28,6 +28,8 @@ PUBLIC_ROUTE_PATTERNS = [
     r'/RefundAndCancellation',
     r'/ContactUs',
     r'/removal-request',
+    r'/privacy-policy',
+    r'/delete-account',
     r'/faq',
     r'/blog',
     r'/blog/[\w-]+',
