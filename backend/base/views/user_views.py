@@ -482,7 +482,7 @@ def getUserById(request, pk):
 
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAdminUser])   # staff only, like reading a user: it can grant admin rights
 def updateUser(request, pk):
     user = User.objects.get(id=pk)
     data = request.data

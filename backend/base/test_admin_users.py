@@ -80,3 +80,31 @@ class AdminUserListTests(TestCase):
         self.assertEqual(self.client.get('/api/users/').status_code, 401)
         self.client.force_authenticate(self.first)
         self.assertEqual(self.client.get('/api/users/').status_code, 403)
+
+
+class UpdateUserPermissionTests(TestCase):
+    """PUT /api/users/update/<pk>/ can grant admin rights, so it is staff-only."""
+
+    def setUp(self):
+        from rest_framework.test import APIClient
+        self.client = APIClient()
+        self.user = User.objects.create_user('c@example.com', 'c@example.com', 'x')
+        self.other = User.objects.create_user('o@example.com', 'o@example.com', 'x')
+
+    def put(self, actor, target, **changes):
+        self.client.force_authenticate(actor)
+        return self.client.put(f'/api/users/update/{target.pk}/',
+                               {'name': 'X', 'email': target.email, 'isAdmin': True, **changes}, format='json')
+
+    def test_ordinary_users_cannot_make_anyone_admin(self):
+        for target in (self.user, self.other):
+            self.assertEqual(self.put(self.user, target).status_code, 403)
+            target.refresh_from_db()
+            self.assertFalse(target.is_staff)
+            self.assertNotEqual(target.first_name, 'X')
+
+    def test_staff_still_can(self):
+        staff = User.objects.create_user('s', 's@example.com', 'x', is_staff=True)
+        self.assertEqual(self.put(staff, self.other).status_code, 200)
+        self.other.refresh_from_db()
+        self.assertTrue(self.other.is_staff)
