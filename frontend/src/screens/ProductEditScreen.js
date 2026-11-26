@@ -6,6 +6,7 @@ import { Form, Button, Row, Col, Card } from 'react-bootstrap'; // Added Row, Co
 import Loader from '../components/Loader';
 import Message from '../components/Message';
 import FormContainer from '../components/FormContainer';
+import { assetUrl } from '../utils/native';
 
 function ProductEditScreen() {
   const { id: productId } = useParams();
@@ -229,7 +230,7 @@ function ProductEditScreen() {
           <Col key={product._id} sm={12} md={6} lg={4} xl={3}>
             <Card className='my-3 p-3 rounded'>
               <Link to={`/product/${product._id}`}>
-                <Card.Img src={product.image} variant='top' />
+                <Card.Img src={assetUrl(product.image)} variant='top' />
               </Link>
 
               <Card.Body>

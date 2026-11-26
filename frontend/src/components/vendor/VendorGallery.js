@@ -2,6 +2,7 @@
 // service photos). No stock images — with no photos we show a plain name card.
 import { categoryText } from '../../utils/categories';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { assetUrl } from '../../utils/native';
 
 export const vendorPhotos = (product) => {
   const seen = new Set();
@@ -9,7 +10,7 @@ export const vendorPhotos = (product) => {
   const add = (src, alt) => {
     if (!src || typeof src !== 'string' || src.includes('placeholder') || seen.has(src)) return;
     seen.add(src);
-    photos.push({ src, alt });
+    photos.push({ src: assetUrl(src), alt });
   };
   add(product.image, product.name);
   (product.services || []).forEach(s => (s.images || []).forEach(img => add(img.image, s.name || product.name)));

@@ -5,6 +5,7 @@ import Rating from '../components/Rating';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
 import Calendar from 'react-calendar';
+import { apiUrl, assetUrl } from '../utils/native';
 import 'react-calendar/dist/Calendar.css';
 
 function ServiceScreen() {
@@ -28,7 +29,7 @@ function ServiceScreen() {
         }
 
         try {
-            const response = await fetch(`/api/products/services/${id}/`);
+            const response = await fetch(apiUrl(`/api/products/services/${id}/`));
             if (!response.ok) {
                 throw new Error('Failed to fetch service');
             }
@@ -47,7 +48,7 @@ function ServiceScreen() {
 
     const fetchBookedDates = async () => {
         try {
-            const response = await fetch(`/api/products/bookings/${id}/dates`);
+            const response = await fetch(apiUrl(`/api/products/bookings/${id}/dates`));
             if (!response.ok) {
                 throw new Error('Booked dates not found');
             }
@@ -137,7 +138,7 @@ function ServiceScreen() {
         <div>
           <Row>
             <Col md={6}>
-              <Image src={product.product_related.image} alt={product.product_related.name} fluid className="product-image" />
+              <Image src={assetUrl(product.product_related.image)} alt={product.product_related.name} fluid className="product-image" />
             </Col>
             <Col md={6}>
               <ListGroup variant="flush">
@@ -183,7 +184,7 @@ function ServiceScreen() {
                         <Carousel.Item key={image._id}>
                           <img
                             className="d-block w-100"
-                            src={image.image}
+                            src={assetUrl(image.image)}
                             alt={`Service ${service.name}`}
                           />
                         </Carousel.Item>

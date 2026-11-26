@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import FilterBar from './FilterBar';
+import { assetUrl } from '../utils/native';
 import './EmergencySection.css';
 
 const CATEGORIES = [
@@ -27,7 +28,7 @@ export function VendorCard({ v, onClick }) {
   const [imgError, setImgError] = useState(false);
   const imgSrc = imgError || !v.image || v.image.includes('placeholder')
     ? null
-    : `/static/images/${v.image}`;
+    : assetUrl(`/static/images/${v.image}`);
 
   return (
     <div className="es-card" onClick={onClick}>

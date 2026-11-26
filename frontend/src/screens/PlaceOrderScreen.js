@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../utils/api';  
 import Message from '../components/Message';
 import CheckoutSteps from '../components/CheckoutSteps';
+import { assetUrl } from '../utils/native';
 import './PlaceOrderScreen.css';
 
 function PlaceOrderScreen() {
@@ -112,7 +113,7 @@ function PlaceOrderScreen() {
                                             <Row>
                                                 <Col md={2}>
                                                     <Image
-                                                        src={item.image}
+                                                        src={assetUrl(item.image)}
                                                         alt={item.name}
                                                         fluid
                                                         rounded

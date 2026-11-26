@@ -9,6 +9,7 @@ import './ManagePage.css';
 import AvailabilityToggle from './AvailabilityToggle';
 import PerformanceSummary from './PerformanceSummary';
 import ProfileCompletion from './ProfileCompletion';
+import { assetUrl } from '../utils/native';
 
 
 
@@ -359,7 +360,7 @@ function ManagePage() {
                                     {productData.image && (
                                         <div className="mp-img-preview-wrap">
                                             <img
-                                                src={productData.image}
+                                                src={assetUrl(productData.image)}
                                                 alt="Preview"
                                                 className="mp-img-preview"
                                                 onError={(e) => { e.target.style.display = 'none'; }}
@@ -606,7 +607,7 @@ function ManagePage() {
                                         {/* Filled slots */}
                                         {videos.map((vid) => (
                                             <div key={vid._id} style={{ position: 'relative' }}>
-                                                <img src={vid.video_thumb} alt="thumb"
+                                                <img src={assetUrl(vid.video_thumb)} alt="thumb"
                                                     style={{ width: '100%', aspectRatio: '9/16', objectFit: 'cover', borderRadius: '8px', border: '2px solid #5e143f', display: 'block' }} />
                                                 {vid.video_duration && (
                                                     <span style={{ position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: '10px', padding: '2px 5px', borderRadius: '4px', whiteSpace: 'nowrap' }}>

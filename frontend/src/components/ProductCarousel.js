@@ -4,6 +4,7 @@ import api from '../utils/api';
 import { Link } from 'react-router-dom';
 import Loader from './Loader';
 import Message from './Message';
+import { assetUrl } from '../utils/native';
 import './ProductCarousel.css';
 
 function ProductCarousel() {
@@ -101,7 +102,7 @@ function ProductCarousel() {
                     >
                       <div className="pc-img-box">
                         <img
-                          src={product.image}
+                          src={assetUrl(product.image)}
                           alt={product.name}
                           className={`pc-img ${hoveredId === product._id ? 'pc-img--zoom' : ''}`}
                         />

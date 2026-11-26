@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
+import { assetUrl } from '../utils/native';
 import './TopRatedVendors.css';
 
 // Product IDs to never surface in this widget, regardless of category/rating
@@ -59,7 +60,7 @@ export default function TopRatedVendors({ category, city, limit = 3 }) {
       <div className="trv-list">
         {vendors.map(v => (
           <Link to={`/product/${v._id}`} key={v._id} className="trv-card">
-            <img src={v.image} alt={v.name} className="trv-img" />
+            <img src={assetUrl(v.image)} alt={v.name} className="trv-img" />
             <div className="trv-info">
               <span className="trv-name">{v.name}</span>
               {v.city && <span className="trv-city">{v.city}</span>}

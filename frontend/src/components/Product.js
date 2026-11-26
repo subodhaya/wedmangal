@@ -5,6 +5,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Rating from './Rating';
 import api from '../utils/api';
 import { trackEvent, EVENTS } from '../utils/analytics';
+import { assetUrl } from '../utils/native';
 import './Product.css';
 
 function VideoModal({ videoUrl, videoThumb, vendorName, onClose }) {
@@ -49,8 +50,8 @@ function VideoModal({ videoUrl, videoThumb, vendorName, onClose }) {
       >
         <video
           ref={videoRef}
-          src={videoUrl}
-          poster={videoThumb || undefined}
+          src={assetUrl(videoUrl)}
+          poster={assetUrl(videoThumb) || undefined}
           autoPlay muted loop playsInline
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
           onClick={() => {
@@ -181,7 +182,7 @@ function Product({ product }) {
           <div className="product-img-box">
             {!imgError ? (
               <Card.Img
-                src={`/static/images/${product.image}`}
+                src={assetUrl(`/static/images/${product.image}`)}
                 className="product-img"
                 onError={() => setImgError(true)}
               />

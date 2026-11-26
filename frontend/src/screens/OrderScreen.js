@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../utils/api';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
+import { assetUrl } from '../utils/native';
 
 const s = {
   page: { fontFamily: "'DM Sans', sans-serif", background: "#fdf8f0", minHeight: "100vh", padding: "0 0 60px" },
@@ -450,7 +451,7 @@ backdropFilter: "blur(1px)",
                     ...(idx === order.orderItems.length - 1 ? { borderBottom: "none", paddingBottom: 0 } : {})
                   }}>
                     {item.image
-                      ? <img src={item.image} alt={item.name} style={s.bookingImg} onError={e => e.target.style.display = 'none'} />
+                      ? <img src={assetUrl(item.image)} alt={item.name} style={s.bookingImg} onError={e => e.target.style.display = 'none'} />
                       : <div style={s.bookingImgPlaceholder}>✨</div>
                     }
                     <div style={s.bookingInfo}>

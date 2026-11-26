@@ -21,6 +21,7 @@ import SlotPicker from '../components/SlotPicker';
 import QuoteModal from '../components/QuoteModal';
 import { trackEvent, EVENTS } from '../utils/analytics';
 import { Helmet } from 'react-helmet-async'; 
+import { assetUrl } from '../utils/native';
 
 // Only needed once someone opens a booking calendar
 const Calendar = lazy(() => import('../components/BookingCalendar'));
@@ -514,8 +515,8 @@ const handleDirectBooking = async (serviceId) => {
                   <video
                     key={cur._id}
                     ref={videoRef}
-                    src={cur.video_url}
-                    poster={cur.video_thumb || undefined}
+                    src={assetUrl(cur.video_url)}
+                    poster={assetUrl(cur.video_thumb) || undefined}
                     autoPlay muted loop playsInline
                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                     onClick={() => {
@@ -619,7 +620,7 @@ const handleDirectBooking = async (serviceId) => {
                             <Carousel.Item key={img._id || img.image}>
                               <img
                                 className="d-block w-100"
-                                src={img.image}
+                                src={assetUrl(img.image)}
                                 alt={service.name}
                                 loading="lazy" decoding="async"
                                 style={{ maxHeight: '260px', objectFit: 'contain' }}

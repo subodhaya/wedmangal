@@ -584,3 +584,15 @@
   .ls-choose-img { width: 96px; height: 96px; }
   .ls-choose-name { font-size: 1rem; }
 }
+
+/* Android app only: Google button (the website uses Google's own) */
+.ls-native-google {
+  width: 100%;
+  max-width: 300px;
+  min-height: 44px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  background: #fff;
+  color: #3c4043;
+  font-weight: 600;
+}

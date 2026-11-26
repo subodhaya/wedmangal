@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import api from '../utils/api';
+import { assetUrl } from '../utils/native';
 import './BlogListScreen.css';
 
 const CATEGORIES = [
@@ -23,7 +24,7 @@ const CATEGORY_IMAGES = {
 
 function BlogCard({ post }) {
   const fallback = CATEGORY_IMAGES[post.category] || '/images/5.jpg';
-  const imgSrc   = post.cover_image_url || fallback;
+  const imgSrc   = assetUrl(post.cover_image_url) || fallback;
 
   return (
     <Link to={`/blog/${post.slug}`} className="bl-card">

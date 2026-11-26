@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { FaHeart, FaDownload, FaWhatsapp, FaCamera } from 'react-icons/fa';
+import { assetUrl, imageAsDataUrl, isNativeApp, shareImage } from '../utils/native';
 import './InviteForm.css';
 
 const templateImages = [
   'invite1.jpg','invite2.jpg','invite3.jpg','invite5.jpg',
   'invite7.jpg','invite6.jpg','invite9.jpg','invite12.jpg',
   'invite13.jpg','invite15.jpg',
-].map(f => `/static/images/invite_images/${f}`);
+].map(f => assetUrl(`/static/images/invite_images/${f}`));
 
 const InviteForm = () => {
   const [formData, setFormData] = useState({
@@ -38,7 +39,28 @@ const InviteForm = () => {
     }
   };
 
+  // Android app: downloads and blob links don't work there, so both buttons open the share sheet
+  // (save to Photos/Files, WhatsApp, …) with the finished image.
+  const shareFromApp = async () => {
+    if (isSample) { setErrorMessage('Please fill in the form first.'); return; }   // the card is hidden until then
+    try {
+      const background = formData.template.startsWith('http') ? await imageAsDataUrl(formData.template) : null;
+      const canvas = await html2canvas(document.getElementById('invitation'), {
+        useCORS: true, scale: 2,
+        onclone: (doc) => {
+          if (background) doc.getElementById('invitation').style.backgroundImage = `url(${background})`;
+        },
+      });
+      // The name is part of a file path, so keep it to plain characters
+      const name = (formData.brideName || '').replace(/[^\p{L}\p{M}\p{N}]+/gu, '-') || 'wedding';
+      await shareImage(canvas.toDataURL('image/png'), `${name}-invitation.png`, 'You are cordially invited! 💍');
+    } catch {
+      setErrorMessage('Could not prepare the invitation. Please try again.');
+    }
+  };
+
   const handleDownload = () => {
+    if (isNativeApp) { shareFromApp(); return; }
     const el = document.getElementById('invitation');
     html2canvas(el, { useCORS: true, scale: 2 }).then(canvas => {
       const link = document.createElement('a');
@@ -50,6 +72,7 @@ const InviteForm = () => {
   };
 
   const handleShare = () => {
+    if (isNativeApp) { shareFromApp(); return; }
     html2canvas(document.getElementById('invitation'), { useCORS: true }).then(canvas => {
       canvas.toBlob(blob => {
         const imageUrl = URL.createObjectURL(blob);
@@ -206,7 +229,7 @@ const InviteForm = () => {
 
             {isSample && (
               <div className="sample-preview-wrap">
-                <img src="/static/images/invite_images/sample-preview.png" alt="Sample invitation" className="sample-preview-img" />
+                <img src={assetUrl('/static/images/invite_images/sample-preview.png')} alt="Sample invitation" className="sample-preview-img" />
                 <div className="sample-preview-hint">Fill in the form to see your personalised invitation here</div>
               </div>
             )}

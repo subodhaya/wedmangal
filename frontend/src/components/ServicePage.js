@@ -2,6 +2,7 @@ import { useState, useEffect ,useRef} from 'react';
 import { FaTrash, FaTimes, FaPlus } from 'react-icons/fa';
 import api from '../utils/api';
 import { useNavigate, useParams } from 'react-router-dom';
+import { apiUrl, assetUrl } from '../utils/native';
 import './ServicePage.css';
 
 /* ── ImageThumb: safely renders one image with delete button ─
@@ -14,7 +15,7 @@ const ImageThumb = ({ imageUrl, imgIndex, onDelete }) => {
                 <div className="sp-image-thumb-placeholder">🖼️</div>
             ) : (
                 <img
-                    src={imageUrl}
+                    src={assetUrl(imageUrl)}
                     alt={`service ${imgIndex + 1}`}
                     onError={() => setBroken(true)}
                 />
@@ -234,7 +235,7 @@ useEffect(() => {
         const formData = new FormData();
         files.forEach((file) => formData.append('images', file));
         try {
-            const response = await fetch(`/api/products/${serviceId}/images/upload/`, {
+            const response = await fetch(apiUrl(`/api/products/${serviceId}/images/upload/`), {
                 method: 'POST',
                 body: formData,
                 headers: { Authorization: `Bearer ${userInfo.token}` },

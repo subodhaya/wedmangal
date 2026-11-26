@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Message from '../components/Message';
 import api from '../utils/api';
+import { assetUrl } from '../utils/native';
 import './WishlistScreen.css';
 
 function WishlistScreen() {
@@ -88,7 +89,7 @@ function WishlistScreen() {
               <Link to={`/product/${item._id}`} className="wl-img-link">
                 <div className="wl-img-box">
                   <img
-                    src={item.image?.startsWith('http') ? item.image : `/static/images/${item.image}`}
+                    src={assetUrl(item.image?.startsWith('http') ? item.image : `/static/images/${item.image}`)}
                     alt={item.name}
                     className="wl-img"
                     onError={(e) => {

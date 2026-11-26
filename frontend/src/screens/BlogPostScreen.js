@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import api from '../utils/api';
 import TopRatedVendors from '../components/TopRatedVendors';
+import { assetUrl } from '../utils/native';
 import './BlogPostScreen.css';
 
 export default function BlogPostScreen() {
@@ -91,7 +92,7 @@ export default function BlogPostScreen() {
         {/* Cover image */}
         {post.cover_image_url && (
           <div className="bp-cover-wrap">
-            <img src={post.cover_image_url} alt={post.title} className="bp-cover" />
+            <img src={assetUrl(post.cover_image_url)} alt={post.title} className="bp-cover" />
           </div>
         )}
 

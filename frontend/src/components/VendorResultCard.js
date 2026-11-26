@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { normalizePhone } from '../screens/ProductScreen';
 import { trackEvent, EVENTS } from '../utils/analytics';
+import { assetUrl } from '../utils/native';
 
 const inr = (n) => `₹${Math.round(n).toLocaleString('en-IN')}`;
 
@@ -11,8 +12,8 @@ export const priceText = (from, to) => {
 };
 
 export const imageSrc = (image) => {
-  if (!image) return '/static/images/placeholder.png';
-  return image.startsWith('/') || image.startsWith('http') ? image : `/static/images/${image}`;
+  if (!image) return assetUrl('/static/images/placeholder.png');
+  return assetUrl(image.startsWith('/') || image.startsWith('http') ? image : `/static/images/${image}`);
 };
 
 // One search result. Uses only the public search fields (no personal_phone).

@@ -9,6 +9,7 @@ import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { isNativeApp, nativeGoogleIdToken } from '../utils/native';
 import '../components/ClaimModal.css';
 import './LoginScreen.css';
 
@@ -65,6 +66,17 @@ function LoginScreen() {
             setError(err.response?.data?.detail || 'Google login failed. Please try another way.');
         }
         setLoading(false);
+    };
+
+    // Android app: Google's account chooser instead of the web button (blocked inside apps).
+    const handleNativeGoogle = async () => {
+        setError('');
+        try {
+            const credential = await nativeGoogleIdToken(GOOGLE_CLIENT_ID);
+            if (credential) await handleGoogle({ credential });
+        } catch {
+            setError('Google login is not available. Please use phone or email.');
+        }
     };
 
     const submitHandler = async (e) => {
@@ -184,6 +196,13 @@ function LoginScreen() {
                     <div className="ls-divider ls-divider--compact" aria-hidden="true">
                         <span /><span className="ls-divider-text">or</span><span />
                     </div>
+                    {isNativeApp ? (
+                        <div className="ls-google-wrap ls-google-wrap--compact">
+                            <button type="button" className="ls-native-google" onClick={handleNativeGoogle} disabled={loading}>
+                                Continue with Google
+                            </button>
+                        </div>
+                    ) : (
                     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
                         <div className="ls-google-wrap ls-google-wrap--compact">
                             <GoogleLogin
@@ -196,6 +215,7 @@ function LoginScreen() {
                             />
                         </div>
                     </GoogleOAuthProvider>
+                    )}
                     <div className="ls-divider ls-divider--compact" aria-hidden="true">
                         <span /><span className="ls-divider-text">or with email</span><span />
                     </div>

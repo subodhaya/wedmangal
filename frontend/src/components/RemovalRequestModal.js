@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { BASE_URL } from '../utils/api';
 import { normalizeIndianMobile, postJSON } from '../utils/analytics';
+import { publicOrigin } from '../utils/native';
 import './QuoteModal.css';
 import './RemovalRequestModal.css';
 
@@ -89,7 +90,7 @@ async function postForm(path, formData) {
   }
 }
 
-const listingUrl = (vendor) => `${window.location.origin}/product/${vendor._id}`;
+const listingUrl = (vendor) => `${publicOrigin()}/product/${vendor._id}`;
 
 export default function RemovalRequestModal({ vendor, type, onClose }) {
   const [form, setForm] = useState({

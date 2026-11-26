@@ -1,6 +1,10 @@
 import axios from "axios";
 import { getCity, isListingRequest } from "./city";
-const BASE_URL = window.location.origin.includes("localhost")
+import { isNativeApp, API_ORIGIN } from "./native";
+// The Android app also runs on a "localhost" origin, so it is checked first.
+const BASE_URL = isNativeApp
+  ? API_ORIGIN
+  : window.location.origin.includes("localhost")
   ? "http://127.0.0.1:8000"
   : window.location.origin.includes("5.223.87.80")
   ? "http://5.223.87.80"

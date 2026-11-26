@@ -18,3 +18,8 @@ __pycache__/
 
 backend/google-chrome-stable_current_amd64.deb
 backend/private_media/
+
+# Android release signing: never commit
+*.jks
+*.keystore
+keystore.properties

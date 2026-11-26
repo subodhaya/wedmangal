@@ -5,6 +5,7 @@ import Message from '../components/Message';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import api from '../utils/api';
+import { assetUrl } from '../utils/native';
 import './CartScreen.css';
 
 function CartScreen() {
@@ -133,7 +134,7 @@ function CartScreen() {
                 <Link to={`/product/service/${item.service}`} className="cs-item-img-link">
                   <div className="cs-item-img-box">
                     <img
-                      src={item.image}
+                      src={assetUrl(item.image)}
                       alt={item.name}
                       className="cs-item-img"
                       onError={(e) => {

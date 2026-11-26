@@ -18,6 +18,7 @@ import './HomeScreen.css';
 import api from '../utils/api';
 import { activeSearchFilters, createSearchTracker } from '../utils/analytics';
 import { useParams } from 'react-router-dom';
+import { isNativeApp } from '../utils/native';
 
 const SITE_URL = process.env.REACT_APP_SITE_URL || 'https://wedmangal.com';
 const SITE_NAME = 'WedMangal';
@@ -533,7 +534,7 @@ return () => { isMounted = false; };
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center', marginTop: 8, flexWrap: 'wrap' }}>
               <Button variant="outline-light" className="plan-button" size="lg" onClick={() => navigate('/plan')} aria-label="Plan my wedding">🗓 Plan my wedding</Button>
               <Button variant="outline-light" size="lg" className="explore-button" onClick={() => { const g = document.querySelector('.product-grid'); if (g) g.scrollIntoView({ behavior: 'smooth' }); else window.scrollTo({ top: window.innerHeight / 2, behavior: 'smooth' }); }} aria-label="Explore all services">Explore Services</Button>
-              <Button variant="success" size="lg" className="download-button" onClick={handleHeaderDownloadClick} aria-label="Download mobile app">📲 Download App</Button>
+              {!isNativeApp && <Button variant="success" size="lg" className="download-button" onClick={handleHeaderDownloadClick} aria-label="Download mobile app">📲 Download App</Button>}
             </div>
           </section>
 

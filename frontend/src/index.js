@@ -5,6 +5,7 @@ import './bootstrap.min.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { registerServiceWorker } from './utils/swRegister';
+import { initNativeApp } from './utils/native';
 
 // Capture beforeinstallprompt globally
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -12,6 +13,8 @@ window.addEventListener('beforeinstallprompt', (e) => {
   window.deferredPWAEvent = e;
   console.log("[PWA] beforeinstallprompt captured in index.js");
 });
+
+initNativeApp();   // Android app only; does nothing on the website
 
 const root = createRoot(document.getElementById('root'));
 

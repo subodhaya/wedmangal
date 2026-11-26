@@ -1,5 +1,30 @@
 {
-  "appId": "com.bookyourcelebration.app",
-  "appName": "bestdayevents",
-  "webDir": "build"
+  "appId": "com.wedmangal.app",
+  "appName": "WedMangal",
+  "webDir": "build",
+  "backgroundColor": "#5e143f",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "launchAutoHide": true,
+      "backgroundColor": "#5e143f",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#5e143f"
+    },
+    "SystemBars": {
+      "insetsHandling": "css",
+      "style": "DARK"
+    },
+    "SocialLogin": {
+      "providers": {
+        "google": true,
+        "facebook": false,
+        "apple": false,
+        "twitter": false
+      }
+    }
+  }
 }
