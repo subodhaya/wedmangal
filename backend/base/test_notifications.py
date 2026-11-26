@@ -8,7 +8,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from base import notifications
+from base import analytics, notifications, phone_check
 from base.models import Product, QuoteRequest, VendorEvent
 
 UA = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/126.0 Mobile Safari/537.36'
@@ -48,6 +48,7 @@ class QuoteNotificationTests(TestCase):
         payload = {'vendor_id': vendor._id, 'session_id': SESSION, 'name': 'Priya', 'phone': '9988776655',
                    'event_date': (timezone.now() + timedelta(days=90)).date().isoformat(),
                    'message': 'Reception for 300 guests', 'consent': True, **extra}
+        payload.setdefault('phone_token', phone_check.token_for(analytics.normalize_indian_mobile(str(payload['phone'] or ''))))
         with self.captureOnCommitCallbacks(execute=True):
             return self.client.post('/api/analytics/quotes/', payload, format='json')
 

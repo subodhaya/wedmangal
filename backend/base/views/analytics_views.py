@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
-from base import analytics, discovery, notifications, search_intent, vendor_profile
+from base import analytics, discovery, notifications, phone_check, search_intent, vendor_profile
 from base.models import Product, QuoteRequest, SearchQuery
 from base.views.product_views import _is_admin
 
@@ -141,6 +141,8 @@ def create_quote_request(request):
 
     if errors:
         return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
+    if not phone_check.is_checked(request, phone, data.get('phone_token')):
+        return phone_check.needs_check_response()   # the vendor only ever gets a number its owner confirmed
 
     # Discovery answers the customer chose to include (same category as this vendor only).
     requirements = {}

@@ -6,7 +6,7 @@ from django.core.cache import cache
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
-from base import notifications
+from base import analytics, notifications, phone_check
 from base.models import Product, QuoteRequest, VendorEvent
 
 UA = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/126.0 Mobile Safari/537.36'
@@ -62,6 +62,7 @@ class WhatsAppTestCase(TestCase):
         payload = {'vendor_id': (target or self.hall)._id, 'session_id': SESSION, 'name': 'Ravi', 'phone': '98765 00012',
                    'event_date': (date.today() + timedelta(days=70)).isoformat(), 'message': 'Reception on the same day',
                    'consent': True, **extra}
+        payload.setdefault('phone_token', phone_check.token_for(analytics.normalize_indian_mobile(str(payload['phone'] or ''))))
         with mock.patch('base.notifications.requests.get', side_effect=provider):
             with self.captureOnCommitCallbacks(execute=True):
                 return self.client.post('/api/analytics/quotes/', payload, format='json')
@@ -189,6 +190,7 @@ class SendingTests(WhatsAppTestCase):
             self.client.get('/api/search/', {'category': 'Halls'})
             self.client.post('/api/discovery/leads/', {'session_id': SESSION, 'source_vendor_id': self.hall._id,
                                                        'name': 'Ravi', 'phone': '9876500012', 'consent': True,
+                                                       'phone_token': phone_check.token_for('9876500012'),
                                                        'requirements': HALL_REQ}, format='json')
         self.assertEqual(provider.calls, [])                               # WedMangal handles help requests itself
         self.assertEqual(self.submit(provider, consent=False).status_code, 400)

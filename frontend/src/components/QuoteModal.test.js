@@ -107,3 +107,55 @@ describe('requirements from the discovery questions', () => {
     expect(JSON.parse(global.fetch.mock.calls[0][1].body).requirements).toBeUndefined();
   });
 });
+
+describe('confirming the mobile number', () => {
+  // Server: quote → "verify first" until a token is sent; send-code → ok; verify → token
+  const server = () => jest.fn((url, options) => {
+    const body = JSON.parse(options.body);
+    if (url.endsWith('/phone/send-code/')) return respond(200, { phone: body.phone, channel: 'whatsapp' });
+    if (url.endsWith('/phone/verify/')) return body.otp === '123456'
+      ? respond(200, { phone: body.phone, phone_token: 'signed' }) : respond(400, { detail: 'Wrong code. 4 attempt(s) left.' });
+    return body.phone_token === 'signed' ? respond(201, { id: 9 })
+      : respond(400, { errors: { phone: 'Please confirm your mobile number with the code we send to it.' }, verify_phone: true });
+  });
+  const calls = (end) => global.fetch.mock.calls.filter(([u]) => u.endsWith(end)).map(([, o]) => JSON.parse(o.body));
+  afterEach(() => sessionStorage.clear());
+
+  it('asks for the code, then sends the same enquiry once confirmed', async () => {
+    global.fetch = server();
+    render(<QuoteModal vendor={vendor} onClose={() => {}} />);
+    fill(); submit();
+    expect(await screen.findByText(/sent a 6-digit code on WhatsApp/)).toHaveTextContent('+91 98765 43210');
+    expect(calls('/phone/send-code/')).toEqual([{ phone: '9876543210' }]);
+    fireEvent.change(screen.getByLabelText('6-digit code'), { target: { value: '000000' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm and send' }));
+    expect(await screen.findByText('Wrong code. 4 attempt(s) left.')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('6-digit code'), { target: { value: '123456' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm and send' }));
+    expect(await screen.findByText('Enquiry received')).toBeInTheDocument();
+    expect(calls('/quotes/').at(-1)).toMatchObject({ name: 'Priya', phone: '98765 43210', phone_token: 'signed' });
+  });
+
+  it('remembers the confirmation for the next vendor in this tab', async () => {
+    global.fetch = server();
+    sessionStorage.setItem('wm_phone_checks', JSON.stringify({ 9876543210: 'signed' }));
+    render(<QuoteModal vendor={vendor} onClose={() => {}} />);
+    fill(); submit();
+    expect(await screen.findByText('Enquiry received')).toBeInTheDocument();
+    expect(calls('/phone/send-code/')).toHaveLength(0);
+  });
+
+  it('fills in a logged-in visitor’s own number', () => {
+    localStorage.setItem('userInfo', JSON.stringify({ token: 't', phone: '9876543210' }));
+    render(<QuoteModal vendor={vendor} onClose={() => {}} />);
+    expect(screen.getByLabelText(/^mobile number/i)).toHaveValue('9876543210');
+  });
+
+  it('lets the visitor go back and fix the number', async () => {
+    global.fetch = server();
+    render(<QuoteModal vendor={vendor} onClose={() => {}} />);
+    fill(); submit();
+    fireEvent.click(await screen.findByRole('button', { name: 'Change number' }));
+    expect(screen.getByLabelText(/^mobile number/i)).toHaveValue('98765 43210');
+  });
+});

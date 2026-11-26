@@ -169,6 +169,27 @@ describe('contact', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Get help' }));
     expect(await screen.findByText(/Please agree to be contacted by WedMangal/)).toBeInTheDocument();
   });
+
+  it('confirms the mobile number before the lead is saved', async () => {
+    global.fetch = jest.fn((url, o) => {
+      const body = JSON.parse(o.body);
+      const reply = (status, data) => Promise.resolve({ ok: status < 400, status, json: () => Promise.resolve(data) });
+      if (url.endsWith('/phone/send-code/')) return reply(200, { phone: body.phone, channel: 'sms' });
+      if (url.endsWith('/phone/verify/')) return reply(200, { phone: body.phone, phone_token: 'signed' });
+      if (url.endsWith('/leads/')) return body.phone_token === 'signed' ? reply(201, { id: 7 }) : reply(400, { errors: { phone: 'x' }, verify_phone: true });
+      return reply(201, {});
+    });
+    openForm();
+    fireEvent.change(screen.getByLabelText('Your name'), { target: { value: 'Ravi' } });
+    fireEvent.change(screen.getByLabelText('Mobile number'), { target: { value: '98765 43210' } });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: 'Get help' }));
+    expect(await screen.findByText(/sent a 6-digit code by SMS/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('6-digit code'), { target: { value: '123456' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm and send' }));
+    expect(await screen.findByText('Thank you, Ravi')).toBeInTheDocument();
+    sessionStorage.clear();
+  });
 });
 
 describe('matching results', () => {

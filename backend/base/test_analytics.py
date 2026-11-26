@@ -7,7 +7,7 @@ from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from base import analytics
+from base import analytics, phone_check
 from base.models import Product, QuoteRequest, VendorEvent
 
 E = VendorEvent.EventType
@@ -40,6 +40,7 @@ class AnalyticsTestCase(TestCase):
     def quote(self, **overrides):
         payload = {'vendor_id': self.vendor._id, 'session_id': SESSION, 'name': 'Priya',
                    'phone': '+91 98765 43210', 'consent': True, **overrides}
+        payload.setdefault('phone_token', phone_check.token_for(analytics.normalize_indian_mobile(str(payload['phone'] or ''))))   # number confirmed by code
         return self.client.post('/api/analytics/quotes/', payload, format='json')
 
 
@@ -286,3 +287,80 @@ class VendorSummaryTests(AnalyticsTestCase):
         self.client.force_authenticate(self.staff)
         totals = self.client.get('/api/analytics/admin-summary/', {'range': '7d'}).json()['metrics']
         self.assertEqual((totals['listing_views'], totals['whatsapp_clicks'], totals['quote_submissions']), (12, 3, 2))
+
+
+# ── Enquiry phone must be confirmed ─────────────────────────────────────────
+
+class EnquiryPhoneCheckTests(AnalyticsTestCase):
+    PHONE = '9876543210'
+
+    def setUp(self):
+        super().setUp()
+        cache.clear()
+        sender = mock.patch('base.views.user_views._send_login_code', return_value=(True, None, 'whatsapp'))
+        self.send = sender.start()
+        self.addCleanup(sender.stop)
+
+    def send_code(self, phone=PHONE):
+        return self.client.post('/api/analytics/phone/send-code/', {'phone': phone}, format='json')
+
+    def code(self, phone=PHONE):
+        return cache.get(f'enquiry_otp:{phone}')
+
+    def verify(self, otp, phone=PHONE):
+        return self.client.post('/api/analytics/phone/verify/', {'phone': phone, 'otp': otp}, format='json')
+
+    def test_unconfirmed_number_is_refused_and_nothing_is_saved(self):
+        for token in (None, '', 'garbage', phone_check.token_for('9000000001')):   # missing, forged, other number
+            response = self.quote(phone_token=token)
+            self.assertEqual(response.status_code, 400, token)
+            self.assertTrue(response.json()['verify_phone'])
+            self.assertIn('phone', response.json()['errors'])
+        self.assertFalse(QuoteRequest.objects.exists())
+
+    def test_code_then_token_lets_the_enquiry_through(self):
+        response = self.send_code('+91 98765-43210')
+        self.assertEqual(response.json(), {'phone': self.PHONE, 'channel': 'whatsapp'})
+        self.assertEqual(self.send.call_args.args[:2], (self.PHONE, self.code()))
+        self.assertEqual(self.verify('000000' if self.code() != '000000' else '111111').status_code, 400)
+        token = self.verify(self.code()).json()['phone_token']
+        self.assertIsNone(self.code())                                    # a code works once
+        self.assertEqual(self.quote(phone_token=token).status_code, 201)
+        self.assertEqual(self.quote(phone_token=token, vendor_id=self.rival_vendor._id).status_code, 201)
+
+    def test_logged_in_users_own_phone_needs_no_code(self):
+        self.customer.profile.phone = self.PHONE
+        self.customer.profile.save()
+        self.client.force_authenticate(self.customer)
+        self.assertEqual(self.quote(phone_token=None).status_code, 201)
+        self.assertEqual(self.quote(phone_token=None, phone='9000000001').status_code, 400)   # someone else's number
+
+    def test_expired_token_is_refused(self):
+        token = phone_check.token_for(self.PHONE)
+        with mock.patch('django.core.signing.time.time', return_value=__import__('time').time() + phone_check.TOKEN_MAX_AGE + 5):
+            self.assertEqual(self.quote(phone_token=token).status_code, 400)
+
+    def test_wrong_codes_lock_out_and_resend_waits(self):
+        self.send_code()
+        wrong = '000000' if self.code() != '000000' else '111111'
+        for _ in range(5):
+            self.verify(wrong)
+        self.assertEqual(self.verify(self.code()).status_code, 429)
+        self.assertEqual(self.send_code().status_code, 429)               # 60 s between codes
+        self.assertEqual(self.send.call_count, 1)
+
+    def test_send_failure_reports_and_allows_retry(self):
+        self.send.return_value = (False, 'provider down', 'sms')
+        self.assertEqual(self.send_code().status_code, 503)
+        self.assertIsNone(self.code())
+        self.send.return_value = (True, None, 'sms')
+        self.assertEqual(self.send_code().status_code, 200)
+
+    def test_bad_number_gets_no_code(self):
+        self.assertEqual(self.send_code('12345').status_code, 400)
+        self.send.assert_not_called()
+
+    def test_login_code_is_not_replaced(self):
+        cache.set(f'login_otp:{self.PHONE}', '123456', 300)
+        self.send_code()
+        self.assertEqual(cache.get(f'login_otp:{self.PHONE}'), '123456')

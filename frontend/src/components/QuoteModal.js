@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getSessionId, normalizeIndianMobile, postJSON } from '../utils/analytics';
+import PhoneCodeCheck, { accountPhone, savedPhoneToken } from './PhoneCodeCheck';
 import './QuoteModal.css';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -23,10 +24,10 @@ const discoveryRequirement = (vendor) => {
 };
 
 export default function QuoteModal({ vendor, onClose }) {
-  const [form, setForm] = useState({ name: '', phone: '', event_date: '', message: '', consent: false });
+  const [form, setForm] = useState(() => ({ name: '', phone: accountPhone(), event_date: '', message: '', consent: false }));
   const [requirement] = useState(() => discoveryRequirement(vendor));
   const [errors, setErrors] = useState({});
-  const [step, setStep] = useState('form'); // 'form' | 'sending' | 'done'
+  const [step, setStep] = useState('form'); // 'form' | 'sending' | 'verify' | 'done'
   const [submitError, setSubmitError] = useState('');
 
   // Lock body scroll; close on Escape
@@ -46,13 +47,9 @@ export default function QuoteModal({ vendor, onClose }) {
     if (errors[field]) setErrors(errs => ({ ...errs, [field]: '' }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const found = validateQuote(form);
-    if (Object.keys(found).length) {
-      setErrors(found);
-      return;
-    }
+  const mobile = normalizeIndianMobile(form.phone);
+
+  const sendEnquiry = async (phoneToken) => {
     setStep('sending');
     setSubmitError('');
     const { ok, data } = await postJSON('/api/analytics/quotes/', {
@@ -61,6 +58,7 @@ export default function QuoteModal({ vendor, onClose }) {
       path: window.location.pathname,
       name: form.name.trim(),
       phone: form.phone.trim(),
+      phone_token: phoneToken || savedPhoneToken(mobile) || undefined,
       event_date: form.event_date || null,
       message: form.message.trim(),
       consent: form.consent,
@@ -70,9 +68,23 @@ export default function QuoteModal({ vendor, onClose }) {
       setStep('done');
       return;
     }
+    if (data && data.verify_phone && !phoneToken) {   // confirm the number, then this enquiry is sent
+      setStep('verify');
+      return;
+    }
     setStep('form');
     if (data && data.errors) setErrors(data.errors);
     else setSubmitError('We couldn’t send your enquiry. Please try again, or call or WhatsApp the vendor directly.');
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const found = validateQuote(form);
+    if (Object.keys(found).length) {
+      setErrors(found);
+      return;
+    }
+    sendEnquiry();
   };
 
   const fieldError = (field) => errors[field] && (
@@ -93,6 +105,8 @@ export default function QuoteModal({ vendor, onClose }) {
             </p>
             <button type="button" className="quote-submit" onClick={onClose}>Done</button>
           </div>
+        ) : step === 'verify' ? (
+          <PhoneCodeCheck phone={mobile} onVerified={sendEnquiry} onChangeNumber={() => setStep('form')} />
         ) : (
           <form onSubmit={handleSubmit} noValidate>
             <h2 id="quote-title" className="quote-title">Get a free quote</h2>

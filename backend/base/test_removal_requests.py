@@ -9,7 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
-from base import removal_requests as rr
+from base import phone_check, removal_requests as rr
 from base.models import (Product, ProductVideo, QuoteRequest, Service, ServiceImage, VendorRemovalRequest,
                          VendorRemovalRequestEvent)
 
@@ -373,7 +373,8 @@ class RemovalRequestTests(TestCase):
                 self.captureOnCommitCallbacks(execute=True):
             response = self.client.post('/api/analytics/quotes/', {
                 'vendor_id': self.vendor._id, 'session_id': 'c1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
-                'name': 'Priya', 'phone': '9988776655', 'message': '', 'consent': True}, format='json')
+                'name': 'Priya', 'phone': '9988776655', 'message': '', 'consent': True,
+                'phone_token': phone_check.token_for('9988776655')}, format='json')
         self.assertEqual(response.status_code, 201)
         self.assertEqual(QuoteRequest.objects.filter(vendor=self.vendor).count(), 1)
         self.assertEqual(VendorRemovalRequestEvent.objects.filter(action='vendor_unlisted').count(), 0)

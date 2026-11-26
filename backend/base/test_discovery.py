@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from base import discovery
+from base import analytics, discovery, phone_check
 from base.models import DiscoveryLead, Product, SearchQuery, Service, VendorEvent
 
 SESSION = 'd1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d'
@@ -67,6 +67,7 @@ class LeadApiTests(TestCase):
         payload = {'session_id': SESSION, 'source_vendor_id': self.source._id, 'name': 'Ravi', 'phone': '98765 43210',
                    'event_date': (date.today() + timedelta(days=60)).isoformat(), 'message': 'Need a hall + catering',
                    'consent': True, 'requirements': REQ, **extra}
+        payload.setdefault('phone_token', phone_check.token_for(analytics.normalize_indian_mobile(str(payload['phone'] or ''))))
         return self.client.post('/api/discovery/leads/', payload, format='json')
 
     def test_lead_is_stored_with_source_and_requirements(self):
@@ -259,3 +260,12 @@ class BudgetAndNewEventTests(TestCase):
                                                             'metadata': {'category': 'Halls'}}, format='json')
             self.assertEqual(r.status_code, 201, t)
         self.assertEqual(VendorEvent.objects.filter(vendor=source, event_type__startswith='discovery_').count(), 2)
+
+
+class LeadPhoneCheckTests(LeadApiTests):
+    def test_help_request_needs_a_confirmed_number(self):
+        response = self.submit(phone_token='')
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(response.json()['verify_phone'])
+        self.assertEqual(DiscoveryLead.objects.count(), 0)
+        self.assertEqual(self.submit().status_code, 201)

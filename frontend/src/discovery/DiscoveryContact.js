@@ -2,13 +2,14 @@
 // Consent is never pre-ticked, and the server rejects a lead without it.
 import React, { useState } from 'react';
 import { getSessionId, normalizeIndianMobile, postJSON, trackEvent, EVENTS } from '../utils/analytics';
+import PhoneCodeCheck, { accountPhone, savedPhoneToken } from '../components/PhoneCodeCheck';
 import './Discovery.css';
 
 export default function DiscoveryContact({ requirement, sourceVendorId }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', phone: '', event_date: '', message: '', consent: false });
+  const [form, setForm] = useState(() => ({ name: '', phone: accountPhone(), event_date: '', message: '', consent: false }));
   const [errors, setErrors] = useState({});
-  const [state, setState] = useState('idle');   // idle | sending | done | failed
+  const [state, setState] = useState('idle');   // idle | sending | verify | done | failed
   const set = (key) => (e) => setForm(f => ({ ...f, [key]: key === 'consent' ? e.target.checked : e.target.value }));
 
   const openForm = () => {
@@ -24,13 +25,18 @@ export default function DiscoveryContact({ requirement, sourceVendorId }) {
     if (!form.consent) found.consent = 'Please agree to be contacted.';
     setErrors(found);
     if (Object.keys(found).length) return;
+    send();
+  };
+
+  const send = async (phoneToken) => {
     setState('sending');
     const { ok, data } = await postJSON('/api/discovery/leads/', {
       session_id: getSessionId(), source_vendor_id: sourceVendorId || null, requirements: requirement,
       name: form.name.trim(), phone: form.phone, event_date: form.event_date || null, message: form.message.trim(),
-      consent: form.consent,
+      consent: form.consent, phone_token: phoneToken || savedPhoneToken(normalizeIndianMobile(form.phone)) || undefined,
     });
     if (ok) { setState('done'); return; }
+    if (data?.verify_phone && !phoneToken) { setErrors({}); setState('verify'); return; }
     setErrors(data?.errors || {});
     setState('failed');
   };
@@ -41,6 +47,14 @@ export default function DiscoveryContact({ requirement, sourceVendorId }) {
       <section className="dsc-contact dsc-done" role="status">
         <h2>Thank you, {form.name.trim()}</h2>
         <p>WedMangal will call you on +91 {mobile.slice(0, 2)}••••••{mobile.slice(-2)} about your requirement. You can keep browsing in the meantime.</p>
+      </section>
+    );
+  }
+
+  if (state === 'verify') {
+    return (
+      <section className="dsc-contact">
+        <PhoneCodeCheck phone={normalizeIndianMobile(form.phone)} onVerified={send} onChangeNumber={() => setState('idle')} />
       </section>
     );
   }

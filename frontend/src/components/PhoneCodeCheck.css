@@ -1,0 +1,42 @@
+/* PhoneCodeCheck — confirm an enquiry phone number (inside QuoteModal and the discovery contact form) */
+.pcc { text-align: left; }
+.pcc-title { margin: 0; font-size: 1.3rem; font-weight: 700; color: #5e143f; }
+.pcc-text { margin: 8px 0 4px; color: #2a1a1f; font-size: 14.5px; line-height: 1.45; }
+.pcc-why { margin: 0 0 16px; color: #6b4a57; font-size: 13px; }
+.pcc-label { display: block; font-size: 13px; font-weight: 600; color: #2a0918; margin-bottom: 6px; }
+.pcc-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 52px;
+  border: 1.5px solid #d9c3cd;
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-size: 1.5rem;
+  letter-spacing: 0.4em;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: #2a1a1f;
+  background: #fff;
+}
+.pcc-input:focus { outline: none; border-color: #5e143f; box-shadow: 0 0 0 3px rgba(94, 20, 63, 0.15); }
+.pcc-input:disabled { background: #f7f0f3; }
+.pcc-error { color: #b3261e; font-size: 13px; margin: 6px 0 0; }
+.pcc-submit {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 16px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #5e143f, #7d1d54);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pcc-submit:disabled { opacity: 0.45; cursor: not-allowed; }
+.pcc-row { display: flex; justify-content: space-between; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+.pcc-link { background: none; border: 0; padding: 6px 0; color: #5e143f; font-weight: 600; font-size: 14px; cursor: pointer; }
+.pcc-link:disabled { opacity: 0.5; }
+.pcc-muted { color: #6b4a57; font-size: 14px; padding: 6px 0; }
+.pcc-submit:focus-visible, .pcc-link:focus-visible { outline: 3px solid #c9973a; outline-offset: 2px; }

@@ -1,8 +1,10 @@
 """Discovery journey: save a visitor's requirement when they ask WedMangal to contact them.
 
     POST /api/discovery/leads/
-      {session_id, source_vendor_id?, name, phone, event_date?, message?, consent: true,
+      {session_id, source_vendor_id?, name, phone, phone_token?, event_date?, message?, consent: true,
        requirements: {...see base/discovery.py}}
+
+The phone must be the logged-in account's phone or carry a phone_token (base/phone_check.py).
 
 No login and no account: the lead is reviewed and called by WedMangal (Django admin →
 Discovery leads). Consent must be explicitly true — it is never assumed.
@@ -17,7 +19,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
-from base import analytics, discovery
+from base import analytics, discovery, phone_check
 from base.models import DiscoveryLead, Product, SavedRequirement, VendorEvent
 
 logger = logging.getLogger(__name__)
@@ -61,6 +63,8 @@ def create_lead(request):
         errors['message'] = 'Please keep this under 1000 characters.'
     if errors:
         return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
+    if not phone_check.is_checked(request, phone, data.get('phone_token')):
+        return phone_check.needs_check_response()
 
     session_id = analytics.clean_session_id(data.get('session_id'))
     source_vendor = None
